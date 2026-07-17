@@ -98,6 +98,8 @@
     .toolbar .filters select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(31,92,169,0.1); }
     .toolbar .dist-slider { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--text-muted); }
     .toolbar .dist-slider input[type="range"] { width: 80px; accent-color: var(--primary); cursor: pointer; }
+    .zona-tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+                color: #64748b; margin-right: 2px; align-self: center; }
     .toolbar .dist-slider span { min-width: 40px; font-weight: 600; color: var(--text-main); }
     .toolbar .btn {
       background: var(--border); color: var(--text-main); border: none; border-radius: 2rem;
@@ -274,16 +276,17 @@
 
     <span class="separator"></span>
 
-    <button class="btn btn-outline" id="btnCirculo150Morelia" aria-label="Círculo de 150 km desde Morelia">
+    <span class="zona-tag">Zonas</span>
+    <button class="btn btn-outline" id="btnCirculo150Morelia" title="Solo clientes a 150 km o menos de Morelia" aria-label="Zona 150 km desde Morelia">
       <i class="fas fa-circle" style="color:#10b981;"></i> 150 M.
     </button>
-    <button class="btn btn-outline" id="btnCirculo190Morelia" aria-label="Círculo de 190 km desde Morelia">
+    <button class="btn btn-outline" id="btnCirculo190Morelia" title="Solo clientes a 190 km o menos de Morelia" aria-label="Zona 190 km desde Morelia">
       <i class="fas fa-circle" style="color:#ef4444;"></i> 190 M.
     </button>
-    <button class="btn btn-outline" id="btnCirculo150Tototlan" aria-label="Círculo de 150 km desde Tototlán">
+    <button class="btn btn-outline" id="btnCirculo150Tototlan" title="Solo clientes a 150 km o menos de Tototlán" aria-label="Zona 150 km desde Tototlán">
       <i class="fas fa-circle" style="color:#10b981;"></i> 150 T.
     </button>
-    <button class="btn btn-outline" id="btnCirculo190Tototlan" aria-label="Círculo de 190 km desde Tototlán">
+    <button class="btn btn-outline" id="btnCirculo190Tototlan" title="Solo clientes a 190 km o menos de Tototlán" aria-label="Zona 190 km desde Tototlán">
       <i class="fas fa-circle" style="color:#ef4444;"></i> 190 T.
     </button>
     <button class="btn btn-success" id="geocodeBtn" aria-label="Obtener direcciones de los clientes visibles">
@@ -856,6 +859,9 @@ document.addEventListener('DOMContentLoaded', function(){
   //  6. CÍRCULOS DE RADIO (150 y 190 km)
   // ============================================================
   const circulosLayer = L.layerGroup().addTo(map);
+
+  // Cada zona guarda su ancla y su radio: el círculo NO es decorativo,
+  // es el filtro. Al activarlo solo se ven los clientes que caen dentro.
   const circulos = {};
   function crearCirculo(ancla, radioKm, color) {
     return L.circle([ancla.lat, ancla.lon], {
@@ -864,9 +870,22 @@ document.addEventListener('DOMContentLoaded', function(){
     }).bindPopup(`${radioKm} km desde ${ancla.nombre}`);
   }
   [['Morelia', ANCLA_MORELIA], ['Tototlan', ANCLA_TOTOTLAN]].forEach(([suf, a]) => {
-    circulos['150' + suf] = { capa: crearCirculo(a, 150, '#10b981'), visible: false };
-    circulos['190' + suf] = { capa: crearCirculo(a, 190, '#ef4444'), visible: false };
+    circulos['150' + suf] = { capa: crearCirculo(a, 150, '#10b981'), visible: false, ancla: a, radioKm: 150 };
+    circulos['190' + suf] = { capa: crearCirculo(a, 190, '#ef4444'), visible: false, ancla: a, radioKm: 190 };
   });
+
+  // UNIÓN: sin zonas activas se ven todos; con varias, los que caigan en cualquiera.
+  function zonasActivas() {
+    return Object.values(circulos).filter(c => c.visible);
+  }
+  function dentroDeZonas(s) {
+    const act = zonasActivas();
+    if (!act.length) return true;
+    for (const c of act) {
+      if (distanciaKm(c.ancla.lat, c.ancla.lon, s.lat, s.lon) <= c.radioKm) return true;
+    }
+    return false;
+  }
 
   function toggleCirculo(id) {
     const c = circulos[id];
@@ -875,6 +894,18 @@ document.addEventListener('DOMContentLoaded', function(){
     const btn = document.getElementById('btnCirculo' + id);
     if (c.visible) { circulosLayer.addLayer(c.capa); if (btn) btn.classList.add('active'); }
     else { circulosLayer.removeLayer(c.capa); if (btn) btn.classList.remove('active'); }
+    applyFilters();          // el filtro se aplica junto con el círculo
+  }
+
+  function limpiarZonas() {
+    Object.entries(circulos).forEach(([id, c]) => {
+      if (c.visible) {
+        c.visible = false;
+        circulosLayer.removeLayer(c.capa);
+        const b = document.getElementById('btnCirculo' + id);
+        if (b) b.classList.remove('active');
+      }
+    });
   }
 
   // ============================================================
@@ -903,13 +934,18 @@ document.addEventListener('DOMContentLoaded', function(){
     L.marker([a.lat, a.lon], {
       icon: L.divIcon({
         className: '',
-        html: `<div style="font-size:26px;color:${a.color};text-shadow:0 0 4px #fff,0 2px 5px rgba(0,0,0,.4);">★</div>`,
-        iconSize: [26,26], iconAnchor: [13,13]
+        html: `<div style="
+                 font-size:52px; line-height:52px; color:${a.color};
+                 text-shadow: 0 0 3px #fff, 0 0 6px #fff, 0 0 10px #fff, 0 3px 8px rgba(0,0,0,.55);
+                 -webkit-text-stroke: 1.5px #1e293b;
+                 text-align:center; pointer-events:auto;">★</div>`,
+        iconSize: [52, 52], iconAnchor: [26, 26], popupAnchor: [0, -24]
       }),
-      zIndexOffset: 1000, title: a.nombre
+      zIndexOffset: 2000, title: a.nombre, riseOnHover: true
     }).addTo(map).bindPopup(
-      `<strong style="color:${a.color};">⭐ ${a.nombre}</strong><br>` +
-      `<span style="font-size:.8rem;color:#64748b;">Ancla de referencia para distancias</span>`
+      `<strong style="color:${a.color};font-size:1.05rem;">★ ${a.nombre}</strong><br>` +
+      `<span style="font-size:.78rem;color:#64748b;">Estación GNU · ancla de referencia</span><br>` +
+      `<span style="font-size:.72rem;color:#94a3b8;">${a.lat.toFixed(6)}, ${a.lon.toFixed(6)}</span>`
     );
   });
 
@@ -1070,6 +1106,7 @@ document.addEventListener('DOMContentLoaded', function(){
     const term = searchTerm.toLowerCase();
     const selectedTam = document.getElementById('tamanoFilter').value;
     const visible = stations.filter(s =>
+      dentroDeZonas(s) &&
       (term === '' || s.nombre.toLowerCase().includes(term)) &&
       (activePrice === null || s.priceKey === activePrice) &&
       (selectedTam === 'all' || s.tamano === selectedTam) &&
@@ -1083,7 +1120,8 @@ document.addEventListener('DOMContentLoaded', function(){
     renderList(visible);
     updateLegendUI();
     updateStats(visible);
-    document.getElementById('clearAllBtn').classList.toggle('hidden', !(activePrice || selectedTam !== 'all' || term || maxDist < 1000)); // ← ajuste
+    document.getElementById('clearAllBtn').classList.toggle('hidden',
+      !(activePrice || selectedTam !== 'all' || term || maxDist < 1000 || zonasActivas().length));
     return visible;
   }
 
@@ -1141,6 +1179,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   document.getElementById('clearAllBtn').addEventListener('click', () => {
     activePrice = null; searchTerm = '';
+    limpiarZonas();
     document.getElementById('tamanoFilter').value = 'all';
     document.getElementById('searchInput').value = '';
     maxDist = 1000;
