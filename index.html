@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clientes Potenciales · Morelia</title>
-  <!-- Resource hints: abre las conexiones antes de necesitarlas -->
+  <title>Clientes Potenciales · Morelia y Tototlán</title>
+  <!-- Resource hints -->
   <link rel="preconnect" href="https://unpkg.com" crossorigin />
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
 
-  <!-- CSS crítico (bloqueante: el mapa lo necesita para pintar bien) -->
+  <!-- CSS crítico -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
 
-  <!-- CSS no crítico: se carga sin bloquear el primer render -->
+  <!-- CSS no crítico -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         media="print" onload="this.media='all';this.onload=null" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
@@ -25,13 +25,15 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
   </noscript>
 
-  <!-- JS con defer: descarga en paralelo desde el <head>, ejecuta en orden -->
+  <!-- JS con defer -->
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script defer src="ductos.js"></script>
+  <!-- Único archivo de clientes (contiene tanto Morelia como Tototlán) -->
   <script defer src="ClientesPotenciales.js"></script>
+
   <style>
-    /* ===== ESTILOS OPTIMIZADOS ===== */
+    /* ===== ESTILOS (sin cambios relevantes) ===== */
     :root {
       --primary: #1F5CA9;
       --primary-hover: #004a8f;
@@ -244,7 +246,7 @@
 <body>
 <div class="shell">
   <div class="topbar">
-    <div class="brand"><i class="fas fa-users"></i> Clientes Potenciales · GNU Morelia y Tototlán</div>
+    <div class="brand"><i class="fas fa-users"></i> Clientes Potenciales · Morelia y Tototlán</div>
     <div class="readouts">
       <span class="readout"><span class="num" id="rTotal">0</span> clientes</span>
       <span class="readout"><span class="num" id="rMatch">0</span> en vista</span>
@@ -273,6 +275,7 @@
 
     <span class="separator"></span>
 
+    <!-- Botones de círculos (se mantienen) -->
     <button class="btn btn-outline" id="btnCirculo150Morelia" aria-label="Círculo de 150 km desde Morelia">
       <i class="fas fa-circle" style="color:#10b981;"></i> 150 M.
     </button>
@@ -285,12 +288,16 @@
     <button class="btn btn-outline" id="btnCirculo190Tototlan" aria-label="Círculo de 190 km desde Tototlán">
       <i class="fas fa-circle" style="color:#ef4444;"></i> 190 T.
     </button>
+
+    <span class="separator"></span>
+
     <button class="btn btn-success" id="geocodeBtn" aria-label="Obtener direcciones de los clientes visibles">
       <i class="fas fa-address-card"></i> Obtener direcciones
     </button>
 
     <span class="separator"></span>
 
+    <!-- Botón toggle ductos (inicialmente ocultos) -->
     <button class="btn btn-secondary" id="toggleDuctosBtn" aria-label="Mostrar/ocultar ductos">
       <i class="fas fa-eye-slash" id="ductosToggleIcon"></i> <span id="ductosToggleLabel">Mostrar ductos</span>
     </button>
@@ -342,13 +349,10 @@
 document.addEventListener('DOMContentLoaded', function(){
   "use strict";
 
-  // Cambia a true si necesitas ver los logs de diagnóstico en consola
   const DEBUG = false;
   const log  = (...a) => { if (DEBUG) console.log(...a); };
   const warn = (...a) => { if (DEBUG) console.warn(...a); };
 
-  // Lee un array guardado en localStorage con formato "window.VAR = [...];"
-  // sin usar eval() (evita ejecutar código arbitrario).
   function leerArrayGuardado(raw) {
     if (!raw) return null;
     const i = raw.indexOf('=');
@@ -364,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function(){
   const ANCLA_MORELIA  = { nombre: "Morelia",  lat: 19.701130, lon: -101.198219, color: '#004D99' };
   const ANCLA_TOTOTLAN = { nombre: "Tototlán", lat: 20.534806, lon: -102.782470, color: '#FF6B35' };
   const ANCLAS = [ANCLA_MORELIA, ANCLA_TOTOTLAN];
-  const ANCLA = ANCLA_MORELIA;   // compatibilidad con el código existente
+  const ANCLA = ANCLA_MORELIA;   // para rutas y distancias (se mantiene)
 
   // ============================================================
   //  1. FUNCIONES AUXILIARES
@@ -447,12 +451,10 @@ document.addEventListener('DOMContentLoaded', function(){
   //  3. CONFIGURACIÓN INICIAL Y MAPA
   // ============================================================
 
-  // ===== DATOS DE CLIENTES =====
-  // Directorio único (ClientesPotenciales.js) compartido por ambas estaciones.
+  // ===== DATOS DE CLIENTES (único archivo) =====
   let rawClientes = Array.isArray(window.CLIENTES_POTENCIALES) ? window.CLIENTES_POTENCIALES : [];
 
-  // El directorio es único y las coordenadas se comparten entre las dos estaciones,
-  // así que cada cliente se mide contra el ancla MÁS CERCANA.
+  // Sobrescritura por localStorage si existe
   const clientesGuardado = localStorage.getItem('CLIENTES_JS');
   if (clientesGuardado) {
     const arr = leerArrayGuardado(clientesGuardado);
@@ -464,27 +466,21 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
-  // Diagnóstico visible en el badge superior
-  function actualizarEstadoCarga(n, porAncla) {
+  function actualizarEstadoCarga(total) {
     const el = document.getElementById('statusText');
     if (!el) return;
-    if (!n) {
-      el.textContent = '⚠️ No se detectó ningún cliente. Revisa que ClientesPotenciales.js esté junto al index.html';
+    if (!total) {
+      el.textContent = '⚠️ No se detectaron clientes. Revisa que ClientesPotenciales.js esté junto al index.html';
     } else {
-      el.textContent = `✅ ${n.toLocaleString()} clientes · más cerca de Morelia: ${porAncla.morelia.toLocaleString()} · de Tototlán: ${porAncla.tototlan.toLocaleString()}`;
+      el.textContent = `✅ ${total} clientes cargados`;
     }
   }
 
-  // Mide cada cliente contra el ancla MÁS CERCANA y guarda cuál fue.
+  // Enriquecer y deduplicar (todos los clientes, distancia a Morelia)
   function enriquecer(lista) {
+    const A = ANCLA_MORELIA;
     for (const s of lista) {
-      const dM = distanciaKm(ANCLA_MORELIA.lat,  ANCLA_MORELIA.lon,  s.lat, s.lon);
-      const dT = distanciaKm(ANCLA_TOTOTLAN.lat, ANCLA_TOTOTLAN.lon, s.lat, s.lon);
-      s.distMorelia  = dM;
-      s.distTototlan = dT;
-      s.ancla  = dM <= dT ? 'Morelia' : 'Tototlán';
-      s.origen = dM <= dT ? 'morelia' : 'tototlan';
-      s.distKm = Math.min(dM, dT);
+      s.distKm = distanciaKm(A.lat, A.lon, s.lat, s.lon);
       const r = getDistRange(s.distKm);
       s.priceKey = r.key;
       s.priceColor = r.color;
@@ -497,15 +493,9 @@ document.addEventListener('DOMContentLoaded', function(){
     return lista;
   }
 
-  let stations = enriquecer(deduplicate(rawClientes));
-
-  function contarPorAncla(lista) {
-    let morelia = 0, tototlan = 0;
-    for (const s of lista) (s.origen === 'morelia' ? morelia++ : tototlan++);
-    return { morelia, tototlan };
-  }
-  actualizarEstadoCarga(stations.length, contarPorAncla(stations));
-  log(`Clientes: ${stations.length}`);
+  const stations = enriquecer(deduplicate(rawClientes));
+  actualizarEstadoCarga(stations.length);
+  log(`Clientes cargados: ${stations.length}`);
 
   // ============================================================
   //  4. MAPA Y CAPAS BASE
@@ -528,7 +518,7 @@ document.addEventListener('DOMContentLoaded', function(){
   L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
 
   // ============================================================
-  //  5. DUCTOS (con toggle y leyenda minimizable)
+  //  5. DUCTOS (con toggle y leyenda minimizable) - INICIALMENTE OCULTOS
   // ============================================================
   const DUCTO_ESTILOS = {
     "CENAGAS (existente)":    { color: "#FF6B35", forma: "rombo",     dash: null },
@@ -579,7 +569,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   let ductosLayer = null;
-  let ductosVisibles = false;   // arrancan apagados: el usuario los activa
+  let ductosVisibles = false;   // <--- INICIALMENTE OCULTOS
   const ductoFiltroIteracion = {};
   let ultimoTipoSeleccionado = null;
 
@@ -782,6 +772,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if (ductosLayer) { map.removeLayer(ductosLayer); ductosLayer = null; }
     if (!datos || !datos.features || datos.features.length === 0) {
       ductosLayer = L.layerGroup();
+      // No se añade al mapa aún
       return;
     }
     try {
@@ -811,8 +802,10 @@ document.addEventListener('DOMContentLoaded', function(){
           layer.bindPopup(ductoPopup(feature.properties), { maxWidth: 280 });
         }
       });
-      // No se agrega al mapa aquí: arranca oculta hasta que el usuario la active.
-      if (ductosVisibles) ductosLayer.addTo(map);
+      // Solo se añade al mapa si ductosVisibles es true
+      if (ductosVisibles) {
+        map.addLayer(ductosLayer);
+      }
       log(`Capa de ductos creada: ${datos.features.length} ductos.`);
     } catch (e) {
       console.error('Error al crear capa de ductos:', e);
@@ -852,10 +845,28 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function toggleDuctos() {
-    if (ductosVisibles) { if (ductosLayer) map.removeLayer(ductosLayer); ductosVisibles = false; document.getElementById('ductosToggleIcon').className = 'fas fa-eye-slash'; document.getElementById('ductosToggleLabel').textContent = 'Mostrar ductos'; }
-    else { if (ductosLayer) map.addLayer(ductosLayer); ductosVisibles = true; document.getElementById('ductosToggleIcon').className = 'fas fa-eye'; document.getElementById('ductosToggleLabel').textContent = 'Ocultar ductos'; }
+    if (ductosVisibles) {
+      // Ocultar
+      if (ductosLayer) map.removeLayer(ductosLayer);
+      ductosVisibles = false;
+      document.getElementById('ductosToggleIcon').className = 'fas fa-eye-slash';
+      document.getElementById('ductosToggleLabel').textContent = 'Mostrar ductos';
+    } else {
+      // Mostrar
+      if (ductosLayer) {
+        map.addLayer(ductosLayer);
+      } else {
+        // Si por alguna razón no se ha creado, se crea
+        crearCapaDuctos(ductosData);
+        if (ductosLayer) map.addLayer(ductosLayer);
+      }
+      ductosVisibles = true;
+      document.getElementById('ductosToggleIcon').className = 'fas fa-eye';
+      document.getElementById('ductosToggleLabel').textContent = 'Ocultar ductos';
+    }
   }
 
+  // Crear capa (sin añadir al mapa todavía)
   crearCapaDuctos(ductosData);
   poblarFiltroDuctos(ductosData);
   agregarLeyendaDuctos();
@@ -865,7 +876,6 @@ document.addEventListener('DOMContentLoaded', function(){
   //  6. CÍRCULOS DE RADIO (150 y 190 km)
   // ============================================================
   const circulosLayer = L.layerGroup().addTo(map);
-  // Un círculo de 150 y otro de 190 km POR CADA ancla
   const circulos = {};
   function crearCirculo(ancla, radioKm, color) {
     return L.circle([ancla.lat, ancla.lon], {
@@ -878,7 +888,7 @@ document.addEventListener('DOMContentLoaded', function(){
     circulos['190' + suf] = { capa: crearCirculo(a, 190, '#ef4444'), visible: false };
   });
 
-  function toggleCirculo(id) {           // id: '150Morelia', '190Tototlan', ...
+  function toggleCirculo(id) {
     const c = circulos[id];
     if (!c) return;
     c.visible = !c.visible;
@@ -891,8 +901,8 @@ document.addEventListener('DOMContentLoaded', function(){
   //  7. CLÚSTER Y MARCADORES DE CLIENTES
   // ============================================================
   const cluster = L.markerClusterGroup({
-    chunkedLoading: true,              // no congela la UI al cargar muchos puntos
-    removeOutsideVisibleBounds: true,  // no dibuja lo que está fuera de pantalla
+    chunkedLoading: true,
+    removeOutsideVisibleBounds: true,
     maxClusterRadius: 50,
     iconCreateFunction: function(c) {
       const n = c.getChildCount();
@@ -909,8 +919,7 @@ document.addEventListener('DOMContentLoaded', function(){
   map.addLayer(cluster);
   const markerMap = new Map();
 
-  // Marcador fijo de Morelia
-  // Marcador de estrella para cada ancla
+  // Marcadores fijos (estrellas) para las anclas
   ANCLAS.forEach(a => {
     L.marker([a.lat, a.lon], {
       icon: L.divIcon({
@@ -925,8 +934,6 @@ document.addEventListener('DOMContentLoaded', function(){
     );
   });
 
-  // Los pines solo varían por color (4 posibles). Creamos cada L.divIcon UNA vez
-  // y la reutilizamos: antes se generaba un icono nuevo por cada marcador.
   const iconCache = new Map();
   function iconoPin(color) {
     let ic = iconCache.get(color);
@@ -950,6 +957,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function reconstruirMarcadoresClientes() {
     cluster.clearLayers();
     markerMap.clear();
+    // Recalcular distancias por si acaso
     enriquecer(stations);
     const nuevos = [];
     stations.forEach(s => {
@@ -969,10 +977,7 @@ document.addEventListener('DOMContentLoaded', function(){
           ${s.telefono ? `<br><span style="font-size:0.8rem;">📞 ${s.telefono}</span>` : ''}
           <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
             <span style="display:block;width:10px;height:10px;border-radius:50%;background:${s.priceColor};"></span>
-            <span style="color:#0f172a;font-weight:600;">${d} km de ${s.ancla}</span>
-          </div>
-          <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">
-            Morelia ${Math.round(s.distMorelia)} km · Tototlán ${Math.round(s.distTototlan)} km
+            <span style="color:#0f172a;font-weight:600;">${d} km de Morelia</span>
           </div>
           <a href="https://www.google.com/maps?q=${s.lat},${s.lon}" target="_blank" style="font-size:0.75rem;color:var(--primary);">Ver en Google Maps</a>
           <button class="btn-route" data-lat="${s.lat}" data-lon="${s.lon}" style="display:block;margin-top:4px;">🚗 Calcular ruta</button>
@@ -983,7 +988,6 @@ document.addEventListener('DOMContentLoaded', function(){
       markerMap.set(s, { marker, data: s });
       nuevos.push(marker);
     });
-    // addLayers() en lote es mucho más rápido que addLayer() en bucle
     cluster.addLayers(nuevos);
     document.getElementById('rTotal').textContent = stations.length;
     log(`Marcadores reconstruidos: ${stations.length}`);
@@ -1022,11 +1026,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   async function mostrarRuta(destLat, destLon) {
     limpiarRuta();
-    // La ruta parte del ancla más cercana al destino, no siempre de Morelia.
-    const dM = distanciaKm(ANCLA_MORELIA.lat,  ANCLA_MORELIA.lon,  destLat, destLon);
-    const dT = distanciaKm(ANCLA_TOTOTLAN.lat, ANCLA_TOTOTLAN.lon, destLat, destLon);
-    const origen = dM <= dT ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
-    const resultado = await calcularRuta(origen.lat, origen.lon, destLat, destLon);
+    const resultado = await calcularRuta(ANCLA.lat, ANCLA.lon, destLat, destLon);
     if (!resultado) { alert('No se pudo calcular la ruta.'); return; }
     const coords = resultado.geometria.map(c => [c[1], c[0]]);
     rutaLayer = L.polyline(coords, { color: '#1F5CA9', weight: 4, opacity: 0.8, dashArray: '8,8' }).addTo(map);
@@ -1034,7 +1034,7 @@ document.addEventListener('DOMContentLoaded', function(){
     rutaMarcador = L.marker([destLat, destLon], {
       icon: L.divIcon({ className: '', html: '<i class="fas fa-flag-checkered" style="font-size:28px;color:#1F5CA9;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>', iconSize: [28,28] })
     }).addTo(map);
-    rutaMarcador.bindPopup(`<strong>Ruta desde ${origen.nombre}</strong><br>Distancia: ${resultado.distanciaKm.toFixed(1)} km<br>Tiempo: ${Math.round(resultado.duracionMin)} min`).openPopup();
+    rutaMarcador.bindPopup(`<strong>Ruta desde Morelia</strong><br>Distancia: ${resultado.distanciaKm.toFixed(1)} km<br>Tiempo: ${Math.round(resultado.duracionMin)} min`).openPopup();
   }
 
   let clusterTimer = null;
@@ -1059,14 +1059,13 @@ document.addEventListener('DOMContentLoaded', function(){
   const legendControl = L.control({ position: 'bottomright' });
   legendControl.onAdd = function() {
     const div = L.DomUtil.create('div', 'price-legend');
-    div.innerHTML = `<div class="title">Distancia al ancla más cercana <button class="clear-btn" id="legendClearBtn">✕</button></div>`;
+    div.innerHTML = `<div class="title">Distancia a Morelia <button class="clear-btn" id="legendClearBtn">✕</button></div>`;
     const ranges = [
       { label: '≤ 100 km',     key: 'low',      color: '#10b981' },
       { label: '100 – 140 km', key: 'mid',      color: '#f59e0b' },
       { label: '140 – 180 km', key: 'high',     color: '#ef4444' },
       { label: '> 180 km',     key: 'no-price', color: '#94a3b8' }
     ];
-    // Un solo conteo (antes: 4 pasadas sobre stations) y un solo innerHTML
     const conteo = new Map();
     for (const s of stations) conteo.set(s.priceKey, (conteo.get(s.priceKey) || 0) + 1);
     div.innerHTML += ranges.map(r => `<div class="row" data-key="${r.key}">
@@ -1079,7 +1078,7 @@ document.addEventListener('DOMContentLoaded', function(){
   legendControl.addTo(map);
 
   // ============================================================
-  //  10. FILTROS Y EVENTOS (clientes) - incluye tamaño
+  //  10. FILTROS Y EVENTOS (clientes) - sin origen
   // ============================================================
   let activePrice = null, activeTamano = 'all', searchTerm = '', maxDist = 210;
 
@@ -1094,7 +1093,8 @@ document.addEventListener('DOMContentLoaded', function(){
     );
 
     cluster.clearLayers();
-    cluster.addLayers(visible.map(s => markerMap.get(s).marker));
+    const markers = visible.map(s => markerMap.get(s)?.marker).filter(Boolean);
+    cluster.addLayers(markers);
     document.getElementById('rMatch').textContent = visible.length;
     document.getElementById('listCnt').textContent = visible.length;
     renderList(visible);
@@ -1168,7 +1168,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ============================================================
-  //  11. RENDERIZAR LISTA (directorio) con estado
+  //  11. RENDERIZAR LISTA (directorio)
   // ============================================================
   function renderList(items) {
     const ul = document.getElementById('list');
@@ -1308,7 +1308,6 @@ document.addEventListener('DOMContentLoaded', function(){
       if (result) {
         s.direccion = result.direccion;
         s.estado = result.estado || s.estado;
-        // Actualizar popup
         const entry = markerMap.get(s);
         if (entry) {
           entry.marker.closePopup();
@@ -1343,7 +1342,6 @@ document.addEventListener('DOMContentLoaded', function(){
     fill.style.width = '100%';
     setTimeout(() => { progress.style.display = 'none'; }, 2000);
 
-    // Guardar en localStorage
     try {
       localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
       localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
@@ -1354,7 +1352,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
   document.getElementById('geocodeBtn').addEventListener('click', geocodeClientesVisibles);
 
-  // Delegación para botones de geocodificación individual en popups
   document.addEventListener('click', async function(e) {
     if (e.target.classList.contains('btn-geocode')) {
       const lat = parseFloat(e.target.dataset.lat);
@@ -1435,7 +1432,7 @@ document.addEventListener('DOMContentLoaded', function(){
       reconstruirMarcadoresClientes();
       actualizarSelectTamano();
       applyFilters();
-      actualizarEstadoCarga(stations.length, contarPorAncla(stations));
+      actualizarEstadoCarga(stations.length);
       log(`Clientes recargados: ${stations.length}`);
     } catch (e) { console.error('Error al recargar clientes:', e); }
   }
@@ -1450,14 +1447,17 @@ document.addEventListener('DOMContentLoaded', function(){
         const geojson = convertirArrayAGeoJSON(arr);
         ductosData = geojson;
         window.DUCTOS_GAS = geojson;
+        // Recrear la capa, pero manteniendo el estado de visibilidad
+        const wasVisible = ductosVisibles;
+        if (ductosLayer) map.removeLayer(ductosLayer);
         crearCapaDuctos(ductosData);
+        if (wasVisible && ductosLayer) map.addLayer(ductosLayer);
         poblarFiltroDuctos(ductosData);
         actualizarLeyendaDuctos(ductosData);
         document.getElementById('ductoFilter').value = 'all';
         for (const key in ductoFiltroIteracion) delete ductoFiltroIteracion[key];
         ultimoTipoSeleccionado = null;
         aplicarFiltroIterativo('all');
-        if (!ductosVisibles && ductosLayer) map.removeLayer(ductosLayer);
       }
     } catch (e) { console.error('Error al recargar ductos:', e); }
   }
