@@ -4,18 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Clientes Potenciales · Morelia</title>
-  <!-- Resource hints: abre las conexiones antes de necesitarlas -->
+  <!-- Resource hints -->
   <link rel="preconnect" href="https://unpkg.com" crossorigin />
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
 
-  <!-- CSS crítico (bloqueante: el mapa lo necesita para pintar bien) -->
+  <!-- CSS crítico -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
 
-  <!-- CSS no crítico: se carga sin bloquear el primer render -->
+  <!-- CSS no crítico -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         media="print" onload="this.media='all';this.onload=null" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
@@ -25,13 +25,13 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
   </noscript>
 
-  <!-- JS con defer: descarga en paralelo desde el <head>, ejecuta en orden -->
+  <!-- JS con defer -->
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script defer src="ductos.js"></script>
   <script defer src="ClientesPotenciales.js"></script>
   <style>
-    /* ===== ESTILOS OPTIMIZADOS ===== */
+    /* ===== ESTILOS (sin cambios) ===== */
     :root {
       --primary: #1F5CA9;
       --primary-hover: #004a8f;
@@ -267,8 +267,9 @@
     </div>
     <div class="dist-slider">
       <label for="distSlider">Max dist.</label>
-      <input type="range" id="distSlider" min="25" max="500" value="500" step="25" />
-      <span id="distLabel">Sin límite</span>
+      <!-- ===== CAMBIADO: max=1000, value=1000 ===== -->
+      <input type="range" id="distSlider" min="60" max="1000" value="1000" step="5" />
+      <span id="distLabel">1000 km</span>
     </div>
 
     <span class="separator"></span>
@@ -342,13 +343,10 @@
 document.addEventListener('DOMContentLoaded', function(){
   "use strict";
 
-  // Cambia a true si necesitas ver los logs de diagnóstico en consola
   const DEBUG = false;
   const log  = (...a) => { if (DEBUG) console.log(...a); };
   const warn = (...a) => { if (DEBUG) console.warn(...a); };
 
-  // Lee un array guardado en localStorage con formato "window.VAR = [...];"
-  // sin usar eval() (evita ejecutar código arbitrario).
   function leerArrayGuardado(raw) {
     if (!raw) return null;
     const i = raw.indexOf('=');
@@ -364,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function(){
   const ANCLA_MORELIA  = { nombre: "Morelia",  lat: 19.701130, lon: -101.198219, color: '#004D99' };
   const ANCLA_TOTOTLAN = { nombre: "Tototlán", lat: 20.534806, lon: -102.782470, color: '#FF6B35' };
   const ANCLAS = [ANCLA_MORELIA, ANCLA_TOTOTLAN];
-  const ANCLA = ANCLA_MORELIA;   // compatibilidad con el código existente
+  const ANCLA = ANCLA_MORELIA;   // compatibilidad
 
   // ============================================================
   //  1. FUNCIONES AUXILIARES
@@ -447,12 +445,8 @@ document.addEventListener('DOMContentLoaded', function(){
   //  3. CONFIGURACIÓN INICIAL Y MAPA
   // ============================================================
 
-  // ===== DATOS DE CLIENTES =====
-  // Directorio único (ClientesPotenciales.js) compartido por ambas estaciones.
   let rawClientes = Array.isArray(window.CLIENTES_POTENCIALES) ? window.CLIENTES_POTENCIALES : [];
 
-  // El directorio es único y las coordenadas se comparten entre las dos estaciones,
-  // así que cada cliente se mide contra el ancla MÁS CERCANA.
   const clientesGuardado = localStorage.getItem('CLIENTES_JS');
   if (clientesGuardado) {
     const arr = leerArrayGuardado(clientesGuardado);
@@ -464,7 +458,6 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
-  // Diagnóstico visible en el badge superior
   function actualizarEstadoCarga(n, porAncla) {
     const el = document.getElementById('statusText');
     if (!el) return;
@@ -475,7 +468,6 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
-  // Mide cada cliente contra el ancla MÁS CERCANA y guarda cuál fue.
   function enriquecer(lista) {
     for (const s of lista) {
       const dM = distanciaKm(ANCLA_MORELIA.lat,  ANCLA_MORELIA.lon,  s.lat, s.lon);
@@ -579,7 +571,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   let ductosLayer = null;
-  let ductosVisibles = false;   // arrancan apagados: el usuario los activa
+  let ductosVisibles = false;
   const ductoFiltroIteracion = {};
   let ultimoTipoSeleccionado = null;
 
@@ -811,7 +803,6 @@ document.addEventListener('DOMContentLoaded', function(){
           layer.bindPopup(ductoPopup(feature.properties), { maxWidth: 280 });
         }
       });
-      // No se agrega al mapa aquí: arranca oculta hasta que el usuario la active.
       if (ductosVisibles) ductosLayer.addTo(map);
       log(`Capa de ductos creada: ${datos.features.length} ductos.`);
     } catch (e) {
@@ -865,7 +856,6 @@ document.addEventListener('DOMContentLoaded', function(){
   //  6. CÍRCULOS DE RADIO (150 y 190 km)
   // ============================================================
   const circulosLayer = L.layerGroup().addTo(map);
-  // Un círculo de 150 y otro de 190 km POR CADA ancla
   const circulos = {};
   function crearCirculo(ancla, radioKm, color) {
     return L.circle([ancla.lat, ancla.lon], {
@@ -878,7 +868,7 @@ document.addEventListener('DOMContentLoaded', function(){
     circulos['190' + suf] = { capa: crearCirculo(a, 190, '#ef4444'), visible: false };
   });
 
-  function toggleCirculo(id) {           // id: '150Morelia', '190Tototlan', ...
+  function toggleCirculo(id) {
     const c = circulos[id];
     if (!c) return;
     c.visible = !c.visible;
@@ -891,8 +881,8 @@ document.addEventListener('DOMContentLoaded', function(){
   //  7. CLÚSTER Y MARCADORES DE CLIENTES
   // ============================================================
   const cluster = L.markerClusterGroup({
-    chunkedLoading: true,              // no congela la UI al cargar muchos puntos
-    removeOutsideVisibleBounds: true,  // no dibuja lo que está fuera de pantalla
+    chunkedLoading: true,
+    removeOutsideVisibleBounds: true,
     maxClusterRadius: 50,
     iconCreateFunction: function(c) {
       const n = c.getChildCount();
@@ -909,8 +899,6 @@ document.addEventListener('DOMContentLoaded', function(){
   map.addLayer(cluster);
   const markerMap = new Map();
 
-  // Marcador fijo de Morelia
-  // Marcador de estrella para cada ancla
   ANCLAS.forEach(a => {
     L.marker([a.lat, a.lon], {
       icon: L.divIcon({
@@ -925,8 +913,6 @@ document.addEventListener('DOMContentLoaded', function(){
     );
   });
 
-  // Los pines solo varían por color (4 posibles). Creamos cada L.divIcon UNA vez
-  // y la reutilizamos: antes se generaba un icono nuevo por cada marcador.
   const iconCache = new Map();
   function iconoPin(color) {
     let ic = iconCache.get(color);
@@ -983,7 +969,6 @@ document.addEventListener('DOMContentLoaded', function(){
       markerMap.set(s, { marker, data: s });
       nuevos.push(marker);
     });
-    // addLayers() en lote es mucho más rápido que addLayer() en bucle
     cluster.addLayers(nuevos);
     document.getElementById('rTotal').textContent = stations.length;
     log(`Marcadores reconstruidos: ${stations.length}`);
@@ -1022,7 +1007,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
   async function mostrarRuta(destLat, destLon) {
     limpiarRuta();
-    // La ruta parte del ancla más cercana al destino, no siempre de Morelia.
     const dM = distanciaKm(ANCLA_MORELIA.lat,  ANCLA_MORELIA.lon,  destLat, destLon);
     const dT = distanciaKm(ANCLA_TOTOTLAN.lat, ANCLA_TOTOTLAN.lon, destLat, destLon);
     const origen = dM <= dT ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
@@ -1066,7 +1050,6 @@ document.addEventListener('DOMContentLoaded', function(){
       { label: '140 – 180 km', key: 'high',     color: '#ef4444' },
       { label: '> 180 km',     key: 'no-price', color: '#94a3b8' }
     ];
-    // Un solo conteo (antes: 4 pasadas sobre stations) y un solo innerHTML
     const conteo = new Map();
     for (const s of stations) conteo.set(s.priceKey, (conteo.get(s.priceKey) || 0) + 1);
     div.innerHTML += ranges.map(r => `<div class="row" data-key="${r.key}">
@@ -1081,8 +1064,7 @@ document.addEventListener('DOMContentLoaded', function(){
   // ============================================================
   //  10. FILTROS Y EVENTOS (clientes) - incluye tamaño
   // ============================================================
-  const DIST_TOPE = 500;                 // al tope, el filtro se apaga
-  let activePrice = null, activeTamano = 'all', searchTerm = '', maxDist = Infinity;
+  let activePrice = null, activeTamano = 'all', searchTerm = '', maxDist = 1000; // ← CAMBIADO a 1000
 
   function applyFilters() {
     const term = searchTerm.toLowerCase();
@@ -1101,7 +1083,7 @@ document.addEventListener('DOMContentLoaded', function(){
     renderList(visible);
     updateLegendUI();
     updateStats(visible);
-    document.getElementById('clearAllBtn').classList.toggle('hidden', !(activePrice || selectedTam !== 'all' || term || maxDist !== Infinity));
+    document.getElementById('clearAllBtn').classList.toggle('hidden', !(activePrice || selectedTam !== 'all' || term || maxDist < 1000)); // ← ajuste
     return visible;
   }
 
@@ -1146,9 +1128,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
   document.getElementById('tamanoFilter').addEventListener('change', applyFilters);
   document.getElementById('distSlider').addEventListener('input', function() {
-    const v = parseInt(this.value);
-    maxDist = (v >= DIST_TOPE) ? Infinity : v;
-    document.getElementById('distLabel').textContent = (v >= DIST_TOPE) ? 'Sin límite' : v + ' km';
+    maxDist = parseInt(this.value);
+    document.getElementById('distLabel').textContent = maxDist + ' km';
     applyFilters();
   });
 
@@ -1162,9 +1143,9 @@ document.addEventListener('DOMContentLoaded', function(){
     activePrice = null; searchTerm = '';
     document.getElementById('tamanoFilter').value = 'all';
     document.getElementById('searchInput').value = '';
-    maxDist = Infinity;
-    document.getElementById('distSlider').value = DIST_TOPE;
-    document.getElementById('distLabel').textContent = 'Sin límite';
+    maxDist = 1000;
+    document.getElementById('distSlider').value = 1000;
+    document.getElementById('distLabel').textContent = '1000 km';
     applyFilters();
     map.flyTo([23.5, -102.5], 5, { duration: 1 });
   });
@@ -1310,7 +1291,6 @@ document.addEventListener('DOMContentLoaded', function(){
       if (result) {
         s.direccion = result.direccion;
         s.estado = result.estado || s.estado;
-        // Actualizar popup
         const entry = markerMap.get(s);
         if (entry) {
           entry.marker.closePopup();
@@ -1345,7 +1325,6 @@ document.addEventListener('DOMContentLoaded', function(){
     fill.style.width = '100%';
     setTimeout(() => { progress.style.display = 'none'; }, 2000);
 
-    // Guardar en localStorage
     try {
       localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
       localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
@@ -1356,7 +1335,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
   document.getElementById('geocodeBtn').addEventListener('click', geocodeClientesVisibles);
 
-  // Delegación para botones de geocodificación individual en popups
   document.addEventListener('click', async function(e) {
     if (e.target.classList.contains('btn-geocode')) {
       const lat = parseFloat(e.target.dataset.lat);
