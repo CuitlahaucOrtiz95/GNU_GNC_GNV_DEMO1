@@ -98,8 +98,6 @@
     .toolbar .filters select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(31,92,169,0.1); }
     .toolbar .dist-slider { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--text-muted); }
     .toolbar .dist-slider input[type="range"] { width: 80px; accent-color: var(--primary); cursor: pointer; }
-    .zona-tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
-                color: #64748b; margin-right: 2px; align-self: center; }
     .toolbar .dist-slider span { min-width: 40px; font-weight: 600; color: var(--text-main); }
     .toolbar .btn {
       background: var(--border); color: var(--text-main); border: none; border-radius: 2rem;
@@ -269,24 +267,22 @@
     </div>
     <div class="dist-slider">
       <label for="distSlider">Max dist.</label>
-      <!-- ===== CAMBIADO: max=1000, value=1000 ===== -->
       <input type="range" id="distSlider" min="60" max="1000" value="1000" step="5" />
       <span id="distLabel">1000 km</span>
     </div>
 
     <span class="separator"></span>
 
-    <span class="zona-tag">Zonas</span>
-    <button class="btn btn-outline" id="btnCirculo150Morelia" title="Solo clientes a 150 km o menos de Morelia" aria-label="Zona 150 km desde Morelia">
+    <button class="btn btn-outline" id="btnCirculo150Morelia" aria-label="Círculo de 150 km desde Morelia">
       <i class="fas fa-circle" style="color:#10b981;"></i> 150 M.
     </button>
-    <button class="btn btn-outline" id="btnCirculo190Morelia" title="Solo clientes a 190 km o menos de Morelia" aria-label="Zona 190 km desde Morelia">
+    <button class="btn btn-outline" id="btnCirculo190Morelia" aria-label="Círculo de 190 km desde Morelia">
       <i class="fas fa-circle" style="color:#ef4444;"></i> 190 M.
     </button>
-    <button class="btn btn-outline" id="btnCirculo150Tototlan" title="Solo clientes a 150 km o menos de Tototlán" aria-label="Zona 150 km desde Tototlán">
+    <button class="btn btn-outline" id="btnCirculo150Tototlan" aria-label="Círculo de 150 km desde Tototlán">
       <i class="fas fa-circle" style="color:#10b981;"></i> 150 T.
     </button>
-    <button class="btn btn-outline" id="btnCirculo190Tototlan" title="Solo clientes a 190 km o menos de Tototlán" aria-label="Zona 190 km desde Tototlán">
+    <button class="btn btn-outline" id="btnCirculo190Tototlan" aria-label="Círculo de 190 km desde Tototlán">
       <i class="fas fa-circle" style="color:#ef4444;"></i> 190 T.
     </button>
     <button class="btn btn-success" id="geocodeBtn" aria-label="Obtener direcciones de los clientes visibles">
@@ -856,12 +852,9 @@ document.addEventListener('DOMContentLoaded', function(){
   document.getElementById('ductoFilter').addEventListener('change', function() { aplicarFiltroIterativo(this.value); });
 
   // ============================================================
-  //  6. CÍRCULOS DE RADIO (150 y 190 km)
+  //  6. CÍRCULOS DE RADIO (150 y 190 km) con FILTRO
   // ============================================================
   const circulosLayer = L.layerGroup().addTo(map);
-
-  // Cada zona guarda su ancla y su radio: el círculo NO es decorativo,
-  // es el filtro. Al activarlo solo se ven los clientes que caen dentro.
   const circulos = {};
   function crearCirculo(ancla, radioKm, color) {
     return L.circle([ancla.lat, ancla.lon], {
@@ -870,42 +863,79 @@ document.addEventListener('DOMContentLoaded', function(){
     }).bindPopup(`${radioKm} km desde ${ancla.nombre}`);
   }
   [['Morelia', ANCLA_MORELIA], ['Tototlan', ANCLA_TOTOTLAN]].forEach(([suf, a]) => {
-    circulos['150' + suf] = { capa: crearCirculo(a, 150, '#10b981'), visible: false, ancla: a, radioKm: 150 };
-    circulos['190' + suf] = { capa: crearCirculo(a, 190, '#ef4444'), visible: false, ancla: a, radioKm: 190 };
+    circulos['150' + suf] = { capa: crearCirculo(a, 150, '#10b981'), visible: false };
+    circulos['190' + suf] = { capa: crearCirculo(a, 190, '#ef4444'), visible: false };
   });
 
-  // UNIÓN: sin zonas activas se ven todos; con varias, los que caigan en cualquiera.
-  function zonasActivas() {
-    return Object.values(circulos).filter(c => c.visible);
-  }
-  function dentroDeZonas(s) {
-    const act = zonasActivas();
-    if (!act.length) return true;
-    for (const c of act) {
-      if (distanciaKm(c.ancla.lat, c.ancla.lon, s.lat, s.lon) <= c.radioKm) return true;
+  // Estado del filtro de círculo activo
+  let activeCircleFilter = null; // { centro: 'morelia'|'tototlan', radio: 150|190 }
+
+  function desactivarCirculoActivo() {
+    if (activeCircleFilter) {
+      const id = activeCircleFilter.radio + 
+                 (activeCircleFilter.centro === 'morelia' ? 'Morelia' : 'Tototlan');
+      const c = circulos[id];
+      if (c && c.visible) {
+        // Desactivar visualmente
+        circulosLayer.removeLayer(c.capa);
+        c.visible = false;
+        const btn = document.getElementById('btnCirculo' + id);
+        if (btn) btn.classList.remove('active');
+      }
+      activeCircleFilter = null;
+      applyFilters();
     }
-    return false;
   }
 
   function toggleCirculo(id) {
     const c = circulos[id];
     if (!c) return;
-    c.visible = !c.visible;
-    const btn = document.getElementById('btnCirculo' + id);
-    if (c.visible) { circulosLayer.addLayer(c.capa); if (btn) btn.classList.add('active'); }
-    else { circulosLayer.removeLayer(c.capa); if (btn) btn.classList.remove('active'); }
-    applyFilters();          // el filtro se aplica junto con el círculo
-  }
 
-  function limpiarZonas() {
-    Object.entries(circulos).forEach(([id, c]) => {
-      if (c.visible) {
-        c.visible = false;
-        circulosLayer.removeLayer(c.capa);
-        const b = document.getElementById('btnCirculo' + id);
-        if (b) b.classList.remove('active');
+    // Si ya hay un filtro activo y es el mismo círculo, lo desactivamos
+    if (activeCircleFilter) {
+      const currentId = activeCircleFilter.radio + 
+                        (activeCircleFilter.centro === 'morelia' ? 'Morelia' : 'Tototlan');
+      if (currentId === id) {
+        // Desactivar
+        desactivarCirculoActivo();
+        return;
+      } else {
+        // Activar otro: desactivar el anterior primero
+        desactivarCirculoActivo();
       }
-    });
+    }
+
+    // Si el círculo ya estaba visible (pero sin filtro, caso raro), lo quitamos
+    if (c.visible) {
+      circulosLayer.removeLayer(c.capa);
+      c.visible = false;
+      const btn = document.getElementById('btnCirculo' + id);
+      if (btn) btn.classList.remove('active');
+      return;
+    }
+
+    // Activar círculo y filtro
+    circulosLayer.addLayer(c.capa);
+    c.visible = true;
+    const btn = document.getElementById('btnCirculo' + id);
+    if (btn) btn.classList.add('active');
+
+    // Extraer centro y radio del id
+    let centro, radio;
+    if (id.includes('Morelia')) {
+      centro = 'morelia';
+    } else if (id.includes('Tototlan')) {
+      centro = 'tototlan';
+    }
+    const radioMatch = id.match(/(\d+)/);
+    radio = radioMatch ? parseInt(radioMatch[0]) : 150;
+
+    activeCircleFilter = { centro, radio };
+    applyFilters();
+
+    // Centrar el mapa en el área del círculo
+    const ancla = centro === 'morelia' ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
+    map.flyTo([ancla.lat, ancla.lon], 8, { duration: 1 });
   }
 
   // ============================================================
@@ -930,22 +960,18 @@ document.addEventListener('DOMContentLoaded', function(){
   map.addLayer(cluster);
   const markerMap = new Map();
 
+  // Marcadores de ancla (ESTRELLAS MÁS GRANDES)
   ANCLAS.forEach(a => {
     L.marker([a.lat, a.lon], {
       icon: L.divIcon({
         className: '',
-        html: `<div style="
-                 font-size:52px; line-height:52px; color:${a.color};
-                 text-shadow: 0 0 3px #fff, 0 0 6px #fff, 0 0 10px #fff, 0 3px 8px rgba(0,0,0,.55);
-                 -webkit-text-stroke: 1.5px #1e293b;
-                 text-align:center; pointer-events:auto;">★</div>`,
-        iconSize: [52, 52], iconAnchor: [26, 26], popupAnchor: [0, -24]
+        html: `<div style="font-size:40px;color:${a.color};text-shadow:0 0 8px #fff,0 2px 8px rgba(0,0,0,.5);">★</div>`,
+        iconSize: [40,40], iconAnchor: [20,20]
       }),
-      zIndexOffset: 2000, title: a.nombre, riseOnHover: true
+      zIndexOffset: 1000, title: a.nombre
     }).addTo(map).bindPopup(
-      `<strong style="color:${a.color};font-size:1.05rem;">★ ${a.nombre}</strong><br>` +
-      `<span style="font-size:.78rem;color:#64748b;">Estación GNU · ancla de referencia</span><br>` +
-      `<span style="font-size:.72rem;color:#94a3b8;">${a.lat.toFixed(6)}, ${a.lon.toFixed(6)}</span>`
+      `<strong style="color:${a.color};">⭐ ${a.nombre}</strong><br>` +
+      `<span style="font-size:.8rem;color:#64748b;">Ancla de referencia para distancias</span>`
     );
   });
 
@@ -1098,20 +1124,28 @@ document.addEventListener('DOMContentLoaded', function(){
   legendControl.addTo(map);
 
   // ============================================================
-  //  10. FILTROS Y EVENTOS (clientes) - incluye tamaño
+  //  10. FILTROS Y EVENTOS (clientes) - incluye círculo
   // ============================================================
-  let activePrice = null, activeTamano = 'all', searchTerm = '', maxDist = 1000; // ← CAMBIADO a 1000
+  let activePrice = null, activeTamano = 'all', searchTerm = '', maxDist = 1000;
 
   function applyFilters() {
     const term = searchTerm.toLowerCase();
     const selectedTam = document.getElementById('tamanoFilter').value;
-    const visible = stations.filter(s =>
-      dentroDeZonas(s) &&
+    let visible = stations.filter(s =>
       (term === '' || s.nombre.toLowerCase().includes(term)) &&
       (activePrice === null || s.priceKey === activePrice) &&
       (selectedTam === 'all' || s.tamano === selectedTam) &&
       s.distKm <= maxDist
     );
+
+    // Aplicar filtro de círculo si está activo
+    if (activeCircleFilter) {
+      const centro = activeCircleFilter.centro === 'morelia' ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
+      visible = visible.filter(s => {
+        const d = distanciaKm(centro.lat, centro.lon, s.lat, s.lon);
+        return d <= activeCircleFilter.radio;
+      });
+    }
 
     cluster.clearLayers();
     cluster.addLayers(visible.map(s => markerMap.get(s).marker));
@@ -1120,8 +1154,7 @@ document.addEventListener('DOMContentLoaded', function(){
     renderList(visible);
     updateLegendUI();
     updateStats(visible);
-    document.getElementById('clearAllBtn').classList.toggle('hidden',
-      !(activePrice || selectedTam !== 'all' || term || maxDist < 1000 || zonasActivas().length));
+    document.getElementById('clearAllBtn').classList.toggle('hidden', !(activePrice || selectedTam !== 'all' || term || maxDist < 1000 || activeCircleFilter));
     return visible;
   }
 
@@ -1179,12 +1212,13 @@ document.addEventListener('DOMContentLoaded', function(){
 
   document.getElementById('clearAllBtn').addEventListener('click', () => {
     activePrice = null; searchTerm = '';
-    limpiarZonas();
     document.getElementById('tamanoFilter').value = 'all';
     document.getElementById('searchInput').value = '';
     maxDist = 1000;
     document.getElementById('distSlider').value = 1000;
     document.getElementById('distLabel').textContent = '1000 km';
+    // Desactivar círculo activo
+    desactivarCirculoActivo();
     applyFilters();
     map.flyTo([23.5, -102.5], 5, { duration: 1 });
   });
@@ -1239,6 +1273,7 @@ document.addEventListener('DOMContentLoaded', function(){
     setTimeout(() => map.invalidateSize(), 300);
   });
 
+  // Asignar eventos a los botones de círculo
   ['150Morelia','190Morelia','150Tototlan','190Tototlan'].forEach(id => {
     const b = document.getElementById('btnCirculo' + id);
     if (b) b.addEventListener('click', () => toggleCirculo(id));
@@ -1251,10 +1286,15 @@ document.addEventListener('DOMContentLoaded', function(){
     const visible = stations.filter(s => {
       const term = searchTerm.toLowerCase();
       const selectedTam = document.getElementById('tamanoFilter').value;
-      return (term === '' || s.nombre.toLowerCase().includes(term)) &&
-             (activePrice === null || s.priceKey === activePrice) &&
-             (selectedTam === 'all' || s.tamano === selectedTam) &&
-             s.distKm <= maxDist;
+      let ok = (term === '' || s.nombre.toLowerCase().includes(term)) &&
+               (activePrice === null || s.priceKey === activePrice) &&
+               (selectedTam === 'all' || s.tamano === selectedTam) &&
+               s.distKm <= maxDist;
+      if (ok && activeCircleFilter) {
+        const centro = activeCircleFilter.centro === 'morelia' ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
+        ok = distanciaKm(centro.lat, centro.lon, s.lat, s.lon) <= activeCircleFilter.radio;
+      }
+      return ok;
     });
     if (visible.length === 0) { alert('No hay clientes visibles para exportar.'); return; }
     let csv = 'Nombre,Distancia a Morelia (km),Estado,Tamaño,Dirección,Teléfono\n';
@@ -1306,10 +1346,15 @@ document.addEventListener('DOMContentLoaded', function(){
     const visible = stations.filter(s => {
       const term = searchTerm.toLowerCase();
       const selectedTam = document.getElementById('tamanoFilter').value;
-      return (term === '' || s.nombre.toLowerCase().includes(term)) &&
-             (activePrice === null || s.priceKey === activePrice) &&
-             (selectedTam === 'all' || s.tamano === selectedTam) &&
-             s.distKm <= maxDist;
+      let ok = (term === '' || s.nombre.toLowerCase().includes(term)) &&
+               (activePrice === null || s.priceKey === activePrice) &&
+               (selectedTam === 'all' || s.tamano === selectedTam) &&
+               s.distKm <= maxDist;
+      if (ok && activeCircleFilter) {
+        const centro = activeCircleFilter.centro === 'morelia' ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
+        ok = distanciaKm(centro.lat, centro.lon, s.lat, s.lon) <= activeCircleFilter.radio;
+      }
+      return ok;
     });
     const sinDireccion = visible.filter(s => !s.direccion);
     if (sinDireccion.length === 0) { alert('Todos los clientes visibles ya tienen dirección.'); return; }
