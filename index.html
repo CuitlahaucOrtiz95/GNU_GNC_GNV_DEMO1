@@ -28,10 +28,10 @@
   <!-- JS con defer -->
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script defer src="ductos.js"></script>
+  <!-- ductos.js ELIMINADO -->
   <script defer src="ClientesPotenciales.js"></script>
   <style>
-    /* ===== ESTILOS OPTIMIZADOS ===== */
+    /* ===== ESTILOS OPTIMIZADOS (sin ductos) ===== */
     :root {
       --primary: #1F5CA9;
       --primary-hover: #004a8f;
@@ -197,7 +197,7 @@
     .location-marker { background: none; border: none; }
     .location-marker .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--secondary); border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(39,191,240,0.25), 0 0 12px rgba(39,191,240,0.7); }
 
-    /* LEYENDA MEJORADA */
+    /* LEYENDA MEJORADA (sin ductos) */
     .price-legend {
       background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px);
       padding: 10px 14px; border-radius: 12px; box-shadow: var(--shadow-lg);
@@ -213,37 +213,6 @@
     .price-legend .color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1); }
     .price-legend .label { color: var(--text-main); flex: 1; font-weight: 500; font-size: 11px; }
     .price-legend .count { font-size: 9px; color: var(--text-muted); background: var(--bg-main); padding: 1px 5px; border-radius: 10px; font-weight: 600; }
-
-    .ducto-legend {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(6px);
-      padding: 10px 14px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      font-size: 10px;
-      line-height: 1.4;
-      min-width: 120px;
-      border: 1px solid rgba(255,255,255,0.5);
-      cursor: default;
-      z-index: 1000;
-      transition: all 0.3s ease;
-      max-height: 400px;
-      overflow: hidden;
-    }
-    .ducto-legend.minimized { padding: 6px 10px; min-width: 40px; max-height: 34px; background: rgba(255,255,255,0.8); }
-    .ducto-legend .title { font-weight: 700; font-size: 12px; color: var(--text-main); margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    .ducto-legend .title .toggle-btn { background: none; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; padding: 0 4px; transition: var(--transition); border-radius: 4px; }
-    .ducto-legend .title .toggle-btn:hover { background: #f1f5f9; }
-    .ducto-legend .body { transition: opacity 0.25s ease; }
-    .ducto-legend.minimized .body { opacity: 0; max-height: 0; pointer-events: none; }
-    .ducto-legend .row { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 6px; cursor: pointer; transition: var(--transition); margin: 2px 0; }
-    .ducto-legend .row:hover { background: #f1f5f9; }
-    .ducto-legend .row.active { background: #e0f2fe; box-shadow: inset 0 0 0 2px var(--secondary); }
-    .ducto-legend .line { width: 18px; height: 3px; border-radius: 2px; flex-shrink: 0; }
-    .ducto-legend .swatch { width: 18px; height: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-    .ducto-legend .swatch svg { width: 18px; height: 18px; }
-    .ducto-legend .reset-btn { background: none; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer; padding: 0 4px; transition: var(--transition); }
-    .ducto-legend .reset-btn:hover { color: #ef4444; }
 
     .leaflet-popup-content { font-size: 0.8rem; font-family: 'Inter', sans-serif; margin: 10px; }
 
@@ -281,7 +250,6 @@
       .toolbar .filters select, .toolbar .btn { flex: 1; text-align: center; justify-content: center; font-size: 0.7rem; }
       .toolbar .dist-slider input[type="range"] { width: 60px; }
       .toolbar .separator { display: none; }
-      .ducto-legend { min-width: 90px; font-size: 9px; }
       .rail-head .sort-options { font-size: 0.6rem; }
     }
   </style>
@@ -307,9 +275,7 @@
         <option value="all">Todos los tamaños</option>
       </select>
     </div>
-    <div class="filters">
-      <select id="ductoFilter" aria-label="Filtrar ductos"><option value="all">Todos los ductos</option></select>
-    </div>
+    <!-- ductoFilter ELIMINADO -->
     <div class="dist-slider">
       <label for="distSlider">Max dist.</label>
       <input type="range" id="distSlider" min="60" max="190" value="190" step="5" />
@@ -342,12 +308,7 @@
 
     <span class="separator"></span>
 
-    <button class="btn btn-secondary" id="toggleDuctosBtn" aria-label="Mostrar/ocultar ductos">
-      <i class="fas fa-eye-slash" id="ductosToggleIcon"></i> <span id="ductosToggleLabel">Mostrar ductos</span>
-    </button>
-    <button class="btn btn-primary" id="centerDuctosBtn" aria-label="Centrar en todos los ductos">
-      <i class="fas fa-expand"></i> Centrar ductos
-    </button>
+    <!-- Botones de ductos ELIMINADOS -->
 
     <button class="btn btn-loc" id="locBtn" title="Centrar en mi ubicación">
       <span class="loc-icon"><i class="fas fa-location-crosshairs"></i></span>
@@ -366,7 +327,6 @@
     <button class="btn btn-warning" id="clearRouteBtn" aria-label="Limpiar ruta">
       <i class="fas fa-route"></i> Limpiar ruta
     </button>
-    <!-- ELIMINADO BOTÓN EXPORTAR -->
     <button class="btn btn-toggle-rail" id="toggleRailBtn" title="Mostrar/ocultar directorio">
       <i class="fas fa-chevron-right" id="railToggleIcon"></i> <span id="railToggleLabel">Directorio</span>
     </button>
@@ -432,7 +392,6 @@ document.addEventListener('DOMContentLoaded', function(){
     return 2*R*Math.asin(Math.sqrt(a));
   }
 
-  // Deduplicación más robusta: misma coordenada (redondeada) y mismo nombre
   function deduplicate(data) {
     const seen = new Set();
     return data.filter(e => {
@@ -452,59 +411,8 @@ document.addEventListener('DOMContentLoaded', function(){
     return { label: '> 190 km', key: 'no-price', color: '#94a3b8' };
   }
 
-  function convertirArrayAGeoJSON(arrayDuctos) {
-    if (!arrayDuctos || !arrayDuctos.length) return { type: "FeatureCollection", features: [] };
-    return {
-      type: "FeatureCollection",
-      features: arrayDuctos.map(d => ({
-        type: "Feature",
-        properties: {
-          nombre: d.nombre || "Ducto",
-          tipo: d.grupo || "Gasoducto privado",
-          precio: d.precio,
-          estado: d.estado || "",
-          lat_inicio: d.lat_inicio,
-          lon_inicio: d.lon_inicio,
-          lat_fin: d.lat_fin,
-          lon_fin: d.lon_fin
-        },
-        geometry: {
-          type: "LineString",
-          coordinates: [
-            [d.lon_inicio, d.lat_inicio],
-            [d.lon_fin, d.lat_fin]
-          ]
-        }
-      }))
-    };
-  }
-
   // ============================================================
-  //  2. CARGA DE DUCTOS
-  // ============================================================
-  let ductosData = { type: "FeatureCollection", features: [] };
-
-  function cargarDuctosIniciales() {
-    const guardado = localStorage.getItem('DUCTOS_JS');
-    if (guardado) {
-      const arr = leerArrayGuardado(guardado);
-      if (arr && Array.isArray(arr)) {
-        window.DUCTOS = arr;
-        const geojson = convertirArrayAGeoJSON(arr);
-        window.DUCTOS_GAS = geojson;
-        ductosData = geojson;
-        log('Ductos cargados desde localStorage');
-        return;
-      }
-      warn('DUCTOS_JS no se pudo interpretar; se usa el archivo ductos.js');
-    }
-    ductosData = window.DUCTOS_GAS || { type: "FeatureCollection", features: [] };
-    log(`Ductos cargados desde archivo: ${ductosData.features.length}`);
-  }
-  cargarDuctosIniciales();
-
-  // ============================================================
-  //  3. CONFIGURACIÓN INICIAL Y MAPA
+  //  2. CARGA DE CLIENTES (sin ductos)
   // ============================================================
 
   let rawClientes = Array.isArray(window.CLIENTES_POTENCIALES) ? window.CLIENTES_POTENCIALES : [];
@@ -551,7 +459,7 @@ document.addEventListener('DOMContentLoaded', function(){
     return lista;
   }
 
-  // === FILTRO GEOGRÁFICO: solo clientes dentro de 190 km de Morelia O Tototlán ===
+  // Filtro geográfico: solo clientes dentro de 190 km de Morelia O Tototlán
   function filtrarPorRadio190(lista) {
     return lista.filter(s => {
       const dM = distanciaKm(ANCLA_MORELIA.lat,  ANCLA_MORELIA.lon,  s.lat, s.lon);
@@ -560,10 +468,8 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
-  // Aplicar deduplicación y filtro
   let stations = enriquecer(deduplicate(rawClientes));
   stations = filtrarPorRadio190(stations);
-  // Re-enriquecer después de filtrar (para recalcular distancias si es necesario)
   stations = enriquecer(stations);
 
   function contarPorAncla(lista) {
@@ -575,7 +481,7 @@ document.addEventListener('DOMContentLoaded', function(){
   log(`Clientes tras filtro geográfico: ${stations.length}`);
 
   // ============================================================
-  //  4. MAPA Y CAPAS BASE
+  //  3. MAPA Y CAPAS BASE
   // ============================================================
   const map = L.map('map', { zoomControl: true }).setView([23.5, -102.5], 5);
 
@@ -595,340 +501,7 @@ document.addEventListener('DOMContentLoaded', function(){
   L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
 
   // ============================================================
-  //  5. DUCTOS (con toggle y leyenda minimizable)
-  // ============================================================
-  const DUCTO_ESTILOS = {
-    "CENAGAS (existente)":    { color: "#FF6B35", forma: "rombo",     dash: null },
-    "Gasoducto privado":      { color: "#3B82F6", forma: "cuadrado",  dash: null },
-    "Interconexión frontera": { color: "#10B981", forma: "triangulo", dash: null },
-    "Hub / Terminal":         { color: "#0EA5E9", forma: "estrella",  dash: null },
-    "En desarrollo":          { color: "#F59E0B", forma: "circulo",   dash: "6 5" },
-    "En construcción":        { color: "#8B5CF6", forma: "hexagono",  dash: "10 4" }
-  };
-  const DUCTO_DEFAULT = { color: "#95a5a6", forma: "circulo", dash: null };
-
-  function obtenerClaveEstilo(tipoReal) {
-    const t = tipoReal.trim().toLowerCase();
-    for (const [clave, _] of Object.entries(DUCTO_ESTILOS)) {
-      if (clave.toLowerCase() === t) return clave;
-    }
-    if (t.includes('cenagas') || t.includes('existente')) return 'CENAGAS (existente)';
-    if (t.includes('privado') || t.includes('privada')) return 'Gasoducto privado';
-    if (t.includes('frontera') || t.includes('interconexión')) return 'Interconexión frontera';
-    if (t.includes('hub') || t.includes('terminal')) return 'Hub / Terminal';
-    if (t.includes('desarrollo') || t.includes('planeación')) return 'En desarrollo';
-    if (t.includes('construcción') || t.includes('construccion')) return 'En construcción';
-    return null;
-  }
-
-  function ductoIconSVG(color, forma, size = 24) {
-    const bd = '#1e293b', w = 1.8;
-    const s = size, c = size/2;
-    const formas = {
-      rombo:     `<polygon points="${c},2 ${s-2},${c} ${c},${s-2} 2,${c}" fill="${color}" stroke="${bd}" stroke-width="${w}"/>`,
-      cuadrado:  `<rect x="3" y="3" width="${s-6}" height="${s-6}" rx="3" fill="${color}" stroke="${bd}" stroke-width="${w}"/>`,
-      triangulo: `<polygon points="${c},2 ${s-2},${s-2} 2,${s-2}" fill="${color}" stroke="${bd}" stroke-width="${w}" stroke-linejoin="round"/>`,
-      estrella:  `<polygon points="${c},2 ${c+4},${c-2} ${s-2},${c-4} ${c+6},${c+2} ${s-2},${s-2} ${c},${c+6} 2,${s-2} ${c-6},${c+2} 2,${c-4} ${c-4},${c-2}" fill="${color}" stroke="${bd}" stroke-width="${w}" stroke-linejoin="round"/>`,
-      circulo:   `<circle cx="${c}" cy="${c}" r="${s/2-3}" fill="${color}" stroke="${bd}" stroke-width="${w}" stroke-dasharray="3 2"/>`,
-      hexagono:  `<polygon points="${c},2 ${s-4},${c-3} ${s-4},${c+3} ${c},${s-2} 4,${c+3} 4,${c-3}" fill="${color}" stroke="${bd}" stroke-width="${w}" stroke-linejoin="round"/>`
-    };
-    return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));">${formas[forma] || formas.circulo}</svg>`;
-  }
-
-  function ductoPopup(p) {
-    const fila = (et, v) => v ? `<br><span style="color:#64748b;">${et}:</span> ${v}` : '';
-    return `<strong style="color:var(--primary);">${p.nombre || "Ducto"}</strong>
-      <br><span style="color:#64748b;">Tipo:</span> ${p.tipo || "N/A"}`
-      + fila('Permisionario', p.permisionario) + fila('Consorcio', p.consorcio)
-      + fila('Capacidad', p.capacidad ? p.capacidad + ' MMpcd' : '')
-      + fila('Longitud', p.longitud_km ? p.longitud_km + ' km' : '')
-      + fila('Permiso', p.permiso) + fila('Inicio op.', p.inicio_op) + fila('Tramo', p.tramo);
-  }
-
-  let ductosLayer = null;
-  let ductosVisibles = false;
-  const ductoFiltroIteracion = {};
-  let ultimoTipoSeleccionado = null;
-
-  function obtenerTiposUnicos(datos) {
-    const mapTipos = new Map();
-    datos.features.forEach(f => {
-      const tipoOriginal = f.properties.Tipo || f.properties.tipo || 'Desconocido';
-      let tipoNormalizado = tipoOriginal.trim();
-      const lower = tipoNormalizado.toLowerCase();
-      if (lower.includes('cenagas') && lower.includes('existente')) tipoNormalizado = 'Gasoductos existentes operados por CENAGAS';
-      if (lower === 'desconocido') return;
-      const clave = tipoNormalizado.toLowerCase();
-      if (!mapTipos.has(clave)) mapTipos.set(clave, tipoNormalizado);
-    });
-    return Array.from(mapTipos.values()).sort((a,b) => a.localeCompare(b));
-  }
-
-  function poblarFiltroDuctos(datos) {
-    const select = document.getElementById('ductoFilter');
-    while (select.options.length > 1) select.remove(1);
-    const tipos = obtenerTiposUnicos(datos);
-    tipos.forEach(t => {
-      const opt = document.createElement('option');
-      opt.value = t;
-      opt.textContent = t;
-      select.appendChild(opt);
-    });
-    select.value = 'all';
-    for (const key in ductoFiltroIteracion) delete ductoFiltroIteracion[key];
-    ultimoTipoSeleccionado = null;
-  }
-
-  function actualizarLeyendaDuctos(datos) {
-    const legendDiv = document.querySelector('.ducto-legend');
-    if (!legendDiv) return;
-    const tipos = obtenerTiposUnicos(datos);
-    let html = `
-      <div class="title">
-        <span>Ductos</span>
-        <span>
-          <button class="toggle-btn" id="ductoToggleBtn" title="Minimizar/expandir leyenda">−</button>
-          <button class="reset-btn" id="ductoResetBtn" title="Ver todos los ductos">✕</button>
-        </span>
-      </div>
-      <div class="body">
-    `;
-    tipos.forEach(tipo => {
-      const clave = obtenerClaveEstilo(tipo);
-      const e = clave ? DUCTO_ESTILOS[clave] : DUCTO_DEFAULT;
-      html += `
-        <div class="row" data-tipo="${tipo}">
-          <span class="swatch">${ductoIconSVG(e.color, e.forma, 18)}</span>
-          <span class="line" style="background:${e.color};${e.dash ? 'background-image:repeating-linear-gradient(90deg,'+e.color+' 0 4px,transparent 4px 7px);background-color:transparent;' : ''}"></span>
-          <span>${tipo}</span>
-        </div>
-      `;
-    });
-    html += `</div>`;
-    legendDiv.innerHTML = html;
-
-    const toggleBtn = legendDiv.querySelector('#ductoToggleBtn');
-    if (toggleBtn) {
-      toggleBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        legendDiv.classList.toggle('minimized');
-        this.textContent = legendDiv.classList.contains('minimized') ? '+' : '−';
-      });
-    }
-    legendDiv.querySelectorAll('.row').forEach(row => {
-      row.addEventListener('click', function() {
-        document.getElementById('ductoFilter').value = this.dataset.tipo;
-        aplicarFiltroIterativo(this.dataset.tipo);
-      });
-    });
-    const resetBtn = legendDiv.querySelector('#ductoResetBtn');
-    if (resetBtn) {
-      resetBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        document.getElementById('ductoFilter').value = 'all';
-        aplicarFiltroIterativo('all');
-        map.flyTo([23.5, -102.5], 5, { duration: 1 });
-      });
-    }
-  }
-
-  function aplicarFiltroIterativo(tipo) {
-    if (tipo === 'all') {
-      for (const key in ductoFiltroIteracion) delete ductoFiltroIteracion[key];
-      ultimoTipoSeleccionado = null;
-      filtrarDuctos('all', 0);
-      map.flyTo([23.5, -102.5], 5, { duration: 1 });
-      document.querySelectorAll('.ducto-legend .row').forEach(row => row.classList.remove('active'));
-      return;
-    }
-    const tipoNorm = tipo.trim();
-    if (ultimoTipoSeleccionado !== tipoNorm) {
-      ductoFiltroIteracion[tipoNorm] = 0;
-      ultimoTipoSeleccionado = tipoNorm;
-    } else {
-      if (!(tipoNorm in ductoFiltroIteracion)) ductoFiltroIteracion[tipoNorm] = 0;
-      ductoFiltroIteracion[tipoNorm]++;
-    }
-    let index = ductoFiltroIteracion[tipoNorm];
-    const ductosDelTipo = ductosData.features.filter(f => {
-      const t = f.properties.Tipo || f.properties.tipo || 'Desconocido';
-      return t.trim().toLowerCase() === tipoNorm.toLowerCase();
-    });
-    const total = ductosDelTipo.length;
-    if (total === 0) return;
-    if (index > total) { index = 0; ductoFiltroIteracion[tipoNorm] = 0; }
-    filtrarDuctos(tipoNorm, index);
-    if (index === 0) centrarEnDuctos(tipoNorm);
-    else {
-      const ducto = ductosDelTipo[index - 1];
-      if (ducto) {
-        const coords = ducto.geometry.coordinates;
-        const latLngs = coords.map(c => [c[1], c[0]]);
-        const bounds = L.latLngBounds(latLngs);
-        map.flyToBounds(bounds, { padding: [40, 40], duration: 1 });
-      }
-    }
-    document.getElementById('ductoFilter').value = tipo;
-    document.querySelectorAll('.ducto-legend .row').forEach(row => {
-      const rowTipo = row.dataset.tipo;
-      if (rowTipo && rowTipo.trim().toLowerCase() === tipoNorm.toLowerCase()) row.classList.add('active');
-      else row.classList.remove('active');
-    });
-  }
-
-  function filtrarDuctos(tipoSeleccionado, index) {
-    if (!ductosLayer) return;
-    const tipoNorm = tipoSeleccionado.trim().toLowerCase();
-    let layersDelTipo = [];
-    if (index > 0) {
-      ductosLayer.eachLayer(function(layer) {
-        const props = layer.feature ? layer.feature.properties : {};
-        const tipoFeature = (props.tipo || "CENAGAS (existente)").trim().toLowerCase();
-        if (tipoFeature === tipoNorm) layersDelTipo.push(layer);
-      });
-      const orderMap = {};
-      ductosData.features.forEach((f, i) => {
-        const t = (f.properties.Tipo || f.properties.tipo || 'Desconocido').trim().toLowerCase();
-        if (t === tipoNorm) {
-          const nombre = f.properties.nombre || '';
-          orderMap[nombre] = i;
-        }
-      });
-      layersDelTipo.sort((a, b) => {
-        const nameA = a.feature ? a.feature.properties.nombre || '' : '';
-        const nameB = b.feature ? b.feature.properties.nombre || '' : '';
-        return (orderMap[nameA] || 0) - (orderMap[nameB] || 0);
-      });
-    }
-    ductosLayer.eachLayer(function(layer) {
-      const props = layer.feature ? layer.feature.properties : {};
-      const tipoFeature = (props.tipo || "CENAGAS (existente)").trim().toLowerCase();
-      let visible = false;
-      if (tipoNorm === 'all') visible = true;
-      else if (tipoFeature === tipoNorm) {
-        if (index === 0) visible = true;
-        else {
-          const pos = layersDelTipo.indexOf(layer);
-          visible = (pos === index - 1);
-        }
-      }
-      if (typeof layer.setStyle === 'function') {
-        layer.setStyle({ opacity: visible ? 0.85 : 0.05, weight: visible ? 3 : 1 });
-      } else if (typeof layer.setOpacity === 'function') {
-        layer.setOpacity(visible ? 1 : 0.1);
-      }
-    });
-  }
-
-  function centrarEnDuctos(tipo) {
-    if (!ductosLayer || !ductosLayer.getLayers().length) { alert('No hay ductos cargados.'); return; }
-    const bounds = new L.LatLngBounds();
-    let encontrados = 0;
-    const tipoNorm = tipo.trim().toLowerCase();
-    ductosLayer.eachLayer(function(layer) {
-      const props = layer.feature ? layer.feature.properties : {};
-      const tipoFeature = (props.tipo || "CENAGAS (existente)").trim().toLowerCase();
-      if (tipoNorm === 'all' || tipoFeature === tipoNorm) {
-        try {
-          const latlngs = layer.getLatLngs ? layer.getLatLngs() : [layer.getLatLng()];
-          if (Array.isArray(latlngs)) {
-            latlngs.forEach(ll => {
-              if (Array.isArray(ll)) ll.forEach(p => bounds.extend(p));
-              else if (ll.lat && ll.lng) bounds.extend(ll);
-            });
-          } else if (latlngs.lat && latlngs.lng) bounds.extend(latlngs);
-          encontrados++;
-        } catch (e) {}
-      }
-    });
-    if (encontrados === 0) { alert(`No se encontraron ductos del tipo "${tipo}".`); return; }
-    if (bounds.isValid()) map.flyToBounds(bounds, { padding: [60, 60], duration: 1.2 });
-  }
-
-  function crearCapaDuctos(datos) {
-    if (ductosLayer) { map.removeLayer(ductosLayer); ductosLayer = null; }
-    if (!datos || !datos.features || datos.features.length === 0) {
-      ductosLayer = L.layerGroup();
-      return;
-    }
-    try {
-      ductosLayer = L.geoJSON(datos, {
-        style: function(feature) {
-          const tipoReal = feature.properties.tipo || "CENAGAS (existente)";
-          const clave = obtenerClaveEstilo(tipoReal);
-          const e = clave ? DUCTO_ESTILOS[clave] : DUCTO_DEFAULT;
-          return { color: e.color, weight: 3, opacity: 0.85, dashArray: e.dash };
-        },
-        pointToLayer: function(feature, latlng) {
-          const tipoReal = feature.properties.tipo || "CENAGAS (existente)";
-          const clave = obtenerClaveEstilo(tipoReal);
-          const e = clave ? DUCTO_ESTILOS[clave] : DUCTO_DEFAULT;
-          return L.marker(latlng, {
-            icon: L.divIcon({
-              className: 'ducto-pin',
-              html: ductoIconSVG(e.color, e.forma, 26),
-              iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -13]
-            }),
-            zIndexOffset: -500,
-            title: feature.properties.nombre || 'Ducto'
-          });
-        },
-        onEachFeature: function(feature, layer) {
-          layer.feature = feature;
-          layer.bindPopup(ductoPopup(feature.properties), { maxWidth: 280 });
-        }
-      });
-      if (ductosVisibles) ductosLayer.addTo(map);
-      log(`Capa de ductos creada: ${datos.features.length} ductos.`);
-    } catch (e) {
-      console.error('Error al crear capa de ductos:', e);
-      ductosLayer = L.layerGroup();
-    }
-  }
-
-  function agregarLeyendaDuctos() {
-    const control = L.control({ position: 'bottomleft' });
-    control.onAdd = function() {
-      const div = L.DomUtil.create('div', 'ducto-legend');
-      div.innerHTML = `
-        <div class="title">
-          <span>Ductos</span>
-          <span>
-            <button class="toggle-btn" id="ductoToggleBtn" title="Minimizar/expandir leyenda">−</button>
-            <button class="reset-btn" id="ductoResetBtn" title="Ver todos los ductos">✕</button>
-          </span>
-        </div>
-        <div class="body"></div>
-      `;
-      setTimeout(() => actualizarLeyendaDuctos(ductosData), 50);
-      return div;
-    };
-    control.addTo(map);
-  }
-
-  function centrarEnTodosDuctos() {
-    if (!ductosData || ductosData.features.length === 0) { map.flyTo([23.5, -102.5], 5); return; }
-    const bounds = new L.LatLngBounds();
-    ductosData.features.forEach(f => {
-      const coords = f.geometry.coordinates;
-      if (coords && coords.length) coords.forEach(coord => bounds.extend([coord[1], coord[0]]));
-    });
-    if (bounds.isValid()) map.flyToBounds(bounds, { padding: [60, 60], duration: 1.2 });
-    else map.flyTo([23.5, -102.5], 5);
-  }
-
-  function toggleDuctos() {
-    if (ductosVisibles) { if (ductosLayer) map.removeLayer(ductosLayer); ductosVisibles = false; document.getElementById('ductosToggleIcon').className = 'fas fa-eye-slash'; document.getElementById('ductosToggleLabel').textContent = 'Mostrar ductos'; }
-    else { if (ductosLayer) map.addLayer(ductosLayer); ductosVisibles = true; document.getElementById('ductosToggleIcon').className = 'fas fa-eye'; document.getElementById('ductosToggleLabel').textContent = 'Ocultar ductos'; }
-  }
-
-  crearCapaDuctos(ductosData);
-  poblarFiltroDuctos(ductosData);
-  agregarLeyendaDuctos();
-  document.getElementById('ductoFilter').addEventListener('change', function() { aplicarFiltroIterativo(this.value); });
-
-  // ============================================================
-  //  6. CÍRCULOS DE RADIO (150 y 190 km) con FILTRO
+  //  4. CÍRCULOS DE RADIO (150 y 190 km) con FILTRO
   // ============================================================
   const circulosLayer = L.layerGroup().addTo(map);
   const circulos = {};
@@ -1006,7 +579,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   // ============================================================
-  //  7. CLÚSTER Y MARCADORES DE CLIENTES
+  //  5. CLÚSTER Y MARCADORES DE CLIENTES
   // ============================================================
   const cluster = L.markerClusterGroup({
     chunkedLoading: true,
@@ -1120,11 +693,11 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   // ============================================================
-  //  8. RUTAS (OSRM) - ahora oculta los marcadores al trazar ruta
+  //  6. RUTAS (OSRM) - oculta marcadores al trazar ruta
   // ============================================================
   let rutaLayer = null;
   let rutaMarcador = null;
-  let rutaActiva = false;  // bandera para saber si estamos en modo ruta
+  let rutaActiva = false;
 
   async function calcularRuta(origenLat, origenLon, destinoLat, destinoLon) {
     const url = `https://router.project-osrm.org/route/v1/driving/${origenLon},${origenLat};${destinoLon},${destinoLat}?overview=full&geometries=geojson`;
@@ -1143,17 +716,16 @@ document.addEventListener('DOMContentLoaded', function(){
     if (rutaMarcador) { map.removeLayer(rutaMarcador); rutaMarcador = null; }
     if (rutaActiva) {
       rutaActiva = false;
-      // Restaurar el clúster y los ductos si estaban visibles
+      // Restaurar el clúster
       if (!map.hasLayer(cluster)) map.addLayer(cluster);
-      if (ductosVisibles && ductosLayer && !map.hasLayer(ductosLayer)) map.addLayer(ductosLayer);
-      // Reaplicar filtros para mostrar los marcadores correctos
-      applyFilters();
       // Restaurar círculos si había alguno activo
       if (activeCircleFilter) {
         const id = activeCircleFilter.radio + (activeCircleFilter.centro === 'morelia' ? 'Morelia' : 'Tototlan');
         const c = circulos[id];
         if (c && c.visible && !map.hasLayer(c.capa)) map.addLayer(c.capa);
       }
+      // Reaplicar filtros para mostrar los marcadores correctos
+      applyFilters();
     }
   }
 
@@ -1166,7 +738,6 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   async function mostrarRuta(destLat, destLon) {
-    // Si ya hay ruta activa, la limpiamos primero
     if (rutaActiva) limpiarRuta();
 
     const dM = distanciaKm(ANCLA_MORELIA.lat,  ANCLA_MORELIA.lon,  destLat, destLon);
@@ -1176,9 +747,8 @@ document.addEventListener('DOMContentLoaded', function(){
     if (!resultado) { alert('No se pudo calcular la ruta.'); return; }
     const coords = resultado.geometria.map(c => [c[1], c[0]]);
 
-    // Ocultar el clúster y los ductos (solo si estaban visibles)
+    // Ocultar el clúster
     if (map.hasLayer(cluster)) map.removeLayer(cluster);
-    if (ductosVisibles && ductosLayer && map.hasLayer(ductosLayer)) map.removeLayer(ductosLayer);
     // Ocultar círculos activos
     if (activeCircleFilter) {
       const id = activeCircleFilter.radio + (activeCircleFilter.centro === 'morelia' ? 'Morelia' : 'Tototlan');
@@ -1195,8 +765,32 @@ document.addEventListener('DOMContentLoaded', function(){
     rutaActiva = true;
   }
 
+  // Mejora del popup de clúster con distancia promedio
+  cluster.on('clustermouseover', function(e) {
+    if (clusterTimer) clearTimeout(clusterTimer);
+    const layer = e.layer;
+    const markers = layer.getAllChildMarkers().sort((a,b)=>a.data.nombre.localeCompare(b.data.nombre));
+    let totalDist = 0;
+    markers.forEach(m => totalDist += m.data.distKm);
+    const avgDist = (totalDist / markers.length).toFixed(1);
+    let html = `<div class="cluster-popup-title">
+      <span>📍 ${markers.length} clientes</span>
+      <span style="font-weight:400;font-size:0.75rem;">📏 ${avgDist} km promedio</span>
+    </div><div class="cluster-popup-list">`;
+    markers.forEach(m => {
+      html += `<div class="item"><span class="name">${m.data.nombre}</span><span class="state">${m.data.estado || ''}</span></div>`;
+    });
+    html += '</div>';
+    layer.bindPopup(html, { className: 'cluster-popup', maxWidth: 320, maxHeight: 280 }).openPopup();
+  });
+
+  let clusterTimer = null;
+  cluster.on('clustermouseout', function(e) {
+    clusterTimer = setTimeout(() => e.layer.closePopup(), 1500);
+  });
+
   // ============================================================
-  //  9. LEYENDA DE DISTANCIAS MEJORADA (5 rangos)
+  //  7. LEYENDA DE DISTANCIAS
   // ============================================================
   const legendControl = L.control({ position: 'bottomright' });
   legendControl.onAdd = function() {
@@ -1231,13 +825,12 @@ document.addEventListener('DOMContentLoaded', function(){
   legendControl.addTo(map);
 
   // ============================================================
-  //  10. FILTROS Y EVENTOS
+  //  8. FILTROS Y EVENTOS
   // ============================================================
-  let activePrice = null, activeTamano = 'all', searchTerm = '', maxDist = 190; // ahora valor por defecto 190
+  let activePrice = null, activeTamano = 'all', searchTerm = '', maxDist = 190;
   let activeNoAddress = false;
 
   function applyFilters() {
-    // Si estamos en modo ruta, no aplicar filtros para no modificar la vista de ruta
     if (rutaActiva) return [];
 
     const term = searchTerm.toLowerCase();
@@ -1261,7 +854,6 @@ document.addEventListener('DOMContentLoaded', function(){
       });
     }
 
-    // Solo actualizar el mapa si el clúster está visible (no estamos en modo ruta)
     if (!rutaActiva) {
       cluster.clearLayers();
       cluster.addLayers(visible.map(s => markerMap.get(s).marker));
@@ -1271,7 +863,6 @@ document.addEventListener('DOMContentLoaded', function(){
       updateLegendUI();
       updateStats(visible);
       document.getElementById('clearAllBtn').classList.toggle('hidden', !(activePrice || selectedTam !== 'all' || term || maxDist < 190 || activeCircleFilter || activeNoAddress));
-      // Actualizar conteos de la leyenda
       const legendDiv = document.querySelector('.price-legend');
       if (legendDiv && legendDiv._actualizarConteos) legendDiv._actualizarConteos();
     }
@@ -1353,7 +944,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ============================================================
-  //  11. RENDERIZAR LISTA (directorio) CON ORDEN
+  //  9. RENDERIZAR LISTA (directorio) CON ORDEN
   // ============================================================
   let sortMode = 'dist';
 
@@ -1423,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ============================================================
-  //  12. CONTROLES ADICIONALES
+  //  10. CONTROLES ADICIONALES
   // ============================================================
   document.getElementById('resetBtn').addEventListener('click', () => map.flyTo([23.5, -102.5], 5, { duration: 1 }));
   document.getElementById('centerMoreliaBtn').addEventListener('click', () => { map.flyTo([ANCLA_MORELIA.lat, ANCLA_MORELIA.lon], 9, { duration: 1.2 }); limpiarRuta(); });
@@ -1450,9 +1041,6 @@ document.addEventListener('DOMContentLoaded', function(){
     if (b) b.addEventListener('click', () => toggleCirculo(id));
   });
 
-  document.getElementById('toggleDuctosBtn').addEventListener('click', toggleDuctos);
-  document.getElementById('centerDuctosBtn').addEventListener('click', centrarEnTodosDuctos);
-
   document.getElementById('noAddressBtn').addEventListener('click', function() {
     activeNoAddress = !activeNoAddress;
     this.classList.toggle('active');
@@ -1460,7 +1048,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ============================================================
-  //  13. GEOCODIFICACIÓN INVERSA (Nominatim)
+  //  11. GEOCODIFICACIÓN INVERSA (Nominatim)
   // ============================================================
   async function geocodeCliente(cliente) {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${cliente.lat}&lon=${cliente.lon}&format=json&zoom=16&addressdetails=1`;
@@ -1588,7 +1176,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ============================================================
-  //  14. ACTUALIZAR SELECT DE TAMAÑOS
+  //  12. ACTUALIZAR SELECT DE TAMAÑOS
   // ============================================================
   function actualizarSelectTamano() {
     const select = document.getElementById('tamanoFilter');
@@ -1607,7 +1195,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   // ============================================================
-  //  15. RECARGA DE CLIENTES Y DUCTOS DESDE LOCALSTORAGE
+  //  13. RECARGA DE CLIENTES DESDE LOCALSTORAGE
   // ============================================================
   function recargarClientes() {
     const nuevoJS = localStorage.getItem('CLIENTES_JS');
@@ -1615,7 +1203,6 @@ document.addEventListener('DOMContentLoaded', function(){
     try {
       const nuevos = leerArrayGuardado(nuevoJS);
       if (!nuevos || !Array.isArray(nuevos)) { warn('CLIENTES_JS inválido'); return; }
-      // Aplicar deduplicación y filtro geográfico
       let nuevosFiltrados = deduplicate(nuevos);
       nuevosFiltrados = filtrarPorRadio190(nuevosFiltrados);
       stations.length = 0;
@@ -1628,35 +1215,12 @@ document.addEventListener('DOMContentLoaded', function(){
     } catch (e) { console.error('Error al recargar clientes:', e); }
   }
 
-  function recargarDuctos() {
-    const nuevoJS = localStorage.getItem('DUCTOS_JS');
-    if (!nuevoJS) return;
-    try {
-      const arr = leerArrayGuardado(nuevoJS);
-      if (arr && Array.isArray(arr)) {
-        window.DUCTOS = arr;
-        const geojson = convertirArrayAGeoJSON(arr);
-        ductosData = geojson;
-        window.DUCTOS_GAS = geojson;
-        crearCapaDuctos(ductosData);
-        poblarFiltroDuctos(ductosData);
-        actualizarLeyendaDuctos(ductosData);
-        document.getElementById('ductoFilter').value = 'all';
-        for (const key in ductoFiltroIteracion) delete ductoFiltroIteracion[key];
-        ultimoTipoSeleccionado = null;
-        aplicarFiltroIterativo('all');
-        if (!ductosVisibles && ductosLayer) map.removeLayer(ductosLayer);
-      }
-    } catch (e) { console.error('Error al recargar ductos:', e); }
-  }
-
   window.addEventListener('storage', function(e) {
-    if (e.key === 'DUCTOS_ACTUALIZADO') { log('Actualización de ductos detectada.'); recargarDuctos(); }
-    else if (e.key === 'CLIENTES_ACTUALIZADO') { log('Actualización de clientes detectada.'); recargarClientes(); }
+    if (e.key === 'CLIENTES_ACTUALIZADO') { log('Actualización de clientes detectada.'); recargarClientes(); }
   });
 
   // ============================================================
-  //  16. INICIALIZACIÓN FINAL
+  //  14. INICIALIZACIÓN FINAL
   // ============================================================
   reconstruirMarcadoresClientes();
   actualizarSelectTamano();
