@@ -31,7 +31,7 @@
   <script defer src="ductos.js"></script>
   <script defer src="ClientesPotenciales.js"></script>
   <style>
-    /* ===== ESTILOS (sin cambios) ===== */
+    /* ===== ESTILOS OPTIMIZADOS ===== */
     :root {
       --primary: #1F5CA9;
       --primary-hover: #004a8f;
@@ -44,7 +44,7 @@
       --border-hover: #cbd5e1;
       --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
       --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.08);
-      --transition: all 0.2s ease-in-out;
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow: hidden; }
@@ -98,11 +98,6 @@
     .toolbar .filters select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(31,92,169,0.1); }
     .toolbar .dist-slider { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--text-muted); }
     .toolbar .dist-slider input[type="range"] { width: 80px; accent-color: var(--primary); cursor: pointer; }
-    .zcount { font-size: 10px; font-weight: 700; background: rgba(15,23,42,.10); color: #475569;
-              padding: 1px 5px; border-radius: 8px; margin-left: 3px; font-variant-numeric: tabular-nums; }
-    .btn-outline.active .zcount { background: rgba(255,255,255,.28); color: #fff; }
-    .zona-tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
-                color: #64748b; margin-right: 2px; align-self: center; }
     .toolbar .dist-slider span { min-width: 40px; font-weight: 600; color: var(--text-main); }
     .toolbar .btn {
       background: var(--border); color: var(--text-main); border: none; border-radius: 2rem;
@@ -110,8 +105,8 @@
       display: inline-flex; align-items: center; gap: 0.3rem; transition: var(--transition);
       white-space: nowrap;
     }
-    .toolbar .btn:hover { background: var(--border-hover); }
-    .toolbar .btn:active { transform: scale(0.96); }
+    .toolbar .btn:hover { background: var(--border-hover); transform: translateY(-1px); }
+    .toolbar .btn:active { transform: scale(0.95); }
     .toolbar .btn-primary { background: var(--primary); color: #fff; }
     .toolbar .btn-primary:hover { background: var(--primary-hover); }
     .toolbar .btn-secondary { background: #6b7280; color: #fff; }
@@ -124,7 +119,7 @@
     .toolbar .btn-warning { background: #f59e0b; color: #fff; }
     .toolbar .btn-warning:hover { background: #d97706; }
     .toolbar .btn-outline { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
-    .toolbar .btn-outline:hover { background: var(--primary); color: #fff; }
+    .toolbar .btn-outline:hover { background: var(--primary); color: #fff; transform: translateY(-1px); }
     .toolbar .btn-outline.active { background: var(--primary); color: #fff; }
     .toolbar .btn-loc .spinner { display: none; animation: spin 0.8s linear infinite; }
     .toolbar .btn-loc.loading .spinner { display: inline-block; }
@@ -133,14 +128,28 @@
     .toolbar .separator { width: 1px; height: 24px; background: var(--border); margin: 0 0.2rem; }
 
     .stage { display: flex; flex: 1; overflow: hidden; position: relative; }
-    #map { flex: 1; height: 100%; min-height: 300px; z-index: 1; }
+    #map { flex: 1; height: 100%; min-height: 300px; z-index: 1; transition: width 0.3s ease; }
     .rail {
-      width: 300px; max-height: 100%; overflow-y: auto; overflow-x: hidden;
+      width: 320px; max-height: 100%; overflow-y: auto; overflow-x: hidden;
       border-left: 1px solid var(--border); background: var(--bg-panel); flex-shrink: 0;
-      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s ease;
     }
     .rail.hidden { width: 0; border-left: none; }
-    .rail-head { padding: 0.8rem 1.2rem; background: #f8fafc; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.8rem; color: var(--text-main); position: sticky; top: 0; z-index: 2; }
+    .rail-head {
+      padding: 0.8rem 1.2rem; background: #f8fafc; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      font-weight: 600; font-size: 0.8rem; color: var(--text-main);
+      position: sticky; top: 0; z-index: 2;
+      gap: 0.5rem; flex-wrap: wrap;
+    }
+    .rail-head .sort-options { display: flex; gap: 0.3rem; font-weight: 400; font-size: 0.7rem; }
+    .rail-head .sort-options button {
+      background: transparent; border: 1px solid var(--border); border-radius: 1rem;
+      padding: 0.1rem 0.6rem; cursor: pointer; font-size: 0.65rem;
+      transition: var(--transition); color: var(--text-muted);
+    }
+    .rail-head .sort-options button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .rail-head .sort-options button:hover { background: var(--border-hover); }
     .rail-list { list-style: none; padding: 0; margin: 0; }
     .rail-list li { padding: 0.6rem 1.2rem; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.8rem; transition: var(--transition); }
     .rail-list li:hover { background: #f8fafc; padding-left: 1.5rem; }
@@ -151,43 +160,44 @@
     .rail-list li .group-header { background: #f8fafc; font-weight: 600; padding: 0.4rem 1rem; color: var(--text-muted); font-size: 0.75rem; border-bottom: 1px solid var(--border); }
     .empty { padding: 2rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
 
-    /* ===== Clústeres: color por densidad, sin halos duros ===== */
-    .gnv-cluster { background: transparent; }
-    .gnv-cluster .bubble {
-      width: 100%; height: 100%; border-radius: 50%;
-      display: grid; place-items: center;
-      font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
-      color: #fff; cursor: pointer;
-      border: 2px solid rgba(255,255,255,0.95);
-      box-shadow: 0 2px 6px rgba(15,23,42,0.28);
-      transition: transform .18s ease;
+    /* CLÚSTERES MEJORADOS */
+    .my-cluster { background: transparent !important; }
+    .cluster-bubble {
+      background: rgba(31, 92, 169, 0.88);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+      border: 2px solid white;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.3);
     }
-    .gnv-cluster:hover .bubble { transform: scale(1.08); }
-    /* Anillo suave del mismo tono: da profundidad sin el halo saturado */
-    .gnv-cluster .halo {
-      position: absolute; inset: -6px; border-radius: 50%;
-      background: currentColor; opacity: .16; pointer-events: none;
+    .cluster-bubble:hover {
+      transform: scale(1.08);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
-    .gnv-cluster .wrap { position: relative; width: 100%; height: 100%; }
-    /* 4 niveles de densidad: claro = pocos, oscuro = muchos */
-    .gnv-cluster.c1 { color: #38bdf8; } .gnv-cluster.c1 .bubble { background: #38bdf8; }
-    .gnv-cluster.c2 { color: #0ea5e9; } .gnv-cluster.c2 .bubble { background: #0ea5e9; }
-    .gnv-cluster.c3 { color: #2563eb; } .gnv-cluster.c3 .bubble { background: #2563eb; }
-    .gnv-cluster.c4 { color: #4338ca; } .gnv-cluster.c4 .bubble { background: #4338ca; }
+    .cluster-popup-list { max-height: 220px; overflow-y: auto; padding-right: 6px; }
+    .cluster-popup-list .item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 0; border-bottom: 1px solid #f1f5f9;
+    }
+    .cluster-popup-list .item:last-child { border-bottom: none; }
+    .cluster-popup-list .item .name { color: var(--text-main); font-weight: 500; font-size: 0.85rem; }
+    .cluster-popup-list .item .state { color: var(--text-muted); font-size: 0.7rem; background: #f1f5f9; padding: 2px 10px; border-radius: 12px; }
+    .cluster-popup-list .item .dist { font-size: 0.7rem; color: var(--primary); font-weight: 600; margin-left: 8px; }
+    .cluster-popup-title {
+      font-weight: 700; font-size: 0.9rem; color: var(--primary);
+      padding-bottom: 4px; margin-bottom: 6px; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between;
+    }
 
-    /* ===== Anclas ===== */
-    .gnu-ancla { background: none; border: none; }
-    .gnu-ancla svg { display: block; overflow: visible; }
-    .gnu-ancla .pulso { transform-origin: 26px 26px; animation: anclaPulso 2.6s ease-out infinite; }
-    @keyframes anclaPulso {
-      0%   { transform: scale(.72); opacity: .55; }
-      70%  { transform: scale(1.5);  opacity: 0; }
-      100% { transform: scale(1.5);  opacity: 0; }
-    }
-    @media (prefers-reduced-motion: reduce) { .gnu-ancla .pulso { animation: none; opacity: .3; } }
     .location-marker { background: none; border: none; }
     .location-marker .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--secondary); border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(39,191,240,0.25), 0 0 12px rgba(39,191,240,0.7); }
 
+    /* LEYENDA MEJORADA */
     .price-legend {
       background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px);
       padding: 10px 14px; border-radius: 12px; box-shadow: var(--shadow-lg);
@@ -236,11 +246,6 @@
     .ducto-legend .reset-btn:hover { color: #ef4444; }
 
     .leaflet-popup-content { font-size: 0.8rem; font-family: 'Inter', sans-serif; margin: 10px; }
-    .cluster-popup-list { max-height: 180px; overflow-y: auto; padding-right: 4px; }
-    .cluster-popup-list .item { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #f1f5f9; }
-    .cluster-popup-list .item:last-child { border-bottom: none; }
-    .cluster-popup-list .item .name { color: var(--text-main); font-weight: 500; }
-    .cluster-popup-list .item .state { color: var(--text-muted); font-size: 0.65rem; background: #f8fafc; padding: 2px 6px; border-radius: 10px; }
 
     .btn-route { display: inline-block; margin-top: 4px; background: var(--primary); color: #fff; border: none; border-radius: 2rem; padding: 0.2rem 0.7rem; font-size: 0.7rem; cursor: pointer; transition: var(--transition); }
     .btn-route:hover { background: var(--primary-hover); }
@@ -264,6 +269,9 @@
     .geocode-progress .bar { width: 100%; height: 4px; background: var(--border); border-radius: 4px; margin-top: 6px; overflow: hidden; }
     .geocode-progress .bar .fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease; }
 
+    /* FILTRO SIN DIRECCIÓN */
+    .btn-no-address.active { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+
     @media (max-width: 768px) {
       .topbar { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
       .rail { width: 100%; max-height: 40vh; border-left: none; border-top: 1px solid var(--border); position: absolute; bottom: 0; z-index: 1000; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); }
@@ -274,21 +282,14 @@
       .toolbar .dist-slider input[type="range"] { width: 60px; }
       .toolbar .separator { display: none; }
       .ducto-legend { min-width: 90px; font-size: 9px; }
+      .rail-head .sort-options { font-size: 0.6rem; }
     }
   </style>
 </head>
 <body>
-<div id="cargaBarra" style="display:none;position:fixed;top:0;left:0;right:0;z-index:3000;
-     background:rgba(255,255,255,.97);border-bottom:1px solid #e2e8f0;padding:7px 14px;
-     font-size:12px;color:#475569;">
-  <div class="txt" style="margin-bottom:5px;"></div>
-  <div style="height:3px;background:#e2e8f0;border-radius:2px;overflow:hidden;">
-    <div class="fill" style="height:100%;width:0;background:linear-gradient(90deg,#38bdf8,#2563eb);transition:width .15s ease;"></div>
-  </div>
-</div>
 <div class="shell">
   <div class="topbar">
-    <div class="brand"><i class="fas fa-users"></i> Clientes Potenciales · GNU Morelia y Tototlán</div>
+    <div class="brand"><i class="fas fa-users"></i> Clientes Potenciales · Morelia y Tototlán</div>
     <div class="readouts">
       <span class="readout"><span class="num" id="rTotal">0</span> clientes</span>
       <span class="readout"><span class="num" id="rMatch">0</span> en vista</span>
@@ -311,28 +312,32 @@
     </div>
     <div class="dist-slider">
       <label for="distSlider">Max dist.</label>
-      <!-- ===== CAMBIADO: max=1000, value=1000 ===== -->
       <input type="range" id="distSlider" min="60" max="1000" value="1000" step="5" />
       <span id="distLabel">1000 km</span>
     </div>
 
     <span class="separator"></span>
 
-    <span class="zona-tag">Zonas</span>
-    <button class="btn btn-outline" id="btnCirculo150Morelia" title="Solo clientes a 150 km o menos de Morelia" aria-label="Zona 150 km desde Morelia">
+    <button class="btn btn-outline" id="btnCirculo150Morelia" aria-label="Círculo de 150 km desde Morelia">
       <i class="fas fa-circle" style="color:#10b981;"></i> 150 M.
     </button>
-    <button class="btn btn-outline" id="btnCirculo190Morelia" title="Solo clientes a 190 km o menos de Morelia" aria-label="Zona 190 km desde Morelia">
+    <button class="btn btn-outline" id="btnCirculo190Morelia" aria-label="Círculo de 190 km desde Morelia">
       <i class="fas fa-circle" style="color:#ef4444;"></i> 190 M.
     </button>
-    <button class="btn btn-outline" id="btnCirculo150Tototlan" title="Solo clientes a 150 km o menos de Tototlán" aria-label="Zona 150 km desde Tototlán">
+    <button class="btn btn-outline" id="btnCirculo150Tototlan" aria-label="Círculo de 150 km desde Tototlán">
       <i class="fas fa-circle" style="color:#10b981;"></i> 150 T.
     </button>
-    <button class="btn btn-outline" id="btnCirculo190Tototlan" title="Solo clientes a 190 km o menos de Tototlán" aria-label="Zona 190 km desde Tototlán">
+    <button class="btn btn-outline" id="btnCirculo190Tototlan" aria-label="Círculo de 190 km desde Tototlán">
       <i class="fas fa-circle" style="color:#ef4444;"></i> 190 T.
     </button>
+
+    <span class="separator"></span>
+
     <button class="btn btn-success" id="geocodeBtn" aria-label="Obtener direcciones de los clientes visibles">
       <i class="fas fa-address-card"></i> Obtener direcciones
+    </button>
+    <button class="btn btn-outline" id="noAddressBtn" aria-label="Filtrar clientes sin dirección">
+      <i class="fas fa-envelope"></i> Sin dirección
     </button>
 
     <span class="separator"></span>
@@ -355,6 +360,9 @@
     <button class="btn btn-primary" id="centerTototlanBtn" aria-label="Centrar en Tototlán">
       <i class="fas fa-star" style="color:#FF6B35;"></i> Tototlán
     </button>
+    <button class="btn btn-primary" id="gotoClosestBtn" title="Centrar en el cliente más cercano">
+      <i class="fas fa-bullseye"></i> Más cercano
+    </button>
     <button class="btn btn-warning" id="clearRouteBtn" aria-label="Limpiar ruta">
       <i class="fas fa-route"></i> Limpiar ruta
     </button>
@@ -372,7 +380,14 @@
   <div class="stage">
     <div id="map"></div>
     <div class="rail" id="railPanel">
-      <div class="rail-head"><span>Directorio</span><span id="listCnt" style="color: var(--primary);">0</span></div>
+      <div class="rail-head">
+        <span>Directorio</span>
+        <div class="sort-options">
+          <button id="sortDist" class="active" data-sort="dist">📏 Distancia</button>
+          <button id="sortState" data-sort="state">📌 Estado</button>
+        </div>
+        <span id="listCnt" style="color: var(--primary);">0</span>
+      </div>
       <ul class="rail-list" id="list"></ul>
     </div>
   </div>
@@ -407,7 +422,7 @@ document.addEventListener('DOMContentLoaded', function(){
   const ANCLA_MORELIA  = { nombre: "Morelia",  lat: 19.701130, lon: -101.198219, color: '#004D99' };
   const ANCLA_TOTOTLAN = { nombre: "Tototlán", lat: 20.534806, lon: -102.782470, color: '#FF6B35' };
   const ANCLAS = [ANCLA_MORELIA, ANCLA_TOTOTLAN];
-  const ANCLA = ANCLA_MORELIA;   // compatibilidad
+  const ANCLA = ANCLA_MORELIA;
 
   // ============================================================
   //  1. FUNCIONES AUXILIARES
@@ -429,10 +444,11 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function getDistRange(km) {
-    if (km <= 100) return { label: '≤ 100 km',     key: 'low',      color: '#10b981' };
-    if (km <= 140) return { label: '100 – 140 km', key: 'mid',      color: '#f59e0b' };
-    if (km <= 180) return { label: '140 – 180 km', key: 'high',     color: '#ef4444' };
-    return                { label: '> 180 km',     key: 'no-price', color: '#94a3b8' };
+    if (km <= 50) return { label: '0 – 50 km',   key: 'very-low', color: '#10b981' };
+    if (km <= 100) return { label: '50 – 100 km', key: 'low',     color: '#34d399' };
+    if (km <= 150) return { label: '100 – 150 km', key: 'mid',    color: '#fbbf24' };
+    if (km <= 200) return { label: '150 – 200 km', key: 'high',   color: '#fb923c' };
+    return { label: '> 200 km', key: 'no-price', color: '#94a3b8' };
   }
 
   function convertirArrayAGeoJSON(arrayDuctos) {
@@ -898,12 +914,9 @@ document.addEventListener('DOMContentLoaded', function(){
   document.getElementById('ductoFilter').addEventListener('change', function() { aplicarFiltroIterativo(this.value); });
 
   // ============================================================
-  //  6. CÍRCULOS DE RADIO (150 y 190 km)
+  //  6. CÍRCULOS DE RADIO (150 y 190 km) con FILTRO
   // ============================================================
   const circulosLayer = L.layerGroup().addTo(map);
-
-  // Cada zona guarda su ancla y su radio: el círculo NO es decorativo,
-  // es el filtro. Al activarlo solo se ven los clientes que caen dentro.
   const circulos = {};
   function crearCirculo(ancla, radioKm, color) {
     return L.circle([ancla.lat, ancla.lon], {
@@ -912,149 +925,122 @@ document.addEventListener('DOMContentLoaded', function(){
     }).bindPopup(`${radioKm} km desde ${ancla.nombre}`);
   }
   [['Morelia', ANCLA_MORELIA], ['Tototlan', ANCLA_TOTOTLAN]].forEach(([suf, a]) => {
-    circulos['150' + suf] = { capa: crearCirculo(a, 150, '#10b981'), visible: false, ancla: a, radioKm: 150 };
-    circulos['190' + suf] = { capa: crearCirculo(a, 190, '#ef4444'), visible: false, ancla: a, radioKm: 190 };
+    circulos['150' + suf] = { capa: crearCirculo(a, 150, '#10b981'), visible: false };
+    circulos['190' + suf] = { capa: crearCirculo(a, 190, '#ef4444'), visible: false };
   });
 
-  // UNIÓN: sin zonas activas se ven todos; con varias, los que caigan en cualquiera.
-  function zonasActivas() {
-    return Object.values(circulos).filter(c => c.visible);
-  }
-  // enriquecer() ya guardó s.distMorelia y s.distTototlan: comparar números
-  // en vez de recalcular Haversine ahorra decenas de miles de operaciones
-  // trigonométricas en CADA tecla del buscador.
-  function distA(s, ancla) {
-    return ancla === ANCLA_MORELIA ? s.distMorelia : s.distTototlan;
-  }
-  function dentroDeZonas(s) {
-    const act = zonasActivas();
-    if (!act.length) return true;
-    for (const c of act) if (distA(s, c.ancla) <= c.radioKm) return true;
-    return false;
-  }
+  let activeCircleFilter = null;
 
-  // Cuántos clientes caen en cada zona, para mostrarlo en su botón.
-  function contarZona(id) {
-    const c = circulos[id];
-    if (!c) return 0;
-    let n = 0;
-    for (const s of stations) if (distA(s, c.ancla) <= c.radioKm) n++;
-    return n;
-  }
-  function pintarContadoresZona() {
-    Object.keys(circulos).forEach(id => {
-      const b = document.getElementById('btnCirculo' + id);
-      if (!b) return;
-      const sp = b.querySelector('.zcount');
-      const n = contarZona(id).toLocaleString();
-      if (sp) sp.textContent = n;
-      else b.insertAdjacentHTML('beforeend', ` <span class="zcount">${n}</span>`);
-    });
+  function desactivarCirculoActivo() {
+    if (activeCircleFilter) {
+      const id = activeCircleFilter.radio + 
+                 (activeCircleFilter.centro === 'morelia' ? 'Morelia' : 'Tototlan');
+      const c = circulos[id];
+      if (c && c.visible) {
+        circulosLayer.removeLayer(c.capa);
+        c.visible = false;
+        const btn = document.getElementById('btnCirculo' + id);
+        if (btn) btn.classList.remove('active');
+      }
+      activeCircleFilter = null;
+      applyFilters();
+    }
   }
 
   function toggleCirculo(id) {
     const c = circulos[id];
     if (!c) return;
-    c.visible = !c.visible;
-    const btn = document.getElementById('btnCirculo' + id);
-    if (c.visible) { circulosLayer.addLayer(c.capa); if (btn) btn.classList.add('active'); }
-    else { circulosLayer.removeLayer(c.capa); if (btn) btn.classList.remove('active'); }
-    applyFilters();          // el filtro se aplica junto con el círculo
-  }
 
-  function limpiarZonas() {
-    Object.entries(circulos).forEach(([id, c]) => {
-      if (c.visible) {
-        c.visible = false;
-        circulosLayer.removeLayer(c.capa);
-        const b = document.getElementById('btnCirculo' + id);
-        if (b) b.classList.remove('active');
+    if (activeCircleFilter) {
+      const currentId = activeCircleFilter.radio + 
+                        (activeCircleFilter.centro === 'morelia' ? 'Morelia' : 'Tototlan');
+      if (currentId === id) {
+        desactivarCirculoActivo();
+        return;
+      } else {
+        desactivarCirculoActivo();
       }
-    });
+    }
+
+    if (c.visible) {
+      circulosLayer.removeLayer(c.capa);
+      c.visible = false;
+      const btn = document.getElementById('btnCirculo' + id);
+      if (btn) btn.classList.remove('active');
+      return;
+    }
+
+    circulosLayer.addLayer(c.capa);
+    c.visible = true;
+    const btn = document.getElementById('btnCirculo' + id);
+    if (btn) btn.classList.add('active');
+
+    let centro, radio;
+    if (id.includes('Morelia')) {
+      centro = 'morelia';
+    } else if (id.includes('Tototlan')) {
+      centro = 'tototlan';
+    }
+    const radioMatch = id.match(/(\d+)/);
+    radio = radioMatch ? parseInt(radioMatch[0]) : 150;
+
+    activeCircleFilter = { centro, radio };
+    applyFilters();
+
+    const ancla = centro === 'morelia' ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
+    map.flyTo([ancla.lat, ancla.lon], 8, { duration: 1.2 });
   }
 
   // ============================================================
-  //  7. CLÚSTER Y MARCADORES DE CLIENTES
+  //  7. CLÚSTER Y MARCADORES DE CLIENTES (MEJORADOS)
   // ============================================================
   const cluster = L.markerClusterGroup({
     chunkedLoading: true,
     removeOutsideVisibleBounds: true,
-    // Radio mayor = menos burbujas en pantalla = menos saturación visual
-    maxClusterRadius: 70,
+    maxClusterRadius: 50,
     iconCreateFunction: function(c) {
       const n = c.getChildCount();
-      // 4 niveles de densidad (color + tamaño). Escala suave, no lineal.
-      let nivel, s;
-      if      (n < 10)   { nivel = 'c1'; s = 32; }
-      else if (n < 100)  { nivel = 'c2'; s = 40; }
-      else if (n < 1000) { nivel = 'c3'; s = 50; }
-      else               { nivel = 'c4'; s = 60; }
-      // "12.4k" en vez de "12432": legible dentro de la burbuja
-      const txt = n < 1000 ? n
-                : n < 10000 ? (n/1000).toFixed(1).replace('.0','') + 'k'
-                : Math.round(n/1000) + 'k';
-      const fs = txt.length >= 5 ? 11 : txt.length === 4 ? 12 : 13;
+      const size = n < 10 ? 44 : n < 50 ? 52 : 60;
+      const fontSize = n < 100 ? 16 : 14;
       return L.divIcon({
-        html: `<div class="wrap"><div class="halo"></div><div class="bubble" style="font-size:${fs}px;">${txt}</div></div>`,
-        className: 'gnv-cluster ' + nivel,
-        iconSize: [s, s], iconAnchor: [s/2, s/2]
+        html: `<div class="cluster-bubble" style="width:${size}px;height:${size}px;font-size:${fontSize}px;">${n}</div>`,
+        className: 'my-cluster',
+        iconSize: [size, size]
       });
-    },
-    // A zoom de calle ya no tiene sentido agrupar: se ahorra el cálculo
-    disableClusteringAtZoom: 17,
-    chunkInterval: 120,
-    chunkProgress: function(hechos, total) {
-      const el = document.getElementById('cargaBarra');
-      if (!el) return;
-      if (hechos < total) {
-        el.style.display = 'block';
-        el.querySelector('.fill').style.width = Math.round(hechos / total * 100) + '%';
-        el.querySelector('.txt').textContent = `Dibujando ${hechos.toLocaleString()} de ${total.toLocaleString()}…`;
-      } else {
-        el.style.display = 'none';
-      }
     },
     zoomToBoundsOnClick: true,
     spiderfyOnMaxZoom: true,
-    showCoverageOnHover: false,      // quita el polígono al pasar el cursor (ruido visual)
-    animateAddingMarkers: false,     // sin animación al cargar miles de puntos
-    spiderLegPolylineOptions: { weight: 1.2, color: '#94a3b8', opacity: 0.6 }
+    removeOutsideVisibleBounds: true
   });
   map.addLayer(cluster);
   const markerMap = new Map();
 
-  // Insignia SVG: aro pulsante + disco de color + estrella blanca.
-  // Antes era el carácter "★" con -webkit-text-stroke, que se veía tosco.
-  function anclaSVG(color) {
-    return `
-    <svg width="52" height="52" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
-      <circle class="pulso" cx="26" cy="26" r="17" fill="${color}"/>
-      <circle cx="26" cy="26" r="15" fill="rgba(255,255,255,.55)"/>
-      <circle cx="26" cy="27.5" r="13" fill="rgba(15,23,42,.28)"/>
-      <circle cx="26" cy="26" r="13" fill="${color}" stroke="#fff" stroke-width="2.5"/>
-      <path fill="#fff" d="M26 18.6l2.29 4.64 5.12.74-3.7 3.61.87 5.1L26 30.28l-4.58 2.41.87-5.1-3.7-3.61 5.12-.74z"/>
-    </svg>`;
+  // === ANCLAS CON ICONOS MEJORADOS ===
+  function anclaIcon(ancla) {
+    const color = ancla.color;
+    const svg = `
+      <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="22" fill="${color}" opacity="0.25" stroke="${color}" stroke-width="1.5"/>
+        <circle cx="24" cy="24" r="18" fill="${color}" stroke="white" stroke-width="2.5"/>
+        <text x="24" y="24" text-anchor="middle" dominant-baseline="central" font-size="20" fill="white" font-family="Arial, sans-serif">★</text>
+      </svg>
+    `;
+    return L.divIcon({
+      className: '',
+      html: svg,
+      iconSize: [48, 48],
+      iconAnchor: [24, 24]
+    });
   }
 
   ANCLAS.forEach(a => {
     L.marker([a.lat, a.lon], {
-      icon: L.divIcon({
-        className: 'gnu-ancla',
-        html: anclaSVG(a.color),
-        iconSize: [52, 52], iconAnchor: [26, 26], popupAnchor: [0, -20]
-      }),
-      zIndexOffset: 2000, title: a.nombre, riseOnHover: true
+      icon: anclaIcon(a),
+      zIndexOffset: 1000,
+      title: a.nombre
     }).addTo(map).bindPopup(
-      `<div style="text-align:center;padding:2px 4px;">
-         <div style="display:inline-flex;align-items:center;gap:6px;font-weight:700;color:${a.color};font-size:1rem;">
-           <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${a.color};"></span>
-           ${a.nombre}
-         </div>
-         <div style="font-size:.74rem;color:#64748b;margin-top:3px;">Estación GNU · ancla de referencia</div>
-         <div style="font-size:.68rem;color:#94a3b8;margin-top:2px;font-family:ui-monospace,Menlo,monospace;">
-           ${a.lat.toFixed(6)}, ${a.lon.toFixed(6)}
-         </div>
-       </div>`, { className: 'ancla-popup' }
+      `<strong style="color:${a.color};">⭐ ${a.nombre}</strong><br>` +
+      `<span style="font-size:.8rem;color:#64748b;">Ancla de referencia para distancias</span>`
     );
   });
 
@@ -1064,19 +1050,17 @@ document.addEventListener('DOMContentLoaded', function(){
     if (!ic) {
       ic = L.divIcon({
         className: '', html: pinSVG(color),
-        iconSize: [24,34], iconAnchor: [12,34], popupAnchor: [0,-31]
+        iconSize: [28,40], iconAnchor: [14,40], popupAnchor: [0,-37]
       });
       iconCache.set(color, ic);
     }
     return ic;
   }
 
-  // Pin más compacto y de trazo suave: con cientos en pantalla, el borde
-  // oscuro grueso y la sombra fuerte eran gran parte de la saturación.
   function pinSVG(color) {
-    return `<svg width="24" height="34" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 2.5px rgba(15,23,42,0.28));">
-      <path d="M14 0 C6.27 0 0 6.27 0 14 C0 24.5 14 40 14 40 S28 24.5 28 14 C28 6.27 21.73 0 14 0 Z" fill="${color}" stroke="rgba(255,255,255,0.9)" stroke-width="1.6"/>
-      <circle cx="14" cy="14" r="4.6" fill="#fff" fill-opacity="0.92"/>
+    return `<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.2));">
+      <path d="M14 0 C6.27 0 0 6.27 0 14 C0 24.5 14 40 14 40 S28 24.5 28 14 C28 6.27 21.73 0 14 0 Z" fill="${color}" stroke="#1e293b" stroke-width="1.2"/>
+      <circle cx="14" cy="14" r="5" fill="white" stroke="#1e293b" stroke-width="1"/>
     </svg>`;
   }
 
@@ -1117,7 +1101,6 @@ document.addEventListener('DOMContentLoaded', function(){
       nuevos.push(marker);
     });
     cluster.addLayers(nuevos);
-    visiblesActuales = new Set(stations);
     document.getElementById('rTotal').textContent = stations.length;
     log(`Marcadores reconstruidos: ${stations.length}`);
   }
@@ -1162,95 +1145,115 @@ document.addEventListener('DOMContentLoaded', function(){
     if (!resultado) { alert('No se pudo calcular la ruta.'); return; }
     const coords = resultado.geometria.map(c => [c[1], c[0]]);
     rutaLayer = L.polyline(coords, { color: '#1F5CA9', weight: 4, opacity: 0.8, dashArray: '8,8' }).addTo(map);
-    map.fitBounds(rutaLayer.getBounds(), { padding: [50,50] });
+    map.fitBounds(rutaLayer.getBounds(), { padding: [50,50], duration: 1.2 });
     rutaMarcador = L.marker([destLat, destLon], {
       icon: L.divIcon({ className: '', html: '<i class="fas fa-flag-checkered" style="font-size:28px;color:#1F5CA9;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>', iconSize: [28,28] })
     }).addTo(map);
     rutaMarcador.bindPopup(`<strong>Ruta desde ${origen.nombre}</strong><br>Distancia: ${resultado.distanciaKm.toFixed(1)} km<br>Tiempo: ${Math.round(resultado.duracionMin)} min`).openPopup();
   }
 
-  let clusterTimer = null;
+  // Mejora del popup de clúster con distancia promedio
   cluster.on('clustermouseover', function(e) {
     if (clusterTimer) clearTimeout(clusterTimer);
     const layer = e.layer;
     const markers = layer.getAllChildMarkers().sort((a,b)=>a.data.nombre.localeCompare(b.data.nombre));
-    let html = '<div class="cluster-popup-list">';
+    // calcular distancia promedio
+    let totalDist = 0;
+    markers.forEach(m => totalDist += m.data.distKm);
+    const avgDist = (totalDist / markers.length).toFixed(1);
+    let html = `<div class="cluster-popup-title">
+      <span>📍 ${markers.length} clientes</span>
+      <span style="font-weight:400;font-size:0.75rem;">📏 ${avgDist} km promedio</span>
+    </div><div class="cluster-popup-list">`;
     markers.forEach(m => {
       html += `<div class="item"><span class="name">${m.data.nombre}</span><span class="state">${m.data.estado || ''}</span></div>`;
     });
     html += '</div>';
-    layer.bindPopup(html, { className: 'cluster-popup', maxWidth: 300, maxHeight: 250 }).openPopup();
+    layer.bindPopup(html, { className: 'cluster-popup', maxWidth: 320, maxHeight: 280 }).openPopup();
   });
+
+  let clusterTimer = null;
   cluster.on('clustermouseout', function(e) {
     clusterTimer = setTimeout(() => e.layer.closePopup(), 1500);
   });
 
   // ============================================================
-  //  9. LEYENDA DE DISTANCIAS
+  //  9. LEYENDA DE DISTANCIAS MEJORADA (5 rangos)
   // ============================================================
   const legendControl = L.control({ position: 'bottomright' });
   legendControl.onAdd = function() {
     const div = L.DomUtil.create('div', 'price-legend');
     div.innerHTML = `<div class="title">Distancia al ancla más cercana <button class="clear-btn" id="legendClearBtn">✕</button></div>`;
     const ranges = [
-      { label: '≤ 100 km',     key: 'low',      color: '#10b981' },
-      { label: '100 – 140 km', key: 'mid',      color: '#f59e0b' },
-      { label: '140 – 180 km', key: 'high',     color: '#ef4444' },
-      { label: '> 180 km',     key: 'no-price', color: '#94a3b8' }
+      { label: '0 – 50 km',   key: 'very-low', color: '#10b981' },
+      { label: '50 – 100 km', key: 'low',     color: '#34d399' },
+      { label: '100 – 150 km', key: 'mid',    color: '#fbbf24' },
+      { label: '150 – 200 km', key: 'high',   color: '#fb923c' },
+      { label: '> 200 km',    key: 'no-price', color: '#94a3b8' }
     ];
-    const conteo = new Map();
-    for (const s of stations) conteo.set(s.priceKey, (conteo.get(s.priceKey) || 0) + 1);
+    // Actualizar conteos en función de stations actuales (se recalcula en applyFilters)
+    function actualizarConteos() {
+      const conteo = new Map();
+      for (const s of stations) conteo.set(s.priceKey, (conteo.get(s.priceKey) || 0) + 1);
+      div.querySelectorAll('.row').forEach(row => {
+        const key = row.dataset.key;
+        const count = conteo.get(key) || 0;
+        const span = row.querySelector('.count');
+        if (span) span.textContent = count;
+      });
+    }
     div.innerHTML += ranges.map(r => `<div class="row" data-key="${r.key}">
         <span class="color-dot" style="background:${r.color};"></span>
         <span class="label">${r.label}</span>
-        <span class="count">${conteo.get(r.key) || 0}</span>
+        <span class="count">0</span>
       </div>`).join('');
+    // Actualizar tras un pequeño delay
+    setTimeout(actualizarConteos, 100);
+    // Guardar referencia para actualizar después
+    div._actualizarConteos = actualizarConteos;
     return div;
   };
   legendControl.addTo(map);
 
   // ============================================================
-  //  10. FILTROS Y EVENTOS (clientes) - incluye tamaño
+  //  10. FILTROS Y EVENTOS (incluye "sin dirección")
   // ============================================================
-  let activePrice = null, activeTamano = 'all', searchTerm = '', maxDist = 1000; // ← CAMBIADO a 1000
-
-  let visiblesActuales = new Set();
+  let activePrice = null, activeTamano = 'all', searchTerm = '', maxDist = 1000;
+  let activeNoAddress = false;
 
   function applyFilters() {
     const term = searchTerm.toLowerCase();
     const selectedTam = document.getElementById('tamanoFilter').value;
-    const visible = stations.filter(s =>
-      dentroDeZonas(s) &&
+    let visible = stations.filter(s =>
       (term === '' || s.nombre.toLowerCase().includes(term)) &&
       (activePrice === null || s.priceKey === activePrice) &&
       (selectedTam === 'all' || s.tamano === selectedTam) &&
       s.distKm <= maxDist
     );
 
-    // Actualización por DIFERENCIA: antes se vaciaba y se volvía a llenar el
-    // clúster completo en cada filtro. Ahora solo se tocan los que cambian.
-    const nuevos = new Set(visible);
-    const quitar = [], agregar = [];
-    for (const s of visiblesActuales) if (!nuevos.has(s)) quitar.push(markerMap.get(s).marker);
-    for (const s of nuevos) if (!visiblesActuales.has(s)) agregar.push(markerMap.get(s).marker);
-
-    // Si el cambio afecta a casi todo, vaciar y rellenar sale más barato
-    if (quitar.length + agregar.length > stations.length * 0.6) {
-      cluster.clearLayers();
-      cluster.addLayers(visible.map(s => markerMap.get(s).marker));
-    } else {
-      if (quitar.length)  cluster.removeLayers(quitar);
-      if (agregar.length) cluster.addLayers(agregar);
+    if (activeNoAddress) {
+      visible = visible.filter(s => !s.direccion);
     }
-    visiblesActuales = nuevos;
 
+    if (activeCircleFilter) {
+      const centro = activeCircleFilter.centro === 'morelia' ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
+      visible = visible.filter(s => {
+        const d = distanciaKm(centro.lat, centro.lon, s.lat, s.lon);
+        return d <= activeCircleFilter.radio;
+      });
+    }
+
+    cluster.clearLayers();
+    cluster.addLayers(visible.map(s => markerMap.get(s).marker));
     document.getElementById('rMatch').textContent = visible.length;
     document.getElementById('listCnt').textContent = visible.length;
     renderList(visible);
     updateLegendUI();
     updateStats(visible);
-    document.getElementById('clearAllBtn').classList.toggle('hidden',
-      !(activePrice || selectedTam !== 'all' || term || maxDist < 1000 || zonasActivas().length));
+    document.getElementById('clearAllBtn').classList.toggle('hidden', !(activePrice || selectedTam !== 'all' || term || maxDist < 1000 || activeCircleFilter || activeNoAddress));
+    // Actualizar conteos de la leyenda
+    const legendDiv = document.querySelector('.price-legend');
+    if (legendDiv && legendDiv._actualizarConteos) legendDiv._actualizarConteos();
     return visible;
   }
 
@@ -1260,36 +1263,23 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
+  // ===== ESTADÍSTICAS MEJORADAS =====
   function updateStats(items) {
     const statsEl = document.getElementById('stats');
     if (items.length === 0) { statsEl.innerHTML = ''; return; }
-
-    // Un solo recorrido, sin Math.min(...arr): el spread pasa cada elemento
-    // como argumento y revienta la pila (~65k en Safari). Con 38k pasaba raspando.
-    let min = Infinity, max = -Infinity, suma = 0, sMin = null, sMax = null;
-    for (const s of items) {
-      const d = s.distKm;
-      if (!isFinite(d)) continue;
-      suma += d;
-      if (d < min) { min = d; sMin = s; }
-      if (d > max) { max = d; sMax = s; }
-    }
-    if (!sMin) { statsEl.innerHTML = ''; return; }
-    const avg = suma / items.length;
-
-    const rec = (s, d) => `${s.nombre.slice(0, 26)}${s.nombre.length > 26 ? '…' : ''} · ${s.ancla}`;
-    // Un cliente a menos de 100 m del ancla suele ser la propia estación
-    // capturada como prospecto: se avisa en vez de mostrar un "0.0" mudo.
-    const alerta = min < 0.1
-      ? `<span class="stat" style="color:#b45309;" title="Hay un registro prácticamente sobre la estación: revisa si es la propia GNU capturada como cliente.">⚠️ Hay un registro sobre el ancla</span>`
-      : '';
-
-    statsEl.innerHTML =
-      `<span class="stat" title="${rec(sMin)}">📏 Más cercano: ${min.toFixed(1)} km</span>` +
-      `<span class="stat" title="${rec(sMax)}">📏 Más lejano: ${max.toFixed(1)} km</span>` +
-      `<span class="stat">📊 Promedio: ${avg.toFixed(1)} km</span>` +
-      `<span class="stat">👁 ${items.length.toLocaleString()} visibles</span>` +
-      alerta;
+    const dists = items.map(s => s.distKm);
+    const min = Math.min(...dists);
+    const max = Math.max(...dists);
+    const avg = dists.reduce((a,b) => a+b, 0) / dists.length;
+    const closest = items.find(s => s.distKm === min);
+    const closestName = closest ? ` (${closest.nombre})` : '';
+    let minDisplay = min.toFixed(1) + ' km';
+    if (min < 0.01) minDisplay = '0.0 km (Mismo punto que Morelia)';
+    statsEl.innerHTML = `
+      <span class="stat">📏 Más cercano: ${minDisplay}${closestName}</span>
+      <span class="stat">📏 Más lejano: ${max.toFixed(1)} km</span>
+      <span class="stat">📊 Promedio: ${avg.toFixed(1)} km</span>
+    `;
   }
 
   setTimeout(() => {
@@ -1312,7 +1302,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if (!lista || !lista.length) { map.flyTo([23.5, -102.5], 5, { duration: 1 }); return; }
     const b = L.latLngBounds(lista.map(s => [s.lat, s.lon]));
     ANCLAS.forEach(a => b.extend([a.lat, a.lon]));
-    map.flyToBounds(b, { padding: [60, 60], duration: 1, maxZoom: 12 });
+    map.flyToBounds(b, { padding: [60, 60], duration: 1.2, maxZoom: 12 });
   }
 
   document.getElementById('tamanoFilter').addEventListener('change', applyFilters);
@@ -1330,76 +1320,88 @@ document.addEventListener('DOMContentLoaded', function(){
 
   document.getElementById('clearAllBtn').addEventListener('click', () => {
     activePrice = null; searchTerm = '';
-    limpiarZonas();
     document.getElementById('tamanoFilter').value = 'all';
     document.getElementById('searchInput').value = '';
     maxDist = 1000;
     document.getElementById('distSlider').value = 1000;
     document.getElementById('distLabel').textContent = '1000 km';
+    activeNoAddress = false;
+    document.getElementById('noAddressBtn').classList.remove('active');
+    desactivarCirculoActivo();
     applyFilters();
     map.flyTo([23.5, -102.5], 5, { duration: 1 });
   });
 
   // ============================================================
-  //  11. RENDERIZAR LISTA (directorio) con estado
+  //  11. RENDERIZAR LISTA (directorio) CON ORDEN
   // ============================================================
-  // El directorio era el mayor freno: creaba un <li> con innerHTML por cada
-  // cliente (38 mil parseos de HTML + 38 mil closures) en CADA filtro.
-  // Ahora: tope de filas, un solo innerHTML y un único listener delegado.
-  const LISTA_MAX = 300;
-  const colador = new Intl.Collator('es', { sensitivity: 'base' });
-  let listaRender = [];
-
-  const escHtml = t => String(t == null ? '' : t)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  let sortMode = 'dist'; // 'dist' o 'state'
 
   function renderList(items) {
     const ul = document.getElementById('list');
-    listaRender = [];
+    ul.innerHTML = '';
     if (!items.length) { ul.innerHTML = '<li class="empty">No hay clientes que coincidan</li>'; return; }
 
-    const grupos = new Map();
-    for (const s of items) {
-      const st = s.estado || 'Sin estado';
-      let g = grupos.get(st);
-      if (!g) { g = []; grupos.set(st, g); }
-      g.push(s);
+    let sortedItems;
+    if (sortMode === 'dist') {
+      sortedItems = [...items].sort((a,b) => a.distKm - b.distKm);
+      const frag = document.createDocumentFragment();
+      sortedItems.forEach(s => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <div class="top-row">
+            <span class="name">${s.nombre}</span>
+            <span class="dist">${s.distKm < 10 ? s.distKm.toFixed(1) : Math.round(s.distKm)} km</span>
+          </div>
+          <span class="state-tag">${s.estado || '...'}</span>
+        `;
+        li.onclick = () => { map.flyTo([s.lat, s.lon], 14, { duration: 1.2 }); markerMap.get(s).marker.openPopup(); };
+        frag.appendChild(li);
+      });
+      ul.appendChild(frag);
+    } else {
+      // Agrupar por estado
+      const grouped = items.reduce((acc, s) => {
+        const state = s.estado || 'Sin estado';
+        if (!acc[state]) acc[state] = [];
+        acc[state].push(s);
+        return acc;
+      }, {});
+      const frag = document.createDocumentFragment();
+      Object.keys(grouped).sort().forEach(state => {
+        const header = document.createElement('li');
+        header.className = 'group-header';
+        header.textContent = `${state} (${grouped[state].length})`;
+        frag.appendChild(header);
+        grouped[state].sort((a,b) => a.nombre.localeCompare(b.nombre)).forEach(s => {
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <div class="top-row">
+              <span class="name">${s.nombre}</span>
+              <span class="dist">${s.distKm < 10 ? s.distKm.toFixed(1) : Math.round(s.distKm)} km</span>
+            </div>
+            <span class="state-tag">${s.estado || '...'}</span>
+          `;
+          li.onclick = () => { map.flyTo([s.lat, s.lon], 14, { duration: 1.2 }); markerMap.get(s).marker.openPopup(); };
+          frag.appendChild(li);
+        });
+      });
+      ul.appendChild(frag);
     }
-    const estados = [...grupos.keys()].sort(colador.compare);
-
-    let html = '', cortado = false;
-    for (const st of estados) {
-      if (cortado) break;
-      const g = grupos.get(st);
-      html += `<li class="group-header">${escHtml(st)} (${g.length.toLocaleString()})</li>`;
-      g.sort((a, b) => colador.compare(a.nombre, b.nombre));
-      for (const s of g) {
-        if (listaRender.length >= LISTA_MAX) { cortado = true; break; }
-        const i = listaRender.length;
-        listaRender.push(s);
-        const d = s.distKm < 10 ? s.distKm.toFixed(1) : Math.round(s.distKm);
-        html += `<li data-i="${i}"><div class="top-row">` +
-                `<span class="name">${escHtml(s.nombre)}</span>` +
-                `<span class="dist">${d} km</span></div>` +
-                `<span class="state-tag">${escHtml(s.estado || '...')}</span></li>`;
-      }
-    }
-    if (cortado) {
-      html += `<li class="empty">Mostrando ${LISTA_MAX} de ${items.length.toLocaleString()}.` +
-              ` Usa el buscador o los filtros para acotar.</li>`;
-    }
-    ul.innerHTML = html;      // un único parseo, no 38 mil
   }
 
-  // Un solo listener para toda la lista, en vez de uno por fila
-  document.getElementById('list').addEventListener('click', e => {
-    const li = e.target.closest('li[data-i]');
-    if (!li) return;
-    const s = listaRender[+li.dataset.i];
-    if (!s) return;
-    map.flyTo([s.lat, s.lon], 14);
-    const m = markerMap.get(s);
-    if (m) m.marker.openPopup();
+  // Eventos para cambiar orden
+  document.getElementById('sortDist').addEventListener('click', function() {
+    sortMode = 'dist';
+    document.getElementById('sortDist').classList.add('active');
+    document.getElementById('sortState').classList.remove('active');
+    applyFilters();
+  });
+  document.getElementById('sortState').addEventListener('click', function() {
+    sortMode = 'state';
+    document.getElementById('sortState').classList.add('active');
+    document.getElementById('sortDist').classList.remove('active');
+    applyFilters();
   });
 
   // ============================================================
@@ -1410,13 +1412,25 @@ document.addEventListener('DOMContentLoaded', function(){
   document.getElementById('centerTototlanBtn').addEventListener('click', () => { map.flyTo([ANCLA_TOTOTLAN.lat, ANCLA_TOTOTLAN.lon], 9, { duration: 1.2 }); limpiarRuta(); });
   document.getElementById('clearRouteBtn').addEventListener('click', limpiarRuta);
 
+  // Botón "Ir al más cercano"
+  document.getElementById('gotoClosestBtn').addEventListener('click', function() {
+    // Obtener la lista de visibles (a través de applyFilters sin re-renderizar todo)
+    const visible = applyFilters();
+    if (!visible.length) { alert('No hay clientes visibles.'); return; }
+    const closest = visible.reduce((a, b) => a.distKm < b.distKm ? a : b);
+    map.flyTo([closest.lat, closest.lon], 14, { duration: 1.2 });
+    markerMap.get(closest).marker.openPopup();
+  });
+
+  // Toggle del panel lateral
   document.getElementById('toggleRailBtn').addEventListener('click', () => {
     const rail = document.getElementById('railPanel');
     rail.classList.toggle('hidden');
     document.getElementById('railToggleIcon').className = rail.classList.contains('hidden') ? 'fas fa-chevron-left' : 'fas fa-chevron-right';
-    setTimeout(() => map.invalidateSize(), 300);
+    setTimeout(() => map.invalidateSize(), 350);
   });
 
+  // Botones de círculos
   ['150Morelia','190Morelia','150Tototlan','190Tototlan'].forEach(id => {
     const b = document.getElementById('btnCirculo' + id);
     if (b) b.addEventListener('click', () => toggleCirculo(id));
@@ -1425,15 +1439,28 @@ document.addEventListener('DOMContentLoaded', function(){
   document.getElementById('toggleDuctosBtn').addEventListener('click', toggleDuctos);
   document.getElementById('centerDuctosBtn').addEventListener('click', centrarEnTodosDuctos);
 
+  // Filtro "Sin dirección"
+  document.getElementById('noAddressBtn').addEventListener('click', function() {
+    activeNoAddress = !activeNoAddress;
+    this.classList.toggle('active');
+    applyFilters();
+  });
+
   document.getElementById('exportBtn').addEventListener('click', function() {
-    const visible = stations.filter(s => {
-      const term = searchTerm.toLowerCase();
-      const selectedTam = document.getElementById('tamanoFilter').value;
-      return (term === '' || s.nombre.toLowerCase().includes(term)) &&
-             (activePrice === null || s.priceKey === activePrice) &&
-             (selectedTam === 'all' || s.tamano === selectedTam) &&
-             s.distKm <= maxDist;
-    });
+    // Recalcular visibles (como en applyFilters)
+    const term = searchTerm.toLowerCase();
+    const selectedTam = document.getElementById('tamanoFilter').value;
+    let visible = stations.filter(s =>
+      (term === '' || s.nombre.toLowerCase().includes(term)) &&
+      (activePrice === null || s.priceKey === activePrice) &&
+      (selectedTam === 'all' || s.tamano === selectedTam) &&
+      s.distKm <= maxDist
+    );
+    if (activeNoAddress) visible = visible.filter(s => !s.direccion);
+    if (activeCircleFilter) {
+      const centro = activeCircleFilter.centro === 'morelia' ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
+      visible = visible.filter(s => distanciaKm(centro.lat, centro.lon, s.lat, s.lon) <= activeCircleFilter.radio);
+    }
     if (visible.length === 0) { alert('No hay clientes visibles para exportar.'); return; }
     let csv = 'Nombre,Distancia a Morelia (km),Estado,Tamaño,Dirección,Teléfono\n';
     visible.forEach(s => {
@@ -1457,7 +1484,7 @@ document.addEventListener('DOMContentLoaded', function(){
     locBtn.classList.add('loading');
     navigator.geolocation.getCurrentPosition(pos => {
       const { latitude, longitude, accuracy } = pos.coords;
-      map.flyTo([latitude, longitude], 13);
+      map.flyTo([latitude, longitude], 13, { duration: 1.2 });
       locMarker = L.marker([latitude, longitude], { icon: L.divIcon({ className: 'location-marker', html: '<div class="dot"></div>', iconSize: [18,18] }) }).addTo(map);
       locCircle = L.circle([latitude, longitude], { radius: accuracy, color: 'var(--secondary)', weight: 1 }).addTo(map);
       locBtn.classList.remove('loading');
@@ -1481,14 +1508,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   async function geocodeClientesVisibles() {
-    const visible = stations.filter(s => {
-      const term = searchTerm.toLowerCase();
-      const selectedTam = document.getElementById('tamanoFilter').value;
-      return (term === '' || s.nombre.toLowerCase().includes(term)) &&
-             (activePrice === null || s.priceKey === activePrice) &&
-             (selectedTam === 'all' || s.tamano === selectedTam) &&
-             s.distKm <= maxDist;
-    });
+    const visible = applyFilters(); // ya tenemos la lista filtrada
     const sinDireccion = visible.filter(s => !s.direccion);
     if (sinDireccion.length === 0) { alert('Todos los clientes visibles ya tienen dirección.'); return; }
 
@@ -1628,13 +1648,10 @@ document.addEventListener('DOMContentLoaded', function(){
       const nuevos = leerArrayGuardado(nuevoJS);
       if (!nuevos || !Array.isArray(nuevos)) { warn('CLIENTES_JS inválido'); return; }
       stations.length = 0;
-      // push(...arr) tiene el mismo límite de pila que Math.min(...arr)
-      const listos = enriquecer(deduplicate(nuevos));
-      for (const s of listos) stations.push(s);
+      stations.push(...enriquecer(deduplicate(nuevos)));
       reconstruirMarcadoresClientes();
       actualizarSelectTamano();
       applyFilters();
-      pintarContadoresZona();
       actualizarEstadoCarga(stations.length, contarPorAncla(stations));
       log(`Clientes recargados: ${stations.length}`);
     } catch (e) { console.error('Error al recargar clientes:', e); }
@@ -1673,7 +1690,6 @@ document.addEventListener('DOMContentLoaded', function(){
   reconstruirMarcadoresClientes();
   actualizarSelectTamano();
   applyFilters();
-  pintarContadoresZona();
   document.getElementById('rTotal').textContent = stations.length;
   setTimeout(() => map.invalidateSize(), 100);
 
