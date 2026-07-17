@@ -7,76 +7,151 @@
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     
     <style>
-        body { margin: 0; padding: 0; font-family: Arial, sans-serif; display: flex; height: 100vh; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; display: flex; height: 100vh; }
         
         /* Sidebar */
         #sidebar {
             width: 300px;
-            background: #f8f9fa;
-            padding: 15px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
             overflow-y: auto;
             z-index: 1000;
         }
-        #sidebar h2 { font-size: 18px; margin-top: 0; color: #333; }
-        #sidebar p { font-size: 14px; color: #666; margin: 5px 0; }
+        #sidebar h2 { 
+            font-size: 20px; 
+            margin-top: 0; 
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        #sidebar p { font-size: 14px; color: #555; margin: 8px 0; }
         
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
         .btn {
-            padding: 10px;
+            padding: 12px;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 14px;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .btn-m { background: #FFD700; color: #333; } /* Dorado para Morelia */
-        .btn-m:hover { background: #e6c200; }
-        .btn-t { background: #C0C0C0; color: #333; } /* Plateado para Tototlán */
-        .btn-t:hover { background: #a9a9a9; }
+        .btn-m { 
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); 
+            color: #333; 
+        }
+        .btn-m:hover { 
+            background: linear-gradient(135deg, #FFC700 0%, #FF9500 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .btn-t { 
+            background: linear-gradient(135deg, #C0C0C0 0%, #808080 100%); 
+            color: #fff; 
+        }
+        .btn-t:hover { 
+            background: linear-gradient(135deg, #B0B0B0 0%, #707070 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
         
         .btn-action {
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            background: #007bff;
+            padding: 12px;
+            margin: 6px 0;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .btn-action:hover { background: #0056b3; }
-        .btn-clear { background: #dc3545; }
-        .btn-clear:hover { background: #c82333; }
+        .btn-action:hover { 
+            background: linear-gradient(135deg, #0056b3 0%, #004094 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .btn-clear { 
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); 
+        }
+        .btn-clear:hover { 
+            background: linear-gradient(135deg, #c82333 0%, #b21f2d 100%);
+        }
 
         /* Mapa */
         #map { flex: 1; height: 100%; }
 
-        /* Estilos para las estrellas */
-        .estrella-marker {
+        /* Iconos ancla mejorados */
+        .ancla-marker {
             background: transparent !important;
             border: none !important;
-            filter: drop-shadow(0 3px 5px rgba(0,0,0,0.5));
-            transition: transform 0.2s;
         }
-        .estrella-marker:hover {
-            transform: scale(1.2);
+
+        /* Efecto de pulso para las anclas */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .ancla-marker svg {
+            animation: pulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+
+        /* Mejorar los clusters de marcadores */
+        .marker-cluster-small {
+            background-color: rgba(181, 226, 140, 0.6);
+        }
+        .marker-cluster-small div {
+            background-color: rgba(110, 204, 57, 0.8);
+            color: white;
+            font-weight: bold;
+        }
+
+        .marker-cluster-medium {
+            background-color: rgba(241, 211, 87, 0.6);
+        }
+        .marker-cluster-medium div {
+            background-color: rgba(240, 194, 12, 0.8);
+            color: white;
+            font-weight: bold;
+        }
+
+        .marker-cluster-large {
+            background-color: rgba(253, 156, 115, 0.6);
+        }
+        .marker-cluster-large div {
+            background-color: rgba(241, 128, 23, 0.8);
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Iconos de clientes más discretos */
+        .cliente-marker {
+            background: transparent !important;
+            border: none !important;
         }
     </style>
 </head>
 <body>
 
-    <!-- Panel Lateral (Basado en tu interfaz) -->
+    <!-- Panel Lateral -->
     <div id="sidebar">
-        <h2>Clientes Potenciales · GNU</h2>
+        <h2>📍 Clientes Potenciales</h2>
         <p><strong>Morelia y Tototlán</strong></p>
-        <p id="contador-clientes">0 clientes | 0 en vista</p>
-        <hr>
+        <p id="contador-clientes" style="font-size: 16px; color: #2c3e50; font-weight: 600;">0 clientes | 0 en vista</p>
+        <hr style="border: none; border-top: 2px solid #dee2e6; margin: 15px 0;">
         
-        <p><strong>Filtrar por distancia:</strong></p>
+        <p style="font-weight: 600; color: #2c3e50;">🎯 Filtrar por distancia:</p>
         <div class="btn-group">
             <button class="btn btn-m" id="btn-150-m">150 M.</button>
             <button class="btn btn-m" id="btn-190-m">190 M.</button>
@@ -84,11 +159,11 @@
             <button class="btn btn-t" id="btn-190-t">190 T.</button>
         </div>
 
-        <hr>
-        <button class="btn-action" id="btn-mi-ubicacion">Mi ubicación</button>
-        <button class="btn-action" id="btn-centrar-morelia">Centrar en Morelia</button>
-        <button class="btn-action" id="btn-centrar-tototlan">Centrar en Tototlán</button>
-        <button class="btn-action btn-clear" id="btn-limpiar">Limpiar filtros</button>
+        <hr style="border: none; border-top: 2px solid #dee2e6; margin: 15px 0;">
+        <button class="btn-action" id="btn-mi-ubicacion">📍 Mi ubicación</button>
+        <button class="btn-action" id="btn-centrar-morelia">⭐ Centrar en Morelia</button>
+        <button class="btn-action" id="btn-centrar-tototlan">⭐ Centrar en Tototlán</button>
+        <button class="btn-action btn-clear" id="btn-limpiar">🧹 Limpiar filtros</button>
     </div>
 
     <!-- Mapa -->
@@ -96,6 +171,8 @@
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- MarkerCluster JS -->
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     
     <script>
         // ==========================================
@@ -111,39 +188,82 @@
         }).addTo(mapa);
 
         // ==========================================
-        // 2. ICONOS PERSONALIZADOS (ESTRELLAS GRANDES)
+        // 2. ICONOS ANCLA ELEGANTES (DISEÑO PREMIUM)
         // ==========================================
-        function crearIconoEstrella(color, size) {
+        function crearIconoAncla(colorPrincipal, colorSecundario, size) {
             return L.divIcon({
-                className: 'estrella-marker',
-                html: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" stroke="#333" stroke-width="1.5">
-                        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
-                       </svg>`,
-                iconSize: [size, size],
-                iconAnchor: [size / 2, size / 2],
-                popupAnchor: [0, -size / 2]
+                className: 'ancla-marker',
+                html: `
+                    <svg width="${size}" height="${size * 1.3}" viewBox="0 0 50 65" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="grad_${colorPrincipal.replace('#', '')}" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:${colorPrincipal};stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:${colorSecundario};stop-opacity:1" />
+                            </linearGradient>
+                            <filter id="shadow">
+                                <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+                            </filter>
+                        </defs>
+                        <!-- Pin principal -->
+                        <path d="M 25 0 C 11.2 0 0 11.2 0 25 C 0 42.5 25 65 25 65 C 25 65 50 42.5 50 25 C 50 11.2 38.8 0 25 0 Z" 
+                              fill="url(#grad_${colorPrincipal.replace('#', '')})" 
+                              filter="url(#shadow)"/>
+                        <!-- Círculo interior -->
+                        <circle cx="25" cy="25" r="18" fill="white" opacity="0.95"/>
+                        <!-- Estrella central -->
+                        <polygon points="25,12 28.5,20.5 37.5,21.5 31,27.5 32.5,36.5 25,32 17.5,36.5 19,27.5 12.5,21.5 21.5,20.5" 
+                                 fill="url(#grad_${colorPrincipal.replace('#', '')})" 
+                                 stroke="${colorSecundario}" 
+                                 stroke-width="0.5"/>
+                    </svg>
+                `,
+                iconSize: [size, size * 1.3],
+                iconAnchor: [size / 2, size * 1.3],
+                popupAnchor: [0, -size * 1.3]
             });
         }
 
-        // Marcadores de las sedes (Estrellas de 50px)
+        // Marcadores de las sedes (Iconos premium de 45px)
         const marcadorMorelia = L.marker([COORD_MORELIA.lat, COORD_MORELIA.lng], {
-            icon: crearIconoEstrella('#FFD700', 50) // Estrella Dorada Grande
-        }).addTo(mapa).bindPopup('<b>Morelia</b><br>Centro de operación');
+            icon: crearIconoAncla('#FFD700', '#FF8C00', 45) // Dorado con gradiente
+        }).addTo(mapa).bindPopup('<b style="font-size: 16px;">⭐ Morelia</b><br>Centro de operación principal');
 
         const marcadorTototlan = L.marker([COORD_TOTOTLAN.lat, COORD_TOTOTLAN.lng], {
-            icon: crearIconoEstrella('#C0C0C0', 50) // Estrella Plateada Grande
-        }).addTo(mapa).bindPopup('<b>Tototlán</b><br>Centro de operación');
+            icon: crearIconoAncla('#4169E1', '#1E90FF', 45) // Azul royal con gradiente
+        }).addTo(mapa).bindPopup('<b style="font-size: 16px;">⭐ Tototlán</b><br>Centro de operación');
 
         // ==========================================
-        // 3. DATOS DE EJEMPLO (CLIENTES)
+        // 3. CLUSTER DE CLIENTES (AGRUPAMIENTO)
         // ==========================================
-        // Generamos clientes ficticios alrededor de ambas coordenadas para probar los filtros
+        // Crear grupo de clusters
+        const clientesCluster = L.markerClusterGroup({
+            maxClusterRadius: 50, // Radio para agrupar (en pixels)
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true,
+            disableClusteringAtZoom: 17 // Desactivar clustering en zoom muy cercano
+        });
+
         const clientesMarkers = [];
         let circuloFiltro = null;
 
+        // Icono de cliente más discreto
+        function crearIconoCliente() {
+            return L.divIcon({
+                className: 'cliente-marker',
+                html: `
+                    <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="10" cy="10" r="8" fill="#3498db" stroke="white" stroke-width="2" opacity="0.85"/>
+                        <circle cx="10" cy="10" r="3" fill="white"/>
+                    </svg>
+                `,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+        }
+
         function generarClientesFicticios(centro, cantidad, radioMax) {
             for (let i = 0; i < cantidad; i++) {
-                // Generar coordenadas aleatorias dentro de un radio
                 const angulo = Math.random() * 2 * Math.PI;
                 const distancia = Math.random() * radioMax;
                 const deltaLat = (distancia / 111320) * Math.cos(angulo);
@@ -152,25 +272,33 @@
                 const lat = centro.lat + deltaLat;
                 const lng = centro.lng + deltaLng;
 
-                const marker = L.marker([lat, lng]).bindPopup(`Cliente #${clientesMarkers.length + 1}<br>Distancia aprox: ${Math.round(distancia)}m`);
+                const marker = L.marker([lat, lng], {
+                    icon: crearIconoCliente()
+                }).bindPopup(`
+                    <div style="text-align: center; padding: 5px;">
+                        <b style="color: #2c3e50; font-size: 14px;">Cliente #${clientesMarkers.length + 1}</b><br>
+                        <span style="color: #7f8c8d; font-size: 12px;">Distancia: ${Math.round(distancia)}m</span>
+                    </div>
+                `);
+                
                 clientesMarkers.push(marker);
+                clientesCluster.addLayer(marker);
             }
         }
 
-        // Generar 30 clientes alrededor de Morelia (hasta 300m de distancia)
-        generarClientesFicticios(COORD_MORELIA, 30, 300);
-        // Generar 30 clientes alrededor de Tototlán (hasta 300m de distancia)
-        generarClientesFicticios(COORD_TOTOTLAN, 30, 300);
+        // Generar clientes
+        generarClientesFicticios(COORD_MORELIA, 50, 400);
+        generarClientesFicticios(COORD_TOTOTLAN, 50, 400);
 
-        // Mostrar todos al inicio
-        clientesMarkers.forEach(m => m.addTo(mapa));
+        // Agregar cluster al mapa
+        mapa.addLayer(clientesCluster);
         actualizarContador();
 
         // ==========================================
-        // 4. LÓGICA DE FILTRADO (FÓRMULA DE Haversine)
+        // 4. LÓGICA DE FILTRADO
         // ==========================================
         function calcularDistancia(lat1, lon1, lat2, lon2) {
-            const R = 6371000; // Radio de la tierra en metros
+            const R = 6371000;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -183,47 +311,70 @@
         function filtrarClientesPorDistancia(coordCentro, radioMetros) {
             let clientesEnVista = 0;
             
-            // 1. Filtrar marcadores
+            // Limpiar cluster actual
+            mapa.removeLayer(clientesCluster);
+            
+            // Crear nuevo cluster temporal para el filtro
+            const clusterFiltro = L.markerClusterGroup({
+                maxClusterRadius: 50,
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true,
+                disableClusteringAtZoom: 17
+            });
+
+            // Filtrar y agregar solo los clientes dentro del radio
             clientesMarkers.forEach(marker => {
                 const pos = marker.getLatLng();
                 const distancia = calcularDistancia(coordCentro.lat, coordCentro.lng, pos.lat, pos.lng);
                 
                 if (distancia <= radioMetros) {
-                    if (!mapa.hasLayer(marker)) mapa.addLayer(marker);
+                    clusterFiltro.addLayer(marker);
                     clientesEnVista++;
-                } else {
-                    if (mapa.hasLayer(marker)) mapa.removeLayer(marker);
                 }
             });
 
-            // 2. Dibujar círculo visual
+            // Agregar cluster filtrado al mapa
+            mapa.addLayer(clusterFiltro);
+
+            // Dibujar círculo visual
             if (circuloFiltro) mapa.removeLayer(circuloFiltro);
             circuloFiltro = L.circle([coordCentro.lat, coordCentro.lng], {
                 radius: radioMetros,
-                color: '#ff6600',
-                fillColor: '#ff6600',
-                fillOpacity: 0.15,
-                weight: 2,
-                dashArray: '5, 10'
+                color: '#e74c3c',
+                fillColor: '#e74c3c',
+                fillOpacity: 0.1,
+                weight: 3,
+                dashArray: '8, 8'
             }).addTo(mapa);
 
-            // 3. Centrar mapa en la coordenada clave
-            mapa.setView([coordCentro.lat, coordCentro.lng], 17); // Zoom 17 para ver bien los metros
+            // Centrar mapa
+            mapa.setView([coordCentro.lat, coordCentro.lng], 16);
 
-            // 4. Actualizar UI
+            // Actualizar UI
             actualizarContador(clientesEnVista);
+
+            // Guardar referencia para limpiar
+            clientesCluster._clusterFiltro = clusterFiltro;
         }
 
         function limpiarFiltros() {
-            // Mostrar todos los clientes
-            clientesMarkers.forEach(marker => {
-                if (!mapa.hasLayer(marker)) mapa.addLayer(marker);
-            });
+            // Remover cluster de filtro si existe
+            if (clientesCluster._clusterFiltro) {
+                mapa.removeLayer(clientesCluster._clusterFiltro);
+            }
+            
+            // Mostrar cluster original con todos los clientes
+            if (!mapa.hasLayer(clientesCluster)) {
+                mapa.addLayer(clientesCluster);
+            }
+
             // Quitar círculo
             if (circuloFiltro) {
                 mapa.removeLayer(circuloFiltro);
                 circuloFiltro = null;
             }
+            
             actualizarContador();
             mapa.setView([COORD_MORELIA.lat, COORD_MORELIA.lng], 13);
         }
