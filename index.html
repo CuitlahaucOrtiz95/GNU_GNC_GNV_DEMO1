@@ -267,8 +267,8 @@
     </div>
     <div class="dist-slider">
       <label for="distSlider">Max dist.</label>
-      <input type="range" id="distSlider" min="60" max="210" value="210" step="5" />
-      <span id="distLabel">210 km</span>
+      <input type="range" id="distSlider" min="25" max="500" value="500" step="25" />
+      <span id="distLabel">Sin límite</span>
     </div>
 
     <span class="separator"></span>
@@ -1081,7 +1081,8 @@ document.addEventListener('DOMContentLoaded', function(){
   // ============================================================
   //  10. FILTROS Y EVENTOS (clientes) - incluye tamaño
   // ============================================================
-  let activePrice = null, activeTamano = 'all', searchTerm = '', maxDist = 210;
+  const DIST_TOPE = 500;                 // al tope, el filtro se apaga (sin límite)
+  let activePrice = null, activeTamano = 'all', searchTerm = '', maxDist = Infinity;
 
   function applyFilters() {
     const term = searchTerm.toLowerCase();
@@ -1100,7 +1101,7 @@ document.addEventListener('DOMContentLoaded', function(){
     renderList(visible);
     updateLegendUI();
     updateStats(visible);
-    document.getElementById('clearAllBtn').classList.toggle('hidden', !(activePrice || selectedTam !== 'all' || term || maxDist < 210));
+    document.getElementById('clearAllBtn').classList.toggle('hidden', !(activePrice || selectedTam !== 'all' || term || maxDist !== Infinity));
     return visible;
   }
 
@@ -1145,8 +1146,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
   document.getElementById('tamanoFilter').addEventListener('change', applyFilters);
   document.getElementById('distSlider').addEventListener('input', function() {
-    maxDist = parseInt(this.value);
-    document.getElementById('distLabel').textContent = maxDist + ' km';
+    const v = parseInt(this.value);
+    maxDist = (v >= DIST_TOPE) ? Infinity : v;      // al tope: sin límite
+    document.getElementById('distLabel').textContent = (v >= DIST_TOPE) ? 'Sin límite' : v + ' km';
     applyFilters();
   });
 
@@ -1160,9 +1162,9 @@ document.addEventListener('DOMContentLoaded', function(){
     activePrice = null; searchTerm = '';
     document.getElementById('tamanoFilter').value = 'all';
     document.getElementById('searchInput').value = '';
-    maxDist = 210;
-    document.getElementById('distSlider').value = 210;
-    document.getElementById('distLabel').textContent = '210 km';
+    maxDist = Infinity;
+    document.getElementById('distSlider').value = DIST_TOPE;
+    document.getElementById('distLabel').textContent = 'Sin límite';
     applyFilters();
     map.flyTo([23.5, -102.5], 5, { duration: 1 });
   });
