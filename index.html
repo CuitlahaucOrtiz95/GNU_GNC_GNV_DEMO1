@@ -3,13 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clientes Potenciales · Morelia</title>
+  <meta name="description" content="Mapa de clientes potenciales en Morelia y Tototlán con filtros por distancia, tamaño y estado, cálculo de rutas y geocodificación." />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#1F5CA9" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231F5CA9'/%3E%3Ctext x='50' y='68' font-size='60' text-anchor='middle' fill='white' font-family='Arial'%3E%F0%9F%93%8D%3C/text%3E%3C/svg%3E" />
+  <title>Clientes Potenciales · Morelia y Tototlán</title>
   <!-- Resource hints -->
   <link rel="preconnect" href="https://unpkg.com" crossorigin />
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
+  <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org" />
+  <link rel="dns-prefetch" href="https://router.project-osrm.org" />
 
   <!-- CSS crítico -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -460,17 +466,12 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   // Filtro geográfico: solo clientes dentro de 190 km de Morelia O Tototlán
+  // Requiere que `lista` ya haya pasado por enriquecer() (usa distMorelia/distTototlan).
   function filtrarPorRadio190(lista) {
-    return lista.filter(s => {
-      const dM = distanciaKm(ANCLA_MORELIA.lat,  ANCLA_MORELIA.lon,  s.lat, s.lon);
-      const dT = distanciaKm(ANCLA_TOTOTLAN.lat, ANCLA_TOTOTLAN.lon, s.lat, s.lon);
-      return dM <= 190 || dT <= 190;
-    });
+    return lista.filter(s => s.distMorelia <= 190 || s.distTototlan <= 190);
   }
 
-  let stations = enriquecer(deduplicate(rawClientes));
-  stations = filtrarPorRadio190(stations);
-  stations = enriquecer(stations);
+  let stations = filtrarPorRadio190(enriquecer(deduplicate(rawClientes)));
 
   function contarPorAncla(lista) {
     let morelia = 0, tototlan = 0;
@@ -596,8 +597,7 @@ document.addEventListener('DOMContentLoaded', function(){
       });
     },
     zoomToBoundsOnClick: true,
-    spiderfyOnMaxZoom: true,
-    removeOutsideVisibleBounds: true
+    spiderfyOnMaxZoom: true
   });
   map.addLayer(cluster);
   const markerMap = new Map();
@@ -654,7 +654,6 @@ document.addEventListener('DOMContentLoaded', function(){
   function reconstruirMarcadoresClientes() {
     cluster.clearLayers();
     markerMap.clear();
-    enriquecer(stations);
     const nuevos = [];
     stations.forEach(s => {
       const marker = L.marker([s.lat, s.lon], {
@@ -1203,10 +1202,9 @@ document.addEventListener('DOMContentLoaded', function(){
     try {
       const nuevos = leerArrayGuardado(nuevoJS);
       if (!nuevos || !Array.isArray(nuevos)) { warn('CLIENTES_JS inválido'); return; }
-      let nuevosFiltrados = deduplicate(nuevos);
-      nuevosFiltrados = filtrarPorRadio190(nuevosFiltrados);
+      const nuevosFiltrados = filtrarPorRadio190(enriquecer(deduplicate(nuevos)));
       stations.length = 0;
-      stations.push(...enriquecer(nuevosFiltrados));
+      stations.push(...nuevosFiltrados);
       reconstruirMarcadoresClientes();
       actualizarSelectTamano();
       applyFilters();
