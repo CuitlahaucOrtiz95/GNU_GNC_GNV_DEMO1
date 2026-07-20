@@ -710,15 +710,13 @@ document.addEventListener('DOMContentLoaded', function(){
     encuadrarClientes(visibles);
   }
 
-  // Activa el círculo de 190 km de una ancla (si no estaba ya activo) para
-  // revelar sus clientes. Se usa al hacer clic en el pin de Morelia/Tototlán
-  // en el mapa y en los botones "Morelia"/"Tototlán" de la barra de herramientas.
-  // Devuelve true si activó un círculo nuevo (y por lo tanto ya encuadró el mapa).
+  // Alterna (activa/desactiva) el círculo de 190 km de una ancla para
+  // mostrar u ocultar sus clientes. Se usa al hacer clic en el pin de
+  // Morelia/Tototlán en el mapa y en los botones "Morelia"/"Tototlán" de la
+  // barra de herramientas: el primer clic los muestra, el siguiente los oculta.
   function activarAncla(centro) {
     const id = '190' + (centro === 'morelia' ? 'Morelia' : 'Tototlan');
-    if (activeCircleFilters.has(id)) return false;
     toggleCirculo(id);
-    return true;
   }
 
   // ============================================================
@@ -1274,11 +1272,11 @@ document.addEventListener('DOMContentLoaded', function(){
   document.getElementById('resetBtn').addEventListener('click', () => verAmbasAnclas());
   document.getElementById('centerMoreliaBtn').addEventListener('click', () => {
     limpiarRuta();
-    if (!activarAncla('morelia')) map.flyTo([ANCLA_MORELIA.lat, ANCLA_MORELIA.lon], 9, { duration: 1.2 });
+    activarAncla('morelia');
   });
   document.getElementById('centerTototlanBtn').addEventListener('click', () => {
     limpiarRuta();
-    if (!activarAncla('tototlan')) map.flyTo([ANCLA_TOTOTLAN.lat, ANCLA_TOTOTLAN.lon], 9, { duration: 1.2 });
+    activarAncla('tototlan');
   });
   document.getElementById('clearRouteBtn').addEventListener('click', limpiarRuta);
 
