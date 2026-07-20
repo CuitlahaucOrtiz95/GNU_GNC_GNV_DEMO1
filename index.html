@@ -710,6 +710,17 @@ document.addEventListener('DOMContentLoaded', function(){
     encuadrarClientes(visibles);
   }
 
+  // Activa el círculo de 190 km de una ancla (si no estaba ya activo) para
+  // revelar sus clientes. Se usa al hacer clic en el pin de Morelia/Tototlán
+  // en el mapa y en los botones "Morelia"/"Tototlán" de la barra de herramientas.
+  // Devuelve true si activó un círculo nuevo (y por lo tanto ya encuadró el mapa).
+  function activarAncla(centro) {
+    const id = '190' + (centro === 'morelia' ? 'Morelia' : 'Tototlan');
+    if (activeCircleFilters.has(id)) return false;
+    toggleCirculo(id);
+    return true;
+  }
+
   // ============================================================
   //  5. CLÚSTER Y MARCADORES DE CLIENTES
   // ============================================================
@@ -752,6 +763,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   ANCLAS.forEach(a => {
+    const centro = a === ANCLA_MORELIA ? 'morelia' : 'tototlan';
     L.marker([a.lat, a.lon], {
       icon: anclaIcon(a),
       zIndexOffset: 1000,
@@ -759,7 +771,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }).addTo(map).bindPopup(
       `<strong style="color:${a.color};">⭐ ${a.nombre}</strong><br>` +
       `<span style="font-size:.8rem;color:#64748b;">Ancla de referencia para distancias</span>`
-    );
+    ).on('click', () => activarAncla(centro));
   });
 
   const iconCache = new Map();
@@ -1260,8 +1272,14 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   document.getElementById('resetBtn').addEventListener('click', () => verAmbasAnclas());
-  document.getElementById('centerMoreliaBtn').addEventListener('click', () => { map.flyTo([ANCLA_MORELIA.lat, ANCLA_MORELIA.lon], 9, { duration: 1.2 }); limpiarRuta(); });
-  document.getElementById('centerTototlanBtn').addEventListener('click', () => { map.flyTo([ANCLA_TOTOTLAN.lat, ANCLA_TOTOTLAN.lon], 9, { duration: 1.2 }); limpiarRuta(); });
+  document.getElementById('centerMoreliaBtn').addEventListener('click', () => {
+    limpiarRuta();
+    if (!activarAncla('morelia')) map.flyTo([ANCLA_MORELIA.lat, ANCLA_MORELIA.lon], 9, { duration: 1.2 });
+  });
+  document.getElementById('centerTototlanBtn').addEventListener('click', () => {
+    limpiarRuta();
+    if (!activarAncla('tototlan')) map.flyTo([ANCLA_TOTOTLAN.lat, ANCLA_TOTOTLAN.lon], 9, { duration: 1.2 });
+  });
   document.getElementById('clearRouteBtn').addEventListener('click', limpiarRuta);
 
   document.getElementById('gotoClosestBtn').addEventListener('click', function() {
