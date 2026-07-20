@@ -1047,6 +1047,60 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ============================================================
+  //  10b. MI UBICACIÓN (Geolocalización del navegador)
+  // ============================================================
+  let miUbicacionMarker = null;
+
+  function miUbicacionIcon() {
+    return L.divIcon({
+      className: 'location-marker',
+      html: '<span class="dot"></span>',
+      iconSize: [18, 18],
+      iconAnchor: [9, 9]
+    });
+  }
+
+  document.getElementById('locBtn').addEventListener('click', function() {
+    const btn = this;
+    if (btn.classList.contains('loading')) return;
+
+    if (!navigator.geolocation) {
+      alert('Tu navegador no soporta geolocalización.');
+      return;
+    }
+
+    btn.classList.add('loading');
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        btn.classList.remove('loading');
+        const { latitude: lat, longitude: lon } = pos.coords;
+
+        if (miUbicacionMarker) map.removeLayer(miUbicacionMarker);
+        miUbicacionMarker = L.marker([lat, lon], {
+          icon: miUbicacionIcon(),
+          zIndexOffset: 2000,
+          title: 'Mi ubicación'
+        }).addTo(map).bindPopup('📍 Estás aquí').openPopup();
+
+        map.flyTo([lat, lon], 13, { duration: 1.2 });
+      },
+      function(err) {
+        btn.classList.remove('loading');
+        let msg = 'No se pudo obtener tu ubicación.';
+        if (err.code === err.PERMISSION_DENIED) {
+          msg = 'Permiso de ubicación denegado. Actívalo en la configuración del navegador para usar esta función.';
+        } else if (err.code === err.TIMEOUT) {
+          msg = 'Tiempo de espera agotado al obtener tu ubicación. Intenta de nuevo.';
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          msg = 'No se pudo determinar tu ubicación actual.';
+        }
+        alert(msg);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  });
+
+  // ============================================================
   //  11. GEOCODIFICACIÓN INVERSA (Nominatim)
   // ============================================================
   async function geocodeCliente(cliente) {
