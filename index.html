@@ -163,8 +163,12 @@
     .dropdown-item {
       background: transparent; border: none; border-radius: 8px; padding: 0.5rem 0.7rem;
       font-size: 0.78rem; text-align: left; cursor: pointer; color: var(--text-main);
-      display: flex; align-items: center; gap: 0.5rem; transition: var(--transition); white-space: nowrap;
+      display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+      transition: var(--transition); white-space: nowrap;
     }
+    .dropdown-item-label { display: flex; align-items: center; gap: 0.5rem; }
+    .dropdown-item .check-icon { font-size: 0.7rem; opacity: 0; color: currentColor; }
+    .dropdown-item.active .check-icon { opacity: 1; }
     .dropdown-item:hover { background: var(--bg-main); }
     .dropdown-item.active { background: var(--primary); color: #fff; }
     .toolbar .btn-primary { background: var(--primary); color: #fff; }
@@ -189,6 +193,16 @@
 
     .stage { display: flex; flex: 1; overflow: hidden; position: relative; }
     #map { flex: 1; height: 100%; min-height: 300px; z-index: 1; transition: width 0.3s ease; }
+    .map-hint {
+      position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+      background: var(--glass-bg); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.5); border-radius: 2rem;
+      padding: 0.55rem 1.1rem; font-size: 0.8rem; color: var(--text-main);
+      box-shadow: var(--shadow-lg); z-index: 15; display: flex; align-items: center; gap: 0.5rem;
+      transition: opacity .3s ease, transform .3s ease; pointer-events: none;
+      max-width: 90%; text-align: center;
+    }
+    .map-hint.hidden { opacity: 0; transform: translate(-50%, -10px); visibility: hidden; }
     .rail {
       width: 320px; max-height: 100%; overflow-y: auto; overflow-x: hidden;
       border-left: 1px solid var(--border); background: var(--bg-panel); flex-shrink: 0;
@@ -393,10 +407,22 @@
         <i class="fas fa-bullseye"></i> <span id="circulosLabel">Círculos de radio</span> <i class="fas fa-chevron-down" style="font-size:0.6rem;"></i>
       </button>
       <div class="dropdown-menu" id="circulosMenu">
-        <button class="dropdown-item" id="btnCirculo150Morelia"><i class="fas fa-circle" style="color:#10b981;"></i> 150 km · Morelia</button>
-        <button class="dropdown-item" id="btnCirculo190Morelia"><i class="fas fa-circle" style="color:#ef4444;"></i> 190 km · Morelia</button>
-        <button class="dropdown-item" id="btnCirculo150Tototlan"><i class="fas fa-circle" style="color:#10b981;"></i> 150 km · Tototlán</button>
-        <button class="dropdown-item" id="btnCirculo190Tototlan"><i class="fas fa-circle" style="color:#ef4444;"></i> 190 km · Tototlán</button>
+        <button class="dropdown-item" id="btnCirculo150Morelia">
+          <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#10b981;"></i> 150 km · Morelia</span>
+          <i class="fas fa-check check-icon" aria-hidden="true"></i>
+        </button>
+        <button class="dropdown-item" id="btnCirculo190Morelia">
+          <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#ef4444;"></i> 190 km · Morelia</span>
+          <i class="fas fa-check check-icon" aria-hidden="true"></i>
+        </button>
+        <button class="dropdown-item" id="btnCirculo150Tototlan">
+          <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#10b981;"></i> 150 km · Tototlán</span>
+          <i class="fas fa-check check-icon" aria-hidden="true"></i>
+        </button>
+        <button class="dropdown-item" id="btnCirculo190Tototlan">
+          <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#ef4444;"></i> 190 km · Tototlán</span>
+          <i class="fas fa-check check-icon" aria-hidden="true"></i>
+        </button>
       </div>
     </div>
 
@@ -440,6 +466,10 @@
   </div>
   <div class="stage">
     <div id="map"></div>
+    <div class="map-hint" id="mapHint">
+      <i class="fas fa-hand-pointer"></i>
+      Activa uno o más <strong>círculos de radio</strong> (o toca una ancla ⭐) para ver los clientes.
+    </div>
     <div class="rail" id="railPanel">
       <div class="rail-head">
         <span>Directorio</span>
@@ -668,22 +698,6 @@ document.addEventListener('DOMContentLoaded', function(){
     label.textContent = `${n} círculos activos`;
   }
 
-  function desactivarTodosLosCirculos() {
-    if (!activeCircleFilters.size) return;
-    activeCircleFilters.forEach(id => {
-      const c = circulos[id];
-      if (c && c.visible) {
-        circulosLayer.removeLayer(c.capa);
-        c.visible = false;
-        const btn = document.getElementById('btnCirculo' + id);
-        if (btn) btn.classList.remove('active');
-      }
-    });
-    activeCircleFilters.clear();
-    actualizarEtiquetaCirculos();
-    applyFilters();
-  }
-
   function toggleCirculo(id) {
     const c = circulos[id];
     if (!c) return;
@@ -803,7 +817,9 @@ document.addEventListener('DOMContentLoaded', function(){
         title: s.nombre
       });
       marker.bindPopup(() => {
-        const d = s.distKm < 10 ? s.distKm.toFixed(1) : Math.round(s.distKm);
+        // El cliente solo puede tener su popup abierto si está visible, así que
+        // _matchDist/_matchColor/_matchAncla ya los puso applyFilters().
+        const d = s._matchDist < 10 ? s._matchDist.toFixed(1) : Math.round(s._matchDist);
         const direccion = s.direccion ? `<br><span style="font-size:0.8rem;">📍 ${s.direccion}</span>` : '';
         const tamano = s.tamano ? `<br><span style="font-size:0.8rem;">🏢 ${s.tamano}</span>` : '';
         return `<div style="padding:0.2rem;">
@@ -813,8 +829,8 @@ document.addEventListener('DOMContentLoaded', function(){
           ${tamano}
           ${s.telefono ? `<br><span style="font-size:0.8rem;">📞 ${s.telefono}</span>` : ''}
           <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
-            <span style="display:block;width:10px;height:10px;border-radius:50%;background:${s.priceColor};"></span>
-            <span style="color:#0f172a;font-weight:600;">${d} km de ${s.ancla}</span>
+            <span style="display:block;width:10px;height:10px;border-radius:50%;background:${s._matchColor};"></span>
+            <span style="color:#0f172a;font-weight:600;">${d} km de ${s._matchAncla}</span>
           </div>
           <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">
             Morelia ${Math.round(s.distMorelia)} km · Tototlán ${Math.round(s.distTototlan)} km
@@ -908,7 +924,7 @@ document.addEventListener('DOMContentLoaded', function(){
     const layer = e.layer;
     const markers = layer.getAllChildMarkers().sort((a,b)=>a.data.nombre.localeCompare(b.data.nombre));
     let totalDist = 0;
-    markers.forEach(m => totalDist += m.data.distKm);
+    markers.forEach(m => totalDist += m.data._matchDist);
     const avgDist = (totalDist / markers.length).toFixed(1);
     let html = `<div class="cluster-popup-title">
       <span>📍 ${markers.length} clientes</span>
@@ -932,7 +948,7 @@ document.addEventListener('DOMContentLoaded', function(){
   const legendControl = L.control({ position: 'bottomright' });
   legendControl.onAdd = function() {
     const div = L.DomUtil.create('div', 'price-legend');
-    div.innerHTML = `<div class="title">Distancia al ancla más cercana <button class="clear-btn" id="legendClearBtn">✕</button></div>`;
+    div.innerHTML = `<div class="title">Distancia al círculo activo <button class="clear-btn" id="legendClearBtn">✕</button></div>`;
     const ranges = [
       { label: '0 – 50 km',   key: 'very-low', color: '#10b981' },
       { label: '50 – 100 km', key: 'low',     color: '#34d399' },
@@ -940,9 +956,11 @@ document.addEventListener('DOMContentLoaded', function(){
       { label: '150 – 190 km', key: 'high',   color: '#fb923c' },
       { label: '> 190 km',    key: 'no-price', color: '#94a3b8' }
     ];
-    function actualizarConteos() {
+    // Cuenta por color entre los clientes VISIBLES (según su círculo activo más cercano),
+    // no entre todos los clientes cargados, para que coincida con lo que se ve en el mapa.
+    function actualizarConteos(visibles) {
       const conteo = new Map();
-      for (const s of stations) conteo.set(s.priceKey, (conteo.get(s.priceKey) || 0) + 1);
+      (visibles || []).forEach(s => conteo.set(s._matchKey, (conteo.get(s._matchKey) || 0) + 1));
       div.querySelectorAll('.row').forEach(row => {
         const key = row.dataset.key;
         const count = conteo.get(key) || 0;
@@ -961,19 +979,35 @@ document.addEventListener('DOMContentLoaded', function(){
   };
   legendControl.addTo(map);
 
+  // Aviso flotante sobre el mapa: visible mientras no haya ningún círculo de
+  // radio activo, para que quede claro que hay que elegir uno para ver clientes.
+  function actualizarPistaMapa() {
+    const hint = document.getElementById('mapHint');
+    if (!hint) return;
+    hint.classList.toggle('hidden', activeCircleFilters.size > 0);
+  }
+
   // ============================================================
   //  8. FILTROS Y EVENTOS
   // ============================================================
   let activePrice = null, activeTamano = 'all', searchTerm = '', maxDist = 190;
   let activeNoAddress = false;
 
-  // Un cliente se muestra si cae dentro de CUALQUIERA de los círculos activos (unión, no intersección).
-  function estaEnAlgunCirculoActivo(s) {
+  // Para un cliente, busca el círculo activo más cercano que lo alcance (si hay varios,
+  // gana el de menor distancia). "Max dist." recorta el radio de CADA círculo activo,
+  // en vez de compararse contra el ancla más cercana en general — así nunca contradice
+  // al círculo que el usuario seleccionó.
+  function mejorCoincidenciaCirculo(s) {
+    let mejor = null;
     for (const id of activeCircleFilters) {
       const { centro, radio } = datosCirculo(id);
-      if (distanciaKm(centro.lat, centro.lon, s.lat, s.lon) <= radio) return true;
+      const limite = Math.min(radio, maxDist);
+      const d = distanciaKm(centro.lat, centro.lon, s.lat, s.lon);
+      if (d <= limite && (!mejor || d < mejor.dist)) {
+        mejor = { dist: d, anclaNombre: centro.nombre };
+      }
     }
-    return false;
+    return mejor;
   }
 
   function applyFilters() {
@@ -984,17 +1018,32 @@ document.addEventListener('DOMContentLoaded', function(){
 
     // Sin ningún círculo de radio activo no se muestra ningún cliente:
     // solo quedan visibles las dos anclas (Morelia y Tototlán).
-    let visible = activeCircleFilters.size === 0 ? [] : stations.filter(s =>
-      (term === '' || s.nombre.toLowerCase().includes(term)) &&
-      (activePrice === null || s.priceKey === activePrice) &&
-      (selectedTam === 'all' || s.tamano === selectedTam) &&
-      s.distKm <= maxDist &&
-      estaEnAlgunCirculoActivo(s)
-    );
+    let visible = [];
+    for (const s of stations) {
+      if (!activeCircleFilters.size) break;
+      if (term !== '' && !s.nombre.toLowerCase().includes(term)) continue;
+      if (selectedTam !== 'all' && s.tamano !== selectedTam) continue;
+      const match = mejorCoincidenciaCirculo(s);
+      if (!match) continue;
+      const rango = getDistRange(match.dist);
+      if (activePrice !== null && rango.key !== activePrice) continue;
+      // El color del pin y la banda de la leyenda reflejan el círculo activo que
+      // reveló a este cliente, no el ancla más cercana en términos absolutos.
+      s._matchDist = match.dist;
+      s._matchAncla = match.anclaNombre;
+      s._matchColor = rango.color;
+      s._matchKey = rango.key;
+      visible.push(s);
+    }
 
     if (activeNoAddress) {
       visible = visible.filter(s => !s.direccion);
     }
+
+    visible.forEach(s => {
+      const entry = markerMap.get(s);
+      if (entry) entry.marker.setIcon(iconoPin(s._matchColor));
+    });
 
     cluster.clearLayers();
     cluster.addLayers(visible.map(s => markerMap.get(s).marker));
@@ -1003,9 +1052,10 @@ document.addEventListener('DOMContentLoaded', function(){
     renderList(visible);
     updateLegendUI();
     updateStats(visible);
-    document.getElementById('clearAllBtn').classList.toggle('hidden', !(activePrice || selectedTam !== 'all' || term || maxDist < 190 || activeCircleFilters.size > 0 || activeNoAddress));
+    document.getElementById('clearAllBtn').classList.toggle('hidden', !(activePrice || selectedTam !== 'all' || term || maxDist < 190 || activeNoAddress));
     const legendDiv = document.querySelector('.price-legend');
-    if (legendDiv && legendDiv._actualizarConteos) legendDiv._actualizarConteos();
+    if (legendDiv && legendDiv._actualizarConteos) legendDiv._actualizarConteos(visible);
+    actualizarPistaMapa();
 
     return visible;
   }
@@ -1019,14 +1069,14 @@ document.addEventListener('DOMContentLoaded', function(){
   function updateStats(items) {
     const statsEl = document.getElementById('stats');
     if (items.length === 0) { statsEl.innerHTML = ''; return; }
-    const dists = items.map(s => s.distKm);
+    const dists = items.map(s => s._matchDist);
     const min = Math.min(...dists);
     const max = Math.max(...dists);
     const avg = dists.reduce((a,b) => a+b, 0) / dists.length;
-    const closest = items.find(s => s.distKm === min);
+    const closest = items.find(s => s._matchDist === min);
     const closestName = closest ? ` (${closest.nombre})` : '';
     let minDisplay = min.toFixed(1) + ' km';
-    if (min < 0.01) minDisplay = '0.0 km (Mismo punto que Morelia)';
+    if (min < 0.01) minDisplay = `0.0 km (Mismo punto que ${closest ? closest._matchAncla : 'el ancla'})`;
     statsEl.innerHTML = `
       <span class="stat">📏 Más cercano: ${minDisplay}${closestName}</span>
       <span class="stat">📏 Más lejano: ${max.toFixed(1)} km</span>
@@ -1046,10 +1096,10 @@ document.addEventListener('DOMContentLoaded', function(){
         }
         const row = e.target.closest('.row');
         if (row) {
+          if (activeCircleFilters.size === 0) { toast('Primero selecciona un círculo de radio.', 'info'); return; }
           activePrice = (activePrice === row.dataset.key) ? null : row.dataset.key;
           const visibles = applyFilters();
-          if (activeCircleFilters.size) encuadrarClientes(visibles);
-          else verAmbasAnclas();
+          encuadrarClientes(visibles);
         }
       });
     }
@@ -1116,6 +1166,9 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
+  // "Limpiar filtros" solo limpia búsqueda/tamaño/distancia/leyenda/sin-dirección.
+  // Los círculos de radio NO se tocan aquí: se activan/desactivan solo desde su
+  // propio botón, el pin del ancla o el botón "Morelia"/"Tototlán".
   document.getElementById('clearAllBtn').addEventListener('click', () => {
     activePrice = null; searchTerm = '';
     document.getElementById('tamanoFilter').value = 'all';
@@ -1125,9 +1178,8 @@ document.addEventListener('DOMContentLoaded', function(){
     document.getElementById('distLabel').textContent = '190 km';
     activeNoAddress = false;
     document.getElementById('noAddressBtn').classList.remove('active');
-    desactivarTodosLosCirculos();
-    applyFilters();
-    verAmbasAnclas();
+    const visibles = applyFilters();
+    if (activeCircleFilters.size) encuadrarClientes(visibles); else verAmbasAnclas();
   });
 
   // ============================================================
@@ -1150,7 +1202,7 @@ document.addEventListener('DOMContentLoaded', function(){
     nombreEl.textContent = s.nombre;
     const distEl = document.createElement('span');
     distEl.className = 'dist';
-    distEl.textContent = `${s.distKm < 10 ? s.distKm.toFixed(1) : Math.round(s.distKm)} km`;
+    distEl.textContent = `${s._matchDist < 10 ? s._matchDist.toFixed(1) : Math.round(s._matchDist)} km`;
     topRow.appendChild(nombreEl);
     topRow.appendChild(distEl);
 
@@ -1209,7 +1261,7 @@ document.addEventListener('DOMContentLoaded', function(){
     const frag = document.createDocumentFragment();
 
     if (sortMode === 'dist') {
-      [...items].sort((a,b) => a.distKm - b.distKm).forEach(s => frag.appendChild(crearItemLista(s)));
+      [...items].sort((a,b) => a._matchDist - b._matchDist).forEach(s => frag.appendChild(crearItemLista(s)));
     } else if (sortMode === 'name') {
       [...items].sort((a,b) => a.nombre.localeCompare(b.nombre)).forEach(s => frag.appendChild(crearItemLista(s)));
     } else {
@@ -1286,7 +1338,7 @@ document.addEventListener('DOMContentLoaded', function(){
       toast(activeCircleFilters.size === 0 ? 'Primero selecciona un círculo de radio.' : 'No hay clientes visibles con los filtros actuales.', 'info');
       return;
     }
-    const closest = visible.reduce((a, b) => a.distKm < b.distKm ? a : b);
+    const closest = visible.reduce((a, b) => a._matchDist < b._matchDist ? a : b);
     map.flyTo([closest.lat, closest.lon], 14, { duration: 1.2 });
     markerMap.get(closest).marker.openPopup();
   });
@@ -1434,7 +1486,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if (entry) {
           entry.marker.closePopup();
           entry.marker.bindPopup(() => {
-            const d = s.distKm < 10 ? s.distKm.toFixed(1) : Math.round(s.distKm);
+            const d = s._matchDist < 10 ? s._matchDist.toFixed(1) : Math.round(s._matchDist);
             const direccion = s.direccion ? `<br><span style="font-size:0.8rem;">📍 ${s.direccion}</span>` : '';
             const tamano = s.tamano ? `<br><span style="font-size:0.8rem;">🏢 ${s.tamano}</span>` : '';
             return `<div style="padding:0.2rem;">
@@ -1444,8 +1496,8 @@ document.addEventListener('DOMContentLoaded', function(){
               ${tamano}
               ${s.telefono ? `<br><span style="font-size:0.8rem;">📞 ${s.telefono}</span>` : ''}
               <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
-                <span style="display:block;width:10px;height:10px;border-radius:50%;background:${s.priceColor};"></span>
-                <span style="color:#0f172a;font-weight:600;">${d} km de Morelia</span>
+                <span style="display:block;width:10px;height:10px;border-radius:50%;background:${s._matchColor};"></span>
+                <span style="color:#0f172a;font-weight:600;">${d} km de ${s._matchAncla}</span>
               </div>
               <a href="https://www.google.com/maps?q=${s.lat},${s.lon}" target="_blank" style="font-size:0.75rem;color:var(--primary);">Ver en Google Maps</a>
               <button class="btn-route" data-lat="${s.lat}" data-lon="${s.lon}" style="display:block;margin-top:4px;">🚗 Calcular ruta</button>
@@ -1499,7 +1551,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if (entry) {
           entry.marker.closePopup();
           entry.marker.bindPopup(() => {
-            const d = cliente.distKm < 10 ? cliente.distKm.toFixed(1) : Math.round(cliente.distKm);
+            const d = cliente._matchDist < 10 ? cliente._matchDist.toFixed(1) : Math.round(cliente._matchDist);
             const direccion = cliente.direccion ? `<br><span style="font-size:0.8rem;">📍 ${cliente.direccion}</span>` : '';
             const tamano = cliente.tamano ? `<br><span style="font-size:0.8rem;">🏢 ${cliente.tamano}</span>` : '';
             return `<div style="padding:0.2rem;">
@@ -1509,8 +1561,8 @@ document.addEventListener('DOMContentLoaded', function(){
               ${tamano}
               ${cliente.telefono ? `<br><span style="font-size:0.8rem;">📞 ${cliente.telefono}</span>` : ''}
               <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
-                <span style="display:block;width:10px;height:10px;border-radius:50%;background:${cliente.priceColor};"></span>
-                <span style="color:#0f172a;font-weight:600;">${d} km de Morelia</span>
+                <span style="display:block;width:10px;height:10px;border-radius:50%;background:${cliente._matchColor};"></span>
+                <span style="color:#0f172a;font-weight:600;">${d} km de ${cliente._matchAncla}</span>
               </div>
               <a href="https://www.google.com/maps?q=${cliente.lat},${cliente.lon}" target="_blank" style="font-size:0.75rem;color:var(--primary);">Ver en Google Maps</a>
               <button class="btn-route" data-lat="${cliente.lat}" data-lon="${cliente.lon}" style="display:block;margin-top:4px;">🚗 Calcular ruta</button>
