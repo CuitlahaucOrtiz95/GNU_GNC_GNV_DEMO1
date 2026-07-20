@@ -3,6 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    // Aplica el tema guardado ANTES de pintar, para evitar parpadeo claro→oscuro.
+    (function(){
+      try {
+        if (localStorage.getItem('tema') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      } catch (e) {}
+    })();
+  </script>
   <meta name="description" content="Mapa de clientes potenciales en Morelia y Tototlán con filtros por distancia, tamaño y estado, cálculo de rutas y geocodificación." />
   <meta name="robots" content="noindex, nofollow" />
   <meta name="theme-color" content="#1F5CA9" />
@@ -52,9 +60,22 @@
       --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.08);
       --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
+    :root[data-theme="dark"] {
+      --primary: #3b82f6;
+      --primary-hover: #60a5fa;
+      --secondary: #38bdf8;
+      --bg-main: #0f172a;
+      --bg-panel: #1e293b;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --border-hover: #475569;
+      --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow: hidden; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-main); }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-main); transition: background .2s ease, color .2s ease; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 4px; }
@@ -82,6 +103,12 @@
     .topbar .status-badge { background: rgba(255,255,255,0.2); border-radius: 2rem; padding: 0.2rem 0.7rem; font-size: 0.7rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
     .topbar .stats { display: flex; gap: 0.8rem; font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 0.2rem 0.8rem; border-radius: 2rem; }
     .topbar .stats .stat { display: flex; align-items: center; gap: 0.2rem; }
+    .theme-toggle {
+      background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 50%;
+      width: 30px; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: var(--transition); flex-shrink: 0;
+    }
+    .theme-toggle:hover { background: rgba(255,255,255,0.3); }
 
     .toolbar {
       background: #f8fafc;
@@ -94,10 +121,20 @@
       flex-shrink: 0;
       z-index: 9;
     }
-    .toolbar .search { flex: 1; min-width: 150px; display: flex; align-items: center; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 2rem; padding: 0.2rem 0.8rem; transition: var(--transition); }
+    .toolbar .search { position: relative; flex: 1; min-width: 150px; display: flex; align-items: center; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 2rem; padding: 0.2rem 0.8rem; transition: var(--transition); }
     .toolbar .search:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(31,92,169,0.1); }
-    .toolbar .search input { border: none; outline: none; flex: 1; padding: 0.3rem 0.4rem; font-size: 0.8rem; background: transparent; }
+    .toolbar .search input { border: none; outline: none; flex: 1; padding: 0.3rem 0.4rem; font-size: 0.8rem; background: transparent; color: var(--text-main); }
     .toolbar .search i { color: #94a3b8; }
+    .search-suggestions {
+      position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: var(--shadow-lg); max-height: 260px; overflow-y: auto; z-index: 30; display: none;
+    }
+    .search-suggestions.show { display: block; }
+    .search-suggestions .item { padding: 0.5rem 0.9rem; cursor: pointer; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+    .search-suggestions .item:hover, .search-suggestions .item.active { background: var(--bg-main); }
+    .search-suggestions .item .name { font-weight: 600; color: var(--text-main); }
+    .search-suggestions .item .meta { color: var(--text-muted); font-size: 0.7rem; white-space: nowrap; }
     .toolbar .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; }
     .toolbar .filters select { padding: 0.3rem 1.8rem 0.3rem 0.8rem; border-radius: 2rem; border: 1px solid var(--border); background: var(--bg-panel); font-size: 0.75rem; cursor: pointer; appearance: none; color: var(--text-main); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236A767D' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.6rem center; background-size: 10px; transition: var(--transition); max-width: 200px; min-width: 120px; }
     .toolbar .filters select:hover { border-color: #cbd5e1; }
@@ -113,6 +150,21 @@
     }
     .toolbar .btn:hover { background: var(--border-hover); transform: translateY(-1px); }
     .toolbar .btn:active { transform: scale(0.95); }
+    .toolbar .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .toolbar .dropdown { position: relative; }
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 6px); left: 0; min-width: 200px;
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: var(--shadow-lg); padding: 6px; z-index: 30; display: none; flex-direction: column; gap: 2px;
+    }
+    .dropdown-menu.open { display: flex; }
+    .dropdown-item {
+      background: transparent; border: none; border-radius: 8px; padding: 0.5rem 0.7rem;
+      font-size: 0.78rem; text-align: left; cursor: pointer; color: var(--text-main);
+      display: flex; align-items: center; gap: 0.5rem; transition: var(--transition); white-space: nowrap;
+    }
+    .dropdown-item:hover { background: var(--bg-main); }
+    .dropdown-item.active { background: var(--primary); color: #fff; }
     .toolbar .btn-primary { background: var(--primary); color: #fff; }
     .toolbar .btn-primary:hover { background: var(--primary-hover); }
     .toolbar .btn-secondary { background: #6b7280; color: #fff; }
@@ -159,6 +211,7 @@
     .rail-list { list-style: none; padding: 0; margin: 0; }
     .rail-list li { padding: 0.6rem 1.2rem; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.8rem; transition: var(--transition); }
     .rail-list li:hover { background: #f8fafc; padding-left: 1.5rem; }
+    .rail-list li:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; background: #f8fafc; padding-left: 1.5rem; }
     .rail-list li .top-row { display: flex; justify-content: space-between; align-items: center; }
     .rail-list li .name { font-weight: 600; color: var(--text-main); }
     .rail-list li .dist { font-weight: 700; color: var(--primary); font-size: 0.8rem; }
@@ -243,9 +296,43 @@
     }
     .geocode-progress .bar { width: 100%; height: 4px; background: var(--border); border-radius: 4px; margin-top: 6px; overflow: hidden; }
     .geocode-progress .bar .fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease; }
+    .btn-cancel-geo {
+      margin-top: 8px; background: transparent; border: 1px solid var(--border); color: var(--text-muted);
+      border-radius: 2rem; padding: 0.25rem 0.8rem; font-size: 0.7rem; cursor: pointer; transition: var(--transition);
+    }
+    .btn-cancel-geo:hover { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
 
     /* FILTRO SIN DIRECCIÓN */
     .btn-no-address.active { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+
+    /* OVERLAY DE CARGA INICIAL */
+    .loading-overlay {
+      position: fixed; inset: 0; background: var(--bg-main); z-index: 99999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+      transition: opacity .3s ease, visibility .3s ease;
+    }
+    .loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loading-overlay .spinner-ring {
+      width: 46px; height: 46px; border: 4px solid var(--border); border-top-color: var(--primary);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    .loading-overlay p { color: var(--text-muted); font-size: 0.9rem; }
+
+    /* NOTIFICACIONES (toast) */
+    .toast-container {
+      position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 100000;
+      display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto; background: #1e293b; color: #fff; padding: 0.6rem 1.1rem; border-radius: 2rem;
+      font-size: 0.8rem; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 0.5rem;
+      opacity: 0; transform: translateY(-12px); transition: opacity .25s ease, transform .25s ease;
+      max-width: 90vw;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast-error { background: #dc2626; }
+    .toast-success { background: #059669; }
+    .toast-info { background: #1F5CA9; }
 
     @media (max-width: 768px) {
       .topbar { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
@@ -261,6 +348,11 @@
   </style>
 </head>
 <body>
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner-ring"></div>
+  <p>Cargando clientes…</p>
+</div>
+<div class="toast-container" id="toastContainer"></div>
 <div class="shell">
   <div class="topbar">
     <div class="brand"><i class="fas fa-users"></i> Clientes Potenciales · Morelia y Tototlán</div>
@@ -269,12 +361,16 @@
       <span class="readout"><span class="num" id="rMatch">0</span> en vista</span>
       <span class="status-badge" id="stateStatus"><i class="fas fa-check-circle"></i> <span id="statusText">Cargando…</span></span>
       <span class="stats" id="stats"></span>
+      <button class="theme-toggle" id="themeToggleBtn" title="Cambiar tema claro/oscuro" aria-label="Cambiar tema claro/oscuro">
+        <i class="fas fa-moon" id="themeIcon"></i>
+      </button>
     </div>
   </div>
   <div class="toolbar">
     <div class="search">
       <i class="fas fa-search"></i>
-      <input type="text" id="searchInput" placeholder="Buscar cliente…" />
+      <input type="text" id="searchInput" placeholder="Buscar cliente…" autocomplete="off" />
+      <div class="search-suggestions" id="searchSuggestions"></div>
     </div>
     <div class="filters">
       <select id="tamanoFilter" aria-label="Filtrar por tamaño de empresa">
@@ -290,18 +386,17 @@
 
     <span class="separator"></span>
 
-    <button class="btn btn-outline" id="btnCirculo150Morelia" aria-label="Círculo de 150 km desde Morelia">
-      <i class="fas fa-circle" style="color:#10b981;"></i> 150 M.
-    </button>
-    <button class="btn btn-outline" id="btnCirculo190Morelia" aria-label="Círculo de 190 km desde Morelia">
-      <i class="fas fa-circle" style="color:#ef4444;"></i> 190 M.
-    </button>
-    <button class="btn btn-outline" id="btnCirculo150Tototlan" aria-label="Círculo de 150 km desde Tototlán">
-      <i class="fas fa-circle" style="color:#10b981;"></i> 150 T.
-    </button>
-    <button class="btn btn-outline" id="btnCirculo190Tototlan" aria-label="Círculo de 190 km desde Tototlán">
-      <i class="fas fa-circle" style="color:#ef4444;"></i> 190 T.
-    </button>
+    <div class="dropdown" id="circulosDropdown">
+      <button class="btn btn-outline" id="circulosToggleBtn" aria-haspopup="true" aria-expanded="false">
+        <i class="fas fa-bullseye"></i> <span id="circulosLabel">Círculos de radio</span> <i class="fas fa-chevron-down" style="font-size:0.6rem;"></i>
+      </button>
+      <div class="dropdown-menu" id="circulosMenu">
+        <button class="dropdown-item" id="btnCirculo150Morelia"><i class="fas fa-circle" style="color:#10b981;"></i> 150 km · Morelia</button>
+        <button class="dropdown-item" id="btnCirculo190Morelia"><i class="fas fa-circle" style="color:#ef4444;"></i> 190 km · Morelia</button>
+        <button class="dropdown-item" id="btnCirculo150Tototlan"><i class="fas fa-circle" style="color:#10b981;"></i> 150 km · Tototlán</button>
+        <button class="dropdown-item" id="btnCirculo190Tototlan"><i class="fas fa-circle" style="color:#ef4444;"></i> 190 km · Tototlán</button>
+      </div>
+    </div>
 
     <span class="separator"></span>
 
@@ -349,6 +444,7 @@
         <div class="sort-options">
           <button id="sortDist" class="active" data-sort="dist">📏 Distancia</button>
           <button id="sortState" data-sort="state">📌 Estado</button>
+          <button id="sortName" data-sort="name">🔤 A-Z</button>
         </div>
         <span id="listCnt" style="color: var(--primary);">0</span>
       </div>
@@ -361,6 +457,7 @@
 <div class="geocode-progress" id="geocodeProgress">
   <div><span id="geoStatus">Obteniendo direcciones…</span> <span id="geoCount">0/0</span></div>
   <div class="bar"><div class="fill" id="geoFill"></div></div>
+  <button class="btn-cancel-geo" id="cancelGeoBtn">Cancelar</button>
 </div>
 
 <script>
@@ -370,6 +467,25 @@ document.addEventListener('DOMContentLoaded', function(){
   const DEBUG = false;
   const log  = (...a) => { if (DEBUG) console.log(...a); };
   const warn = (...a) => { if (DEBUG) console.warn(...a); };
+
+  // Notificación flotante no bloqueante, en vez de alert().
+  function toast(msg, tipo, duracionMs) {
+    tipo = tipo || 'info';
+    duracionMs = duracionMs || 3500;
+    const cont = document.getElementById('toastContainer');
+    if (!cont) { console.warn(msg); return; }
+    const icono = tipo === 'error' ? 'fa-circle-exclamation' : tipo === 'success' ? 'fa-circle-check' : 'fa-circle-info';
+    const el = document.createElement('div');
+    el.className = 'toast toast-' + tipo;
+    el.innerHTML = '<i class="fas ' + icono + '"></i><span></span>';
+    el.querySelector('span').textContent = msg;
+    cont.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => {
+      el.classList.remove('show');
+      setTimeout(() => el.remove(), 300);
+    }, duracionMs);
+  }
 
   function leerArrayGuardado(raw) {
     if (!raw) return null;
@@ -519,9 +635,17 @@ document.addEventListener('DOMContentLoaded', function(){
 
   let activeCircleFilter = null;
 
+  function actualizarEtiquetaCirculos() {
+    const label = document.getElementById('circulosLabel');
+    if (!label) return;
+    if (!activeCircleFilter) { label.textContent = 'Círculos de radio'; return; }
+    const nombreAncla = activeCircleFilter.centro === 'morelia' ? 'Morelia' : 'Tototlán';
+    label.textContent = `${activeCircleFilter.radio} km · ${nombreAncla}`;
+  }
+
   function desactivarCirculoActivo() {
     if (activeCircleFilter) {
-      const id = activeCircleFilter.radio + 
+      const id = activeCircleFilter.radio +
                  (activeCircleFilter.centro === 'morelia' ? 'Morelia' : 'Tototlan');
       const c = circulos[id];
       if (c && c.visible) {
@@ -531,6 +655,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if (btn) btn.classList.remove('active');
       }
       activeCircleFilter = null;
+      actualizarEtiquetaCirculos();
       applyFilters();
     }
   }
@@ -555,6 +680,7 @@ document.addEventListener('DOMContentLoaded', function(){
       c.visible = false;
       const btn = document.getElementById('btnCirculo' + id);
       if (btn) btn.classList.remove('active');
+      actualizarEtiquetaCirculos();
       return;
     }
 
@@ -573,6 +699,7 @@ document.addEventListener('DOMContentLoaded', function(){
     radio = radioMatch ? parseInt(radioMatch[0]) : 150;
 
     activeCircleFilter = { centro, radio };
+    actualizarEtiquetaCirculos();
     applyFilters();
 
     const ancla = centro === 'morelia' ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
@@ -743,7 +870,7 @@ document.addEventListener('DOMContentLoaded', function(){
     const dT = distanciaKm(ANCLA_TOTOTLAN.lat, ANCLA_TOTOTLAN.lon, destLat, destLon);
     const origen = dM <= dT ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
     const resultado = await calcularRuta(origen.lat, origen.lon, destLat, destLon);
-    if (!resultado) { alert('No se pudo calcular la ruta.'); return; }
+    if (!resultado) { toast('No se pudo calcular la ruta.', 'error'); return; }
     const coords = resultado.geometria.map(c => [c[1], c[0]]);
 
     // Ocultar el clúster
@@ -925,7 +1052,48 @@ document.addEventListener('DOMContentLoaded', function(){
   let debounceTimer;
   document.getElementById('searchInput').addEventListener('input', function() {
     clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => { searchTerm = this.value; applyFilters(); }, 300);
+    const valorActual = this.value;
+    debounceTimer = setTimeout(() => { searchTerm = valorActual; applyFilters(); }, 300);
+    actualizarSugerenciasBusqueda(valorActual);
+  });
+
+  // Autocompletar: sugerencias de nombre mientras se escribe en el buscador
+  function actualizarSugerenciasBusqueda(texto) {
+    const box = document.getElementById('searchSuggestions');
+    const term = texto.trim().toLowerCase();
+    if (!term) { box.classList.remove('show'); box.innerHTML = ''; return; }
+
+    const coincidencias = stations.filter(s => s.nombre.toLowerCase().includes(term)).slice(0, 8);
+    box.innerHTML = '';
+    if (!coincidencias.length) { box.classList.remove('show'); return; }
+
+    coincidencias.forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'item';
+      const nombreEl = document.createElement('span');
+      nombreEl.className = 'name';
+      nombreEl.textContent = s.nombre;
+      const metaEl = document.createElement('span');
+      metaEl.className = 'meta';
+      metaEl.textContent = `${Math.round(s.distKm)} km · ${s.estado || '...'}`;
+      item.appendChild(nombreEl);
+      item.appendChild(metaEl);
+      item.addEventListener('click', () => {
+        document.getElementById('searchInput').value = s.nombre;
+        box.classList.remove('show');
+        map.flyTo([s.lat, s.lon], 14, { duration: 1.2 });
+        const entry = markerMap.get(s);
+        if (entry) entry.marker.openPopup();
+      });
+      box.appendChild(item);
+    });
+    box.classList.add('show');
+  }
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search')) {
+      document.getElementById('searchSuggestions').classList.remove('show');
+    }
   });
 
   document.getElementById('clearAllBtn').addEventListener('click', () => {
@@ -947,28 +1115,76 @@ document.addEventListener('DOMContentLoaded', function(){
   // ============================================================
   let sortMode = 'dist';
 
+  // Un solo <li> reutilizado por los tres modos de orden: clic o teclado
+  // (Enter/Espacio) centran el mapa en ese cliente y abren su popup.
+  function crearItemLista(s) {
+    const li = document.createElement('li');
+    li.tabIndex = 0;
+    li.setAttribute('role', 'button');
+    li.setAttribute('aria-label', `Ver ${s.nombre} en el mapa`);
+
+    const topRow = document.createElement('div');
+    topRow.className = 'top-row';
+    const nombreEl = document.createElement('span');
+    nombreEl.className = 'name';
+    nombreEl.textContent = s.nombre;
+    const distEl = document.createElement('span');
+    distEl.className = 'dist';
+    distEl.textContent = `${s.distKm < 10 ? s.distKm.toFixed(1) : Math.round(s.distKm)} km`;
+    topRow.appendChild(nombreEl);
+    topRow.appendChild(distEl);
+
+    const stateEl = document.createElement('span');
+    stateEl.className = 'state-tag';
+    stateEl.textContent = s.estado || '...';
+
+    li.appendChild(topRow);
+    li.appendChild(stateEl);
+
+    const activar = () => { map.flyTo([s.lat, s.lon], 14, { duration: 1.2 }); markerMap.get(s).marker.openPopup(); };
+    li.addEventListener('click', activar);
+    li.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activar(); }
+    });
+    return li;
+  }
+
+  // Sugiere qué filtro relajar cuando no hay resultados, en vez de un mensaje genérico.
+  function mensajeSinResultados() {
+    const sugerencias = [];
+    if (searchTerm) sugerencias.push('revisa lo que escribiste en el buscador');
+    if (activePrice) sugerencias.push('quita el filtro de distancia por color en la leyenda');
+    if (document.getElementById('tamanoFilter').value !== 'all') sugerencias.push('quita el filtro de tamaño de empresa');
+    if (maxDist < 190) sugerencias.push('amplía el máximo de distancia');
+    if (activeCircleFilter) sugerencias.push('desactiva el círculo de radio activo');
+    if (activeNoAddress) sugerencias.push('quita el filtro "Sin dirección"');
+
+    const li = document.createElement('li');
+    li.className = 'empty';
+    const p1 = document.createElement('div');
+    p1.textContent = 'No hay clientes que coincidan.';
+    li.appendChild(p1);
+    if (sugerencias.length) {
+      const p2 = document.createElement('div');
+      p2.style.fontSize = '0.75rem';
+      p2.style.marginTop = '0.4rem';
+      p2.textContent = 'Prueba: ' + sugerencias.join(', ') + '.';
+      li.appendChild(p2);
+    }
+    return li;
+  }
+
   function renderList(items) {
     const ul = document.getElementById('list');
     ul.innerHTML = '';
-    if (!items.length) { ul.innerHTML = '<li class="empty">No hay clientes que coincidan</li>'; return; }
+    if (!items.length) { ul.appendChild(mensajeSinResultados()); return; }
 
-    let sortedItems;
+    const frag = document.createDocumentFragment();
+
     if (sortMode === 'dist') {
-      sortedItems = [...items].sort((a,b) => a.distKm - b.distKm);
-      const frag = document.createDocumentFragment();
-      sortedItems.forEach(s => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <div class="top-row">
-            <span class="name">${s.nombre}</span>
-            <span class="dist">${s.distKm < 10 ? s.distKm.toFixed(1) : Math.round(s.distKm)} km</span>
-          </div>
-          <span class="state-tag">${s.estado || '...'}</span>
-        `;
-        li.onclick = () => { map.flyTo([s.lat, s.lon], 14, { duration: 1.2 }); markerMap.get(s).marker.openPopup(); };
-        frag.appendChild(li);
-      });
-      ul.appendChild(frag);
+      [...items].sort((a,b) => a.distKm - b.distKm).forEach(s => frag.appendChild(crearItemLista(s)));
+    } else if (sortMode === 'name') {
+      [...items].sort((a,b) => a.nombre.localeCompare(b.nombre)).forEach(s => frag.appendChild(crearItemLista(s)));
     } else {
       const grouped = items.reduce((acc, s) => {
         const state = s.estado || 'Sin estado';
@@ -976,45 +1192,56 @@ document.addEventListener('DOMContentLoaded', function(){
         acc[state].push(s);
         return acc;
       }, {});
-      const frag = document.createDocumentFragment();
       Object.keys(grouped).sort().forEach(state => {
         const header = document.createElement('li');
         header.className = 'group-header';
         header.textContent = `${state} (${grouped[state].length})`;
         frag.appendChild(header);
-        grouped[state].sort((a,b) => a.nombre.localeCompare(b.nombre)).forEach(s => {
-          const li = document.createElement('li');
-          li.innerHTML = `
-            <div class="top-row">
-              <span class="name">${s.nombre}</span>
-              <span class="dist">${s.distKm < 10 ? s.distKm.toFixed(1) : Math.round(s.distKm)} km</span>
-            </div>
-            <span class="state-tag">${s.estado || '...'}</span>
-          `;
-          li.onclick = () => { map.flyTo([s.lat, s.lon], 14, { duration: 1.2 }); markerMap.get(s).marker.openPopup(); };
-          frag.appendChild(li);
-        });
+        grouped[state].sort((a,b) => a.nombre.localeCompare(b.nombre)).forEach(s => frag.appendChild(crearItemLista(s)));
       });
-      ul.appendChild(frag);
     }
+
+    ul.appendChild(frag);
   }
 
+  function marcarSortActivo(modo) {
+    ['sortDist','sortState','sortName'].forEach(id => {
+      document.getElementById(id).classList.toggle('active', id === modo);
+    });
+  }
   document.getElementById('sortDist').addEventListener('click', function() {
     sortMode = 'dist';
-    document.getElementById('sortDist').classList.add('active');
-    document.getElementById('sortState').classList.remove('active');
+    marcarSortActivo('sortDist');
     applyFilters();
   });
   document.getElementById('sortState').addEventListener('click', function() {
     sortMode = 'state';
-    document.getElementById('sortState').classList.add('active');
-    document.getElementById('sortDist').classList.remove('active');
+    marcarSortActivo('sortState');
+    applyFilters();
+  });
+  document.getElementById('sortName').addEventListener('click', function() {
+    sortMode = 'name';
+    marcarSortActivo('sortName');
     applyFilters();
   });
 
   // ============================================================
   //  10. CONTROLES ADICIONALES
   // ============================================================
+
+  // Tema claro/oscuro (persistente en localStorage; el <head> ya evita el parpadeo)
+  function aplicarTema(tema) {
+    document.documentElement.setAttribute('data-theme', tema);
+    const icon = document.getElementById('themeIcon');
+    if (icon) icon.className = tema === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    try { localStorage.setItem('tema', tema); } catch (e) {}
+  }
+  aplicarTema(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+  document.getElementById('themeToggleBtn').addEventListener('click', () => {
+    const actual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    aplicarTema(actual === 'dark' ? 'light' : 'dark');
+  });
+
   document.getElementById('resetBtn').addEventListener('click', () => map.flyTo([23.5, -102.5], 5, { duration: 1 }));
   document.getElementById('centerMoreliaBtn').addEventListener('click', () => { map.flyTo([ANCLA_MORELIA.lat, ANCLA_MORELIA.lon], 9, { duration: 1.2 }); limpiarRuta(); });
   document.getElementById('centerTototlanBtn').addEventListener('click', () => { map.flyTo([ANCLA_TOTOTLAN.lat, ANCLA_TOTOTLAN.lon], 9, { duration: 1.2 }); limpiarRuta(); });
@@ -1022,7 +1249,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   document.getElementById('gotoClosestBtn').addEventListener('click', function() {
     const visible = applyFilters();
-    if (!visible.length) { alert('No hay clientes visibles.'); return; }
+    if (!visible.length) { toast('No hay clientes visibles.', 'info'); return; }
     const closest = visible.reduce((a, b) => a.distKm < b.distKm ? a : b);
     map.flyTo([closest.lat, closest.lon], 14, { duration: 1.2 });
     markerMap.get(closest).marker.openPopup();
@@ -1038,6 +1265,33 @@ document.addEventListener('DOMContentLoaded', function(){
   ['150Morelia','190Morelia','150Tototlan','190Tototlan'].forEach(id => {
     const b = document.getElementById('btnCirculo' + id);
     if (b) b.addEventListener('click', () => toggleCirculo(id));
+  });
+
+  // Menú desplegable de círculos de radio (agrupa los 4 botones anteriores)
+  const circulosToggleBtn = document.getElementById('circulosToggleBtn');
+  const circulosMenu = document.getElementById('circulosMenu');
+  circulosToggleBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const abierto = circulosMenu.classList.toggle('open');
+    circulosToggleBtn.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+  });
+  circulosMenu.querySelectorAll('.dropdown-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      circulosMenu.classList.remove('open');
+      circulosToggleBtn.setAttribute('aria-expanded', 'false');
+    });
+  });
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('#circulosDropdown')) {
+      circulosMenu.classList.remove('open');
+      circulosToggleBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      circulosMenu.classList.remove('open');
+      circulosToggleBtn.setAttribute('aria-expanded', 'false');
+    }
   });
 
   document.getElementById('noAddressBtn').addEventListener('click', function() {
@@ -1065,7 +1319,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if (btn.classList.contains('loading')) return;
 
     if (!navigator.geolocation) {
-      alert('Tu navegador no soporta geolocalización.');
+      toast('Tu navegador no soporta geolocalización.', 'error');
       return;
     }
 
@@ -1094,7 +1348,7 @@ document.addEventListener('DOMContentLoaded', function(){
         } else if (err.code === err.POSITION_UNAVAILABLE) {
           msg = 'No se pudo determinar tu ubicación actual.';
         }
-        alert(msg);
+        toast(msg, 'error');
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
@@ -1116,10 +1370,16 @@ document.addEventListener('DOMContentLoaded', function(){
     } catch (e) { console.warn(`Error geocodificando ${cliente.nombre}:`, e); return null; }
   }
 
+  let geocodeCancelado = false;
+
   async function geocodeClientesVisibles() {
     const visible = applyFilters();
     const sinDireccion = visible.filter(s => !s.direccion);
-    if (sinDireccion.length === 0) { alert('Todos los clientes visibles ya tienen dirección.'); return; }
+    if (sinDireccion.length === 0) { toast('Todos los clientes visibles ya tienen dirección.', 'info'); return; }
+
+    geocodeCancelado = false;
+    const geocodeBtn = document.getElementById('geocodeBtn');
+    geocodeBtn.disabled = true;
 
     const progress = document.getElementById('geocodeProgress');
     const status = document.getElementById('geoStatus');
@@ -1130,6 +1390,7 @@ document.addEventListener('DOMContentLoaded', function(){
     const total = sinDireccion.length;
 
     for (const s of sinDireccion) {
+      if (geocodeCancelado) break;
       status.textContent = `Obteniendo dirección para: ${s.nombre}`;
       count.textContent = `${procesados+1}/${total}`;
       fill.style.width = `${((procesados)/total)*100}%`;
@@ -1166,9 +1427,17 @@ document.addEventListener('DOMContentLoaded', function(){
       await new Promise(r => setTimeout(r, 200));
     }
 
-    status.textContent = '¡Proceso completado!';
-    count.textContent = `${total}/${total}`;
-    fill.style.width = '100%';
+    geocodeBtn.disabled = false;
+
+    if (geocodeCancelado) {
+      status.textContent = 'Proceso cancelado.';
+      toast(`Geocodificación cancelada: ${procesados}/${total} procesados.`, 'info');
+    } else {
+      status.textContent = '¡Proceso completado!';
+      toast(`Direcciones obtenidas para ${total.toLocaleString()} cliente(s).`, 'success');
+    }
+    count.textContent = `${procesados}/${total}`;
+    fill.style.width = `${(procesados/total)*100}%`;
     setTimeout(() => { progress.style.display = 'none'; }, 2000);
 
     try {
@@ -1180,6 +1449,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   document.getElementById('geocodeBtn').addEventListener('click', geocodeClientesVisibles);
+  document.getElementById('cancelGeoBtn').addEventListener('click', () => { geocodeCancelado = true; });
 
   document.addEventListener('click', async function(e) {
     if (e.target.classList.contains('btn-geocode')) {
@@ -1188,7 +1458,7 @@ document.addEventListener('DOMContentLoaded', function(){
       const nombre = e.target.dataset.nombre;
       const cliente = stations.find(s => s.lat === lat && s.lon === lon && s.nombre === nombre);
       if (!cliente) return;
-      if (cliente.direccion) { alert('Este cliente ya tiene dirección.'); return; }
+      if (cliente.direccion) { toast('Este cliente ya tiene dirección.', 'info'); return; }
       const result = await geocodeCliente(cliente);
       if (result) {
         cliente.direccion = result.direccion;
@@ -1223,7 +1493,7 @@ document.addEventListener('DOMContentLoaded', function(){
         } catch (e) {}
         applyFilters();
       } else {
-        alert('No se pudo obtener la dirección para este cliente.');
+        toast('No se pudo obtener la dirección para este cliente.', 'error');
       }
     }
   });
@@ -1279,6 +1549,9 @@ document.addEventListener('DOMContentLoaded', function(){
   applyFilters();
   document.getElementById('rTotal').textContent = stations.length;
   setTimeout(() => map.invalidateSize(), 100);
+
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  if (loadingOverlay) loadingOverlay.classList.add('hidden');
 
   log(`Mapa iniciado con ${stations.length} clientes.`);
 
