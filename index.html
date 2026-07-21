@@ -187,6 +187,10 @@
     .toolbar .btn-clear-all { background: #fee2e2; color: #ef4444; }
     .toolbar .btn-clear-all:hover { background: #fecaca; }
     .toolbar .btn-clear-all.hidden { display: none; }
+    .toolbar .btn-success { background: #10b981; color: #fff; }
+    .toolbar .btn-success:hover { background: #059669; }
+    .toolbar .btn-warning { background: #f59e0b; color: #fff; }
+    .toolbar .btn-warning:hover { background: #d97706; }
     .toolbar .btn-outline { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
     .toolbar .btn-outline:hover { background: var(--primary); color: #fff; transform: translateY(-1px); }
     .toolbar .btn-outline.active { background: var(--primary); color: #fff; }
@@ -195,6 +199,8 @@
     .toolbar .btn-loc.loading .loc-icon { display: none; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
     .toolbar .separator { width: 1px; height: 24px; background: var(--border); margin: 0 0.2rem; }
+    .toolbar .btn-add.active { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+    .toolbar .more-toggle { display: none; } /* solo aparece en móvil, ver @media más abajo */
 
     /* Botones de anclas: agrupados para que Morelia y Tototlán queden siempre
        juntos (nunca se separan al saltar de línea) y con el color de cada
@@ -209,55 +215,6 @@
     .toolbar .anchor-btn-morelia:hover { background: #003b77; }
     .toolbar .anchor-btn-tototlan { background: #FF6B35; }
     .toolbar .anchor-btn-tototlan:hover { background: #e25b26; }
-
-    /* ===== Barra agrupada por función + jerarquía de color =====
-       Los botones se organizan en grupos (Filtrar / Ir a / Vista) separados por
-       líneas, y el color deja de ser decorativo: solo la acción principal
-       (Círculos de radio) usa un color fuerte; lo secundario es neutro; y las
-       acciones poco frecuentes viven en el menú "Más". */
-    .toolbar .tb-group { display: inline-flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
-    .toolbar .tb-spacer { flex: 1 1 0; min-width: 0; }
-
-    /* Acción principal: Círculos de radio (sin ella el mapa está vacío) */
-    .toolbar .btn-circulos {
-      background: var(--primary); color: #fff; font-weight: 600;
-      padding: 0.35rem 0.9rem; box-shadow: var(--shadow-sm);
-    }
-    .toolbar .btn-circulos:hover { background: var(--primary-hover); }
-    .toolbar .btn-circulos .chevron { font-size: 0.6rem; opacity: 0.85; }
-    .toolbar .btn-circulos .badge {
-      background: #fff; color: var(--primary); font-weight: 700; font-size: 0.65rem;
-      min-width: 1.15rem; height: 1.15rem; border-radius: 1rem; padding: 0 0.35rem;
-      display: inline-flex; align-items: center; justify-content: center; line-height: 1;
-    }
-    .toolbar .btn-circulos .badge[hidden] { display: none; }
-    /* Late la atención mientras no haya ningún círculo activo: "empieza aquí". */
-    .toolbar .btn-circulos.is-empty { animation: pulse-primary 2.2s ease-in-out infinite; }
-    @keyframes pulse-primary {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(31,92,169,0.5); }
-      50% { box-shadow: 0 0 0 6px rgba(31,92,169,0); }
-    }
-
-    /* Mi ubicación: identidad propia (geolocalización), distinta de las anclas */
-    .toolbar .btn-loc { background: #0891b2; color: #fff; }
-    .toolbar .btn-loc:hover { background: #0e7490; }
-
-    /* Botón "Más": abre el menú de acciones secundarias (en escritorio y móvil) */
-    .toolbar .btn-mas { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
-    .toolbar .btn-mas:hover { background: var(--bg-panel); color: var(--text-main); border-color: var(--border-hover); }
-    .toolbar .btn-mas .chevron { font-size: 0.6rem; opacity: 0.85; }
-
-    /* Menú de "Más": alineado a la derecha, con secciones etiquetadas */
-    .dropdown-menu-right { left: auto; right: 0; }
-    .menu-section-label {
-      font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.04em;
-      color: var(--text-muted); padding: 0.45rem 0.7rem 0.15rem; font-weight: 700;
-    }
-    .menu-divider { height: 1px; background: var(--border); margin: 4px 6px; }
-    .dropdown-item:disabled { opacity: 0.5; cursor: not-allowed; }
-    .dropdown-item.menu-action .dropdown-item-label i { width: 1.1rem; text-align: center; color: var(--text-muted); }
-    .dropdown-item.menu-action:hover .dropdown-item-label i,
-    .dropdown-item.menu-action.active .dropdown-item-label i { color: inherit; }
 
     .stage { display: flex; flex: 1; overflow: hidden; position: relative; }
     #map { flex: 1; height: 100%; min-height: 300px; z-index: 1; transition: width 0.3s ease; }
@@ -477,20 +434,16 @@
       .toolbar { gap: 0.4rem; justify-content: space-between; }
       .toolbar .filters select, .toolbar .btn { flex: 1; text-align: center; justify-content: center; font-size: 0.7rem; min-height: 40px; }
       .toolbar .dropdown, .toolbar .dropdown .btn { flex: 1; }
-      /* Cada grupo ocupa su propio renglón para que la barra se lea de arriba
-         hacia abajo: Filtrar, luego Ir a, luego Vista. */
-      .toolbar .tb-group { flex: 1 1 100%; gap: 0.4rem; }
-      .toolbar .tb-group > * { flex: 1; }
       .toolbar .anchor-group { flex: 1 1 100%; }
       .toolbar .dist-slider { flex: 1 1 100%; justify-content: center; }
       .toolbar .dist-slider input[type="range"] { flex: 1; min-width: 0; }
-      .toolbar .separator, .toolbar .tb-spacer { display: none; }
+      .toolbar .separator { display: none; }
       .rail-head .sort-options { font-size: 0.6rem; }
-      /* En móvil el menú "Más" y su botón ocupan el ancho completo, como el
-         resto de controles apilados. */
-      .dropdown-menu-right { left: 0; right: 0; }
-      #masDropdown { flex: 1 1 100%; }
-      #masDropdown .btn-mas { width: 100%; }
+
+      /* Botones de uso poco frecuente: se ocultan detrás de "Más" para no saturar la barra */
+      .toolbar .mobile-extra { display: none; }
+      .toolbar.mobile-more-open .mobile-extra { display: inline-flex; }
+      .toolbar .more-toggle { display: inline-flex; }
 
       /* Objetivos táctiles más grandes */
       .dropdown-item, .rail-list li, .search-suggestions .item, .price-legend .row { min-height: 40px; }
@@ -569,112 +522,93 @@
       <input type="text" id="searchInput" placeholder="Buscar cliente…" autocomplete="off" />
       <div class="search-suggestions" id="searchSuggestions"></div>
     </div>
-    <!-- ==================== GRUPO: FILTRAR ==================== -->
-    <div class="tb-group" role="group" aria-label="Filtrar clientes">
-      <div class="dropdown" id="circulosDropdown">
-        <button class="btn btn-circulos is-empty" id="circulosToggleBtn" aria-haspopup="true" aria-expanded="false">
-          <i class="fas fa-bullseye"></i> <span id="circulosLabel">Círculos de radio</span>
-          <span class="badge" id="circulosBadge" hidden>0</span>
-          <i class="fas fa-chevron-down chevron"></i>
-        </button>
-        <div class="dropdown-menu" id="circulosMenu">
-          <button class="dropdown-item" id="btnCirculo150Morelia">
-            <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#10b981;"></i> 150 km · Morelia</span>
-            <i class="fas fa-check check-icon" aria-hidden="true"></i>
-          </button>
-          <button class="dropdown-item" id="btnCirculo190Morelia">
-            <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#ef4444;"></i> 190 km · Morelia</span>
-            <i class="fas fa-check check-icon" aria-hidden="true"></i>
-          </button>
-          <button class="dropdown-item" id="btnCirculo150Tototlan">
-            <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#10b981;"></i> 150 km · Tototlán</span>
-            <i class="fas fa-check check-icon" aria-hidden="true"></i>
-          </button>
-          <button class="dropdown-item" id="btnCirculo190Tototlan">
-            <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#ef4444;"></i> 190 km · Tototlán</span>
-            <i class="fas fa-check check-icon" aria-hidden="true"></i>
-          </button>
-        </div>
-      </div>
-      <div class="filters">
-        <select id="tamanoFilter" aria-label="Filtrar por tamaño de empresa">
-          <option value="all">Todos los tamaños</option>
-        </select>
-      </div>
-      <div class="dist-slider">
-        <label for="distSlider">Distancia</label>
-        <input type="range" id="distSlider" min="60" max="190" value="190" step="5" />
-        <span id="distLabel">190 km</span>
-      </div>
+    <div class="filters mobile-extra">
+      <select id="tamanoFilter" aria-label="Filtrar por tamaño de empresa">
+        <option value="all">Todos los tamaños</option>
+      </select>
+    </div>
+    <!-- ductoFilter ELIMINADO -->
+    <div class="dist-slider mobile-extra">
+      <label for="distSlider">Max dist.</label>
+      <input type="range" id="distSlider" min="60" max="190" value="190" step="5" />
+      <span id="distLabel">190 km</span>
     </div>
 
     <span class="separator"></span>
 
-    <!-- ==================== GRUPO: IR A ==================== -->
-    <div class="tb-group" role="group" aria-label="Ir a">
-      <button class="btn btn-loc" id="locBtn" title="Centrar en mi ubicación">
-        <span class="loc-icon"><i class="fas fa-location-crosshairs"></i></span>
-        <span class="spinner"><i class="fas fa-circle-notch"></i></span>
-        <span>Mi ubicación</span>
+    <div class="dropdown" id="circulosDropdown">
+      <button class="btn btn-outline" id="circulosToggleBtn" aria-haspopup="true" aria-expanded="false">
+        <i class="fas fa-bullseye"></i> <span id="circulosLabel">Círculos de radio</span> <i class="fas fa-chevron-down" style="font-size:0.6rem;"></i>
       </button>
-      <div class="anchor-group">
-        <button class="btn anchor-btn anchor-btn-morelia" id="centerMoreliaBtn" aria-label="Centrar en Morelia">
-          <i class="fas fa-star"></i> Morelia
+      <div class="dropdown-menu" id="circulosMenu">
+        <button class="dropdown-item" id="btnCirculo150Morelia">
+          <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#10b981;"></i> 150 km · Morelia</span>
+          <i class="fas fa-check check-icon" aria-hidden="true"></i>
         </button>
-        <button class="btn anchor-btn anchor-btn-tototlan" id="centerTototlanBtn" aria-label="Centrar en Tototlán">
-          <i class="fas fa-star"></i> Tototlán
+        <button class="dropdown-item" id="btnCirculo190Morelia">
+          <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#ef4444;"></i> 190 km · Morelia</span>
+          <i class="fas fa-check check-icon" aria-hidden="true"></i>
+        </button>
+        <button class="dropdown-item" id="btnCirculo150Tototlan">
+          <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#10b981;"></i> 150 km · Tototlán</span>
+          <i class="fas fa-check check-icon" aria-hidden="true"></i>
+        </button>
+        <button class="dropdown-item" id="btnCirculo190Tototlan">
+          <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#ef4444;"></i> 190 km · Tototlán</span>
+          <i class="fas fa-check check-icon" aria-hidden="true"></i>
         </button>
       </div>
     </div>
 
     <span class="separator"></span>
 
-    <!-- ==================== GRUPO: VISTA ==================== -->
-    <div class="tb-group" role="group" aria-label="Vista">
-      <button class="btn btn-toggle-rail" id="toggleRailBtn" title="Mostrar/ocultar directorio">
-        <i class="fas fa-chevron-right" id="railToggleIcon"></i> <span id="railToggleLabel">Directorio</span>
+    <button class="btn btn-success mobile-extra" id="geocodeBtn" aria-label="Obtener direcciones de los clientes visibles">
+      <i class="fas fa-address-card"></i> Obtener direcciones
+    </button>
+    <button class="btn btn-outline mobile-extra" id="noAddressBtn" aria-label="Filtrar clientes sin dirección">
+      <i class="fas fa-envelope"></i> Sin dirección
+    </button>
+
+    <span class="separator"></span>
+
+    <button class="btn btn-add mobile-extra" id="addClientBtn" title="Agregar un cliente nuevo en el mapa">
+      <i class="fas fa-plus-circle"></i> Agregar cliente
+    </button>
+    <button class="btn btn-primary mobile-extra" id="exportCsvBtn" title="Descargar todos los clientes como CSV">
+      <i class="fas fa-file-csv"></i> Exportar CSV
+    </button>
+
+    <span class="separator"></span>
+
+    <button class="btn btn-loc" id="locBtn" title="Centrar en mi ubicación">
+      <span class="loc-icon"><i class="fas fa-location-crosshairs"></i></span>
+      <span class="spinner"><i class="fas fa-circle-notch"></i></span>
+      <span>Mi ubicación</span>
+    </button>
+    <div class="anchor-group">
+      <button class="btn anchor-btn anchor-btn-morelia" id="centerMoreliaBtn" aria-label="Centrar en Morelia">
+        <i class="fas fa-star"></i> Morelia
       </button>
-      <button class="btn btn-clear-all hidden" id="clearAllBtn" title="Limpiar todos los filtros">
-        <i class="fas fa-times"></i> Limpiar filtros
+      <button class="btn anchor-btn anchor-btn-tototlan" id="centerTototlanBtn" aria-label="Centrar en Tototlán">
+        <i class="fas fa-star"></i> Tototlán
       </button>
     </div>
-
-    <span class="tb-spacer"></span>
-
-    <!-- ==================== MENÚ: MÁS ACCIONES ==================== -->
-    <div class="dropdown" id="masDropdown">
-      <button class="btn btn-mas" id="moreToggleBtn" title="Más acciones" aria-haspopup="true" aria-expanded="false">
-        <i class="fas fa-ellipsis-vertical"></i> Más <i class="fas fa-chevron-down chevron"></i>
-      </button>
-      <div class="dropdown-menu dropdown-menu-right" id="masMenu">
-        <div class="menu-section-label">Datos</div>
-        <button class="dropdown-item menu-action" id="addClientBtn" title="Agregar un cliente nuevo en el mapa">
-          <span class="dropdown-item-label"><i class="fas fa-plus-circle"></i> Agregar cliente</span>
-        </button>
-        <button class="dropdown-item menu-action" id="geocodeBtn" aria-label="Obtener direcciones de los clientes visibles">
-          <span class="dropdown-item-label"><i class="fas fa-address-card"></i> Obtener direcciones</span>
-        </button>
-        <button class="dropdown-item menu-action" id="exportCsvBtn" title="Descargar todos los clientes como CSV">
-          <span class="dropdown-item-label"><i class="fas fa-file-csv"></i> Exportar CSV</span>
-        </button>
-        <div class="menu-divider"></div>
-        <div class="menu-section-label">Filtrar</div>
-        <button class="dropdown-item menu-action" id="noAddressBtn" aria-label="Filtrar clientes sin dirección">
-          <span class="dropdown-item-label"><i class="fas fa-envelope"></i> Solo sin dirección</span>
-        </button>
-        <div class="menu-divider"></div>
-        <div class="menu-section-label">Navegación</div>
-        <button class="dropdown-item menu-action" id="gotoClosestBtn" title="Centrar en el cliente más cercano">
-          <span class="dropdown-item-label"><i class="fas fa-bullseye"></i> Cliente más cercano</span>
-        </button>
-        <button class="dropdown-item menu-action" id="clearRouteBtn" aria-label="Limpiar ruta">
-          <span class="dropdown-item-label"><i class="fas fa-route"></i> Limpiar ruta</span>
-        </button>
-        <button class="dropdown-item menu-action" id="resetBtn" aria-label="Restablecer vista">
-          <span class="dropdown-item-label"><i class="fas fa-home"></i> Restablecer vista</span>
-        </button>
-      </div>
-    </div>
+    <button class="btn btn-primary mobile-extra" id="gotoClosestBtn" title="Centrar en el cliente más cercano">
+      <i class="fas fa-bullseye"></i> Más cercano
+    </button>
+    <button class="btn btn-warning mobile-extra" id="clearRouteBtn" aria-label="Limpiar ruta">
+      <i class="fas fa-route"></i> Limpiar ruta
+    </button>
+    <button class="btn btn-outline more-toggle" id="moreToggleBtn" title="Más opciones" aria-haspopup="true" aria-expanded="false">
+      <i class="fas fa-ellipsis-vertical"></i> Más
+    </button>
+    <button class="btn btn-toggle-rail" id="toggleRailBtn" title="Mostrar/ocultar directorio">
+      <i class="fas fa-chevron-right" id="railToggleIcon"></i> <span id="railToggleLabel">Directorio</span>
+    </button>
+    <button class="btn btn-clear-all hidden" id="clearAllBtn" title="Limpiar todos los filtros">
+      <i class="fas fa-times"></i> Limpiar filtros
+    </button>
+    <button class="btn btn-primary mobile-extra" id="resetBtn" aria-label="Restablecer vista"><i class="fas fa-home"></i> Restablecer</button>
   </div>
   <div class="stage">
     <div id="map"></div>
@@ -920,22 +854,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function actualizarEtiquetaCirculos() {
     const label = document.getElementById('circulosLabel');
-    const btn = document.getElementById('circulosToggleBtn');
-    const badge = document.getElementById('circulosBadge');
-    const n = activeCircleFilters.size;
-    // Estado visual del botón principal: "vacío" (late para invitar a empezar)
-    // vs "activo" (muestra un badge con cuántos círculos hay encendidos).
-    if (btn) {
-      btn.classList.toggle('is-empty', n === 0);
-      btn.classList.toggle('is-active', n > 0);
-    }
-    // El badge solo aparece con 2+ círculos: con uno solo la etiqueta ya dice
-    // cuál es ("190 km · Morelia"), así que el número sería redundante.
-    if (badge) {
-      if (n > 1) { badge.hidden = false; badge.textContent = n; }
-      else { badge.hidden = true; }
-    }
     if (!label) return;
+    const n = activeCircleFilters.size;
     if (n === 0) { label.textContent = 'Círculos de radio'; return; }
     if (n === 1) {
       const id = [...activeCircleFilters][0];
@@ -943,7 +863,7 @@ document.addEventListener('DOMContentLoaded', function(){
       label.textContent = `${radio} km · ${centro.nombre}`;
       return;
     }
-    label.textContent = 'Círculos activos';
+    label.textContent = `${n} círculos activos`;
   }
 
   // Activa/desactiva UN círculo puntual, sin tocar los demás ni refrescar
@@ -1719,23 +1639,14 @@ document.addEventListener('DOMContentLoaded', function(){
     aplicarTema(actual === 'dark' ? 'light' : 'dark');
   });
 
-  // Menú "Más" (escritorio y móvil): agrupa las acciones poco frecuentes
-  // (Agregar cliente, Obtener direcciones, Exportar CSV, Sin dirección, Más
-  // cercano, Limpiar ruta, Restablecer) en un desplegable, para dejar la barra
-  // principal limpia con solo lo de uso diario.
-  const masMenu = document.getElementById('masMenu');
-  const moreToggleBtn = document.getElementById('moreToggleBtn');
-  moreToggleBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    const abierto = masMenu.classList.toggle('open');
+  // Botón "Más" (solo visible en pantallas angostas): agrupa las acciones menos
+  // frecuentes (Agregar cliente, Exportar CSV, Sin dirección, Limpiar ruta,
+  // Restablecer) para no saturar la barra de herramientas en el celular.
+  document.getElementById('moreToggleBtn').addEventListener('click', function() {
+    const toolbar = document.querySelector('.toolbar');
+    const abierto = toolbar.classList.toggle('mobile-more-open');
     this.setAttribute('aria-expanded', abierto ? 'true' : 'false');
-  });
-  // Al elegir una acción del menú, ciérralo (su propio handler ya se ejecuta).
-  masMenu.addEventListener('click', function(e) {
-    if (e.target.closest('.menu-action')) {
-      masMenu.classList.remove('open');
-      moreToggleBtn.setAttribute('aria-expanded', 'false');
-    }
+    this.querySelector('i').className = abierto ? 'fas fa-chevron-up' : 'fas fa-ellipsis-vertical';
   });
 
   document.getElementById('resetBtn').addEventListener('click', () => verAmbasAnclas());
@@ -1786,17 +1697,11 @@ document.addEventListener('DOMContentLoaded', function(){
       circulosMenu.classList.remove('open');
       circulosToggleBtn.setAttribute('aria-expanded', 'false');
     }
-    if (!e.target.closest('#masDropdown')) {
-      masMenu.classList.remove('open');
-      moreToggleBtn.setAttribute('aria-expanded', 'false');
-    }
   });
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
       circulosMenu.classList.remove('open');
       circulosToggleBtn.setAttribute('aria-expanded', 'false');
-      masMenu.classList.remove('open');
-      moreToggleBtn.setAttribute('aria-expanded', 'false');
     }
   });
 
