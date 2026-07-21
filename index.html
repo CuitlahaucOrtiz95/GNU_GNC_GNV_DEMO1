@@ -299,12 +299,22 @@
 
     .leaflet-popup-content { font-size: 0.8rem; font-family: 'Inter', sans-serif; margin: 10px; }
 
-    .btn-route { display: inline-block; margin-top: 4px; background: var(--primary); color: #fff; border: none; border-radius: 2rem; padding: 0.2rem 0.7rem; font-size: 0.7rem; cursor: pointer; transition: var(--transition); }
-    .btn-route:hover { background: var(--primary-hover); }
-    .btn-route-prospeccion { display: inline-block; margin-top: 4px; background: #059669; color: #fff; border: none; border-radius: 2rem; padding: 0.2rem 0.7rem; font-size: 0.7rem; cursor: pointer; transition: var(--transition); }
-    .btn-route-prospeccion:hover { background: #047857; }
-    .btn-geocode { display: inline-block; margin-top: 4px; background: #10b981; color: #fff; border: none; border-radius: 2rem; padding: 0.2rem 0.7rem; font-size: 0.7rem; cursor: pointer; transition: var(--transition); }
-    .btn-geocode:hover { background: #059669; }
+    /* Acciones del popup de cliente: cuadrícula compacta en vez de botones apilados */
+    .popup-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+    .popup-actions .popup-btn {
+      text-align: center; white-space: nowrap; text-decoration: none;
+      border: none; border-radius: 2rem; padding: 0.4rem 0.5rem;
+      font-size: 0.7rem; font-weight: 600; cursor: pointer; color: #fff; transition: var(--transition);
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;
+    }
+    .popup-actions .popup-btn.btn-delete-client { grid-column: 1 / -1; }
+    .popup-actions .popup-btn:hover { transform: translateY(-1px); filter: brightness(0.93); }
+    .popup-actions .popup-btn:active { transform: scale(0.96); }
+    .btn-maps { background: #475569; }
+    .btn-route { background: var(--primary); }
+    .btn-route-prospeccion { background: #059669; }
+    .btn-geocode { background: #10b981; }
+    .btn-delete-client { background: #dc2626; }
 
     .geocode-progress {
       position: fixed;
@@ -389,6 +399,14 @@
     .modal .actions button { padding: 8px 16px; border-radius: 2rem; border: none; cursor: pointer; font-weight: 500; font-size: 0.8rem; }
     .modal .btn-cancel { background: var(--border); color: var(--text-main); }
     .modal .btn-save { background: var(--primary); color: #fff; }
+    .modal .btn-danger { background: #dc2626; color: #fff; }
+    .modal .btn-danger:hover { background: #b91c1c; }
+    .modal .pin-input {
+      width: 100%; text-align: center; letter-spacing: 0.5em; font-size: 1.3rem; font-weight: 700;
+      padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg-main); color: var(--text-main);
+    }
+    .modal .warning-text { font-size: 0.85rem; color: var(--text-main); line-height: 1.5; }
 
     @media (max-width: 768px) {
       .topbar { flex-direction: column; align-items: flex-start; gap: 0.3rem; padding: 0.4rem 0.8rem; }
@@ -448,6 +466,28 @@
     </div>
   </div>
 </div>
+
+<div class="modal-overlay" id="deleteClientModalOverlay">
+  <div class="modal">
+    <h3>🗑️ Eliminar cliente</h3>
+    <div id="deleteStepPin">
+      <p class="warning-text">Para eliminar a <strong id="deleteClientName"></strong> introduce el NIP de seguridad.</p>
+      <label>NIP <input type="password" class="pin-input" id="deletePinInput" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off"></label>
+      <div class="actions">
+        <button class="btn-cancel" id="deletePinCancelBtn">Cancelar</button>
+        <button class="btn-save" id="deletePinConfirmBtn">Continuar</button>
+      </div>
+    </div>
+    <div id="deleteStepConfirm" style="display:none;">
+      <p class="warning-text">¿Seguro que quieres eliminar a <strong id="deleteClientNameConfirm"></strong>? Esta acción no se puede deshacer.</p>
+      <div class="actions">
+        <button class="btn-cancel" id="deleteConfirmCancelBtn">Cancelar</button>
+        <button class="btn-danger" id="deleteConfirmOkBtn">Eliminar definitivamente</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="shell">
   <div class="topbar">
     <div class="brand"><i class="fas fa-users"></i> Clientes Potenciales · Morelia y Tototlán</div>
@@ -1058,10 +1098,13 @@ document.addEventListener('DOMContentLoaded', function(){
           <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">
             Morelia ${Math.round(s.distMorelia)} km · Tototlán ${Math.round(s.distTototlan)} km
           </div>
-          <a href="https://www.google.com/maps?q=${s.lat},${s.lon}" target="_blank" style="font-size:0.75rem;color:var(--primary);">Ver en Google Maps</a>
-          <button class="btn-route" data-lat="${s.lat}" data-lon="${s.lon}" style="display:block;margin-top:4px;">🚗 Calcular ruta</button>
-          <button class="btn-route-prospeccion" data-lat="${s.lat}" data-lon="${s.lon}" style="display:block;margin-top:4px;">🧭 Ruta de prospección</button>
-          ${!s.direccion ? `<button class="btn-geocode" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}" style="display:block;margin-top:4px;">📍 Obtener dirección</button>` : ''}
+          <div class="popup-actions">
+            <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${s.lat},${s.lon}" target="_blank">🗺️ Maps</a>
+            <button class="popup-btn btn-route" data-lat="${s.lat}" data-lon="${s.lon}">🚗 Ruta</button>
+            <button class="popup-btn btn-route-prospeccion" data-lat="${s.lat}" data-lon="${s.lon}">🧭 Prospección</button>
+            ${!s.direccion ? `<button class="popup-btn btn-geocode" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">📍 Dirección</button>` : ''}
+            <button class="popup-btn btn-delete-client" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">🗑️ Eliminar</button>
+          </div>
         </div>`;
       }, { className: '', maxWidth: 300 });
       marker.data = s;
@@ -1732,6 +1775,78 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ============================================================
+  //  10c. ELIMINAR CLIENTE (con NIP de seguridad)
+  // ============================================================
+  const NIP_ELIMINAR = '1723';
+  let clienteAEliminar = null;
+  const deleteModalOverlay = document.getElementById('deleteClientModalOverlay');
+  const deleteStepPin = document.getElementById('deleteStepPin');
+  const deleteStepConfirm = document.getElementById('deleteStepConfirm');
+  const deletePinInput = document.getElementById('deletePinInput');
+
+  function abrirModalEliminar(cliente) {
+    clienteAEliminar = cliente;
+    document.getElementById('deleteClientName').textContent = cliente.nombre;
+    document.getElementById('deleteClientNameConfirm').textContent = cliente.nombre;
+    deletePinInput.value = '';
+    deleteStepPin.style.display = 'block';
+    deleteStepConfirm.style.display = 'none';
+    deleteModalOverlay.classList.add('open');
+    setTimeout(() => deletePinInput.focus(), 50);
+  }
+
+  function cerrarModalEliminar() {
+    deleteModalOverlay.classList.remove('open');
+    clienteAEliminar = null;
+  }
+
+  document.getElementById('deletePinCancelBtn').addEventListener('click', cerrarModalEliminar);
+  document.getElementById('deleteConfirmCancelBtn').addEventListener('click', cerrarModalEliminar);
+
+  document.getElementById('deletePinConfirmBtn').addEventListener('click', () => {
+    if (deletePinInput.value.trim() !== NIP_ELIMINAR) {
+      toast('NIP incorrecto.', 'error');
+      deletePinInput.value = '';
+      deletePinInput.focus();
+      return;
+    }
+    deleteStepPin.style.display = 'none';
+    deleteStepConfirm.style.display = 'block';
+  });
+
+  deletePinInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('deletePinConfirmBtn').click();
+  });
+
+  document.getElementById('deleteConfirmOkBtn').addEventListener('click', () => {
+    if (!clienteAEliminar) return;
+    const nombre = clienteAEliminar.nombre;
+    const idx = stations.indexOf(clienteAEliminar);
+    if (idx !== -1) stations.splice(idx, 1);
+    map.closePopup();
+    reconstruirMarcadoresClientes();
+    actualizarSelectTamano();
+    applyFilters();
+    try {
+      localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
+      localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
+    } catch (e) {}
+    cerrarModalEliminar();
+    toast(`Cliente "${nombre}" eliminado.`, 'success');
+  });
+
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn-delete-client');
+    if (!btn) return;
+    const lat = parseFloat(btn.dataset.lat);
+    const lon = parseFloat(btn.dataset.lon);
+    const nombre = btn.dataset.nombre;
+    const cliente = stations.find(s => s.lat === lat && s.lon === lon && s.nombre === nombre);
+    if (!cliente) return;
+    abrirModalEliminar(cliente);
+  });
+
+  // ============================================================
   //  10b2. EXPORTAR CSV
   // ============================================================
   document.getElementById('exportCsvBtn').addEventListener('click', function() {
@@ -1899,10 +2014,13 @@ document.addEventListener('DOMContentLoaded', function(){
                 <span style="display:block;width:10px;height:10px;border-radius:50%;background:${s._matchColor};"></span>
                 <span style="color:#0f172a;font-weight:600;">${d} km de ${s._matchAncla}</span>
               </div>
-              <a href="https://www.google.com/maps?q=${s.lat},${s.lon}" target="_blank" style="font-size:0.75rem;color:var(--primary);">Ver en Google Maps</a>
-              <button class="btn-route" data-lat="${s.lat}" data-lon="${s.lon}" style="display:block;margin-top:4px;">🚗 Calcular ruta</button>
-              <button class="btn-route-prospeccion" data-lat="${s.lat}" data-lon="${s.lon}" style="display:block;margin-top:4px;">🧭 Ruta de prospección</button>
-              ${!s.direccion ? `<button class="btn-geocode" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}" style="display:block;margin-top:4px;">📍 Obtener dirección</button>` : ''}
+              <div class="popup-actions">
+                <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${s.lat},${s.lon}" target="_blank">🗺️ Maps</a>
+                <button class="popup-btn btn-route" data-lat="${s.lat}" data-lon="${s.lon}">🚗 Ruta</button>
+                <button class="popup-btn btn-route-prospeccion" data-lat="${s.lat}" data-lon="${s.lon}">🧭 Prospección</button>
+                ${!s.direccion ? `<button class="popup-btn btn-geocode" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">📍 Dirección</button>` : ''}
+                <button class="popup-btn btn-delete-client" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">🗑️ Eliminar</button>
+              </div>
             </div>`;
           });
         }
@@ -1965,10 +2083,13 @@ document.addEventListener('DOMContentLoaded', function(){
                 <span style="display:block;width:10px;height:10px;border-radius:50%;background:${cliente._matchColor};"></span>
                 <span style="color:#0f172a;font-weight:600;">${d} km de ${cliente._matchAncla}</span>
               </div>
-              <a href="https://www.google.com/maps?q=${cliente.lat},${cliente.lon}" target="_blank" style="font-size:0.75rem;color:var(--primary);">Ver en Google Maps</a>
-              <button class="btn-route" data-lat="${cliente.lat}" data-lon="${cliente.lon}" style="display:block;margin-top:4px;">🚗 Calcular ruta</button>
-              <button class="btn-route-prospeccion" data-lat="${cliente.lat}" data-lon="${cliente.lon}" style="display:block;margin-top:4px;">🧭 Ruta de prospección</button>
-              ${!cliente.direccion ? `<button class="btn-geocode" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}" style="display:block;margin-top:4px;">📍 Obtener dirección</button>` : ''}
+              <div class="popup-actions">
+                <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${cliente.lat},${cliente.lon}" target="_blank">🗺️ Maps</a>
+                <button class="popup-btn btn-route" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🚗 Ruta</button>
+                <button class="popup-btn btn-route-prospeccion" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🧭 Prospección</button>
+                ${!cliente.direccion ? `<button class="popup-btn btn-geocode" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">📍 Dirección</button>` : ''}
+                <button class="popup-btn btn-delete-client" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">🗑️ Eliminar</button>
+              </div>
             </div>`;
           });
           entry.marker.openPopup();
