@@ -531,7 +531,7 @@ document.addEventListener('DOMContentLoaded', function(){
   // ============================================================
   //  0. COORDENADAS ANCLA
   // ============================================================
-  const ANCLA_MORELIA  = { nombre: "Morelia",  lat: 19.701130, lon: -101.198219, color: '#004D99' };
+  const ANCLA_MORELIA  = { nombre: "Morelia",  lat: 19.70480534245386, lon: -101.24479193126763, color: '#004D99' };
   const ANCLA_TOTOTLAN = { nombre: "Tototlán", lat: 20.534806, lon: -102.782470, color: '#FF6B35' };
   const ANCLAS = [ANCLA_MORELIA, ANCLA_TOTOTLAN];
   const ANCLA = ANCLA_MORELIA;
@@ -757,20 +757,34 @@ document.addEventListener('DOMContentLoaded', function(){
   const markerMap = new Map();
 
   // === ANCLAS CON ICONOS MEJORADOS ===
+  // Estrella con destellos (tipo ⭐/🌟), coloreada según cada ancla para
+  // distinguir Morelia de Tototlán de un vistazo.
   function anclaIcon(ancla) {
     const color = ancla.color;
+    const filtroId = 'anclaShadow-' + (ancla.nombre === 'Morelia' ? 'morelia' : 'tototlan');
+    const destello = 'M0,-7 Q3.2,0 0,9 Q-3.2,0 0,-7 Z';
     const svg = `
-      <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="24" cy="24" r="22" fill="${color}" opacity="0.25" stroke="${color}" stroke-width="1.5"/>
-        <circle cx="24" cy="24" r="18" fill="${color}" stroke="white" stroke-width="2.5"/>
-        <text x="24" y="24" text-anchor="middle" dominant-baseline="central" font-size="20" fill="white" font-family="Arial, sans-serif">★</text>
+      <svg width="56" height="56" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="${filtroId}" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.35"/>
+          </filter>
+        </defs>
+        <g filter="url(#${filtroId})">
+          <path d="${destello}" fill="${color}" opacity="0.55" transform="translate(49.68,14.32) rotate(45)"/>
+          <path d="${destello}" fill="${color}" opacity="0.55" transform="translate(14.32,14.32) rotate(-45)"/>
+          <path d="${destello}" fill="${color}" opacity="0.55" transform="translate(49.68,49.68) rotate(135)"/>
+          <path d="${destello}" fill="${color}" opacity="0.55" transform="translate(14.32,49.68) rotate(225)"/>
+          <path d="M32.00,15.00 L36.11,26.34 L48.17,26.75 L38.66,34.16 L41.99,45.75 L32.00,39.00 L22.01,45.75 L25.34,34.16 L15.83,26.75 L27.89,26.34 Z"
+                fill="${color}" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>
+        </g>
       </svg>
     `;
     return L.divIcon({
       className: '',
       html: svg,
-      iconSize: [48, 48],
-      iconAnchor: [24, 24]
+      iconSize: [56, 56],
+      iconAnchor: [28, 28]
     });
   }
 
