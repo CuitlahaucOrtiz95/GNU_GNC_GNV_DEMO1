@@ -1,8 +1,8 @@
 // ============================================================
 // ARCHIVO GENERADO desde: clientes_nuevos_denue.csv
 // Directorio único: lo usan Morelia y Tototlán a la vez.
-// Fecha: 21/7/2026, 10:00:54 a.m.
-// Registros: 18134
+// Fecha: 21/7/2026, 10:22:11 a.m.
+// Registros: 18154
 // NO editar a mano.
 // ============================================================
 window.CLIENTES_POTENCIALES = [
@@ -18139,5 +18139,25 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"Advance San Juan","lat":20.4389,"lon":-99.958712,"estado":"Querétaro","tamano":"Parque Industrial"},
   {"nombre":"Valle de Oro","lat":20.398057,"lon":-99.985713,"estado":"Querétaro","tamano":"Parque Industrial"},
   {"nombre":"San Juan del Río Business Park","lat":20.378744,"lon":-100.014145,"estado":"Querétaro","tamano":"Parque Industrial"},
-  {"nombre":"Nuevo San Juan / Parque San Juan AMD","lat":20.363598,"lon":-99.964328,"estado":"Querétaro","tamano":"Parque Industrial"}
+  {"nombre":"Nuevo San Juan / Parque San Juan AMD","lat":20.363598,"lon":-99.964328,"estado":"Querétaro","tamano":"Parque Industrial"},
+  {"nombre":"PORTNEXIS (en desarrollo);Tecomán/Armería;Colima;18.8913606;-103.8561269;214.5;293.1;Fuera de 190 km","lat":18.891361,"lon":-103.856127,"estado":"Colima","tamano":"Parque Industrial"},
+  {"nombre":"Centra Parque Industrial Manzanillo;Manzanillo;Colima;19.073801;-104.2802047;225.7;330.7;Fuera de 190 km","lat":19.073801,"lon":-104.280205,"estado":"Colima","tamano":"Parque Industrial"},
+  {"nombre":"PARKUM Manzanillo;Manzanillo;Colima;19.1246875;-104.3141875;224.2;333.0;Fuera de 190 km","lat":19.124688,"lon":-104.314187,"estado":"Colima","tamano":"Parque Industrial"},
+  {"nombre":"Valle de Aguascalientes (PIVA);Aguascalientes;Aguascalientes;21.965739;-102.2831142;167.3;275.9;Tototlán","lat":21.965739,"lon":-102.283114,"estado":"Aguascalientes","tamano":"Parque Industrial"},
+  {"nombre":"FINSA Aguascalientes;Aguascalientes;Aguascalientes;21.748393;-102.281345;144.6;254.0;Tototlán","lat":21.748393,"lon":-102.281345,"estado":"Aguascalientes","tamano":"Parque Industrial"},
+  {"nombre":"Ciudad Industrial de Aguascalientes;Aguascalientes;Aguascalientes;21.836332;-102.28764;153.5;263.1;Tototlán","lat":21.836332,"lon":-102.28764,"estado":"Aguascalientes","tamano":"Parque Industrial"},
+  {"nombre":"Chichimeco;Jesús María;Aguascalientes;21.9905067;-102.3371271;168.3;280.7;Tototlán","lat":21.990507,"lon":-102.337127,"estado":"Aguascalientes","tamano":"Parque Industrial"},
+  {"nombre":"Douki Seisan Park (Nissan/Vesta);Aguascalientes;Aguascalientes;21.7400694;-102.2940695;143.3;253.8;Tototlán","lat":21.740069,"lon":-102.294069,"estado":"Aguascalientes","tamano":"Parque Industrial"},
+  {"nombre":"Siglo XXI;Aguascalientes;Aguascalientes;21.800416;-102.2885914;149.8;259.5;Tototlán","lat":21.800416,"lon":-102.288591,"estado":"Aguascalientes","tamano":"Parque Industrial"},
+  {"nombre":"San Francisco IV;San Francisco de los Romo;Aguascalientes;22.0387592;-102.2817382;175.1;283.3;Tototlán","lat":22.038759,"lon":-102.281738,"estado":"Aguascalientes","tamano":"Parque Industrial"},
+  {"nombre":"Parque Industrial Zamora;Zamora;Michoacán;20.1090566;-102.2683834;71.5;120.7;Ambas","lat":20.109057,"lon":-102.268383,"estado":"Michoacán","tamano":"Parque Industrial"},
+  {"nombre":"Ciudad Industrial de Morelia;Morelia;Michoacán;19.7235455;-101.1546576;192.4;5.2;Morelia","lat":19.723546,"lon":-101.154658,"estado":"Michoacán","tamano":"Parque Industrial"},
+  {"nombre":"ElevaPark Industrial & Logistics;Tarímbaro;Michoacán;19.7613267;-101.1733526;188.7;7.2;Ambas","lat":19.761327,"lon":-101.173353,"estado":"Michoacán","tamano":"Parque Industrial"},
+  {"nombre":"Atlacomulco Industrial Park;Atlacomulco;Edo. de México;19.7870894;-99.8956853;312.6;136.7;Morelia","lat":19.787089,"lon":-99.895685,"estado":"Edo. de México","tamano":"Parque Industrial"},
+  {"nombre":"Toluca 2000;Toluca;Edo. de México;19.3864642;-99.5708618;359.1;174.1;Morelia","lat":19.386464,"lon":-99.570862,"estado":"Edo. de México","tamano":"Parque Industrial"},
+  {"nombre":"Exportec;Toluca;Edo. de México;19.3359297;-99.5842093;359.9;174.0;Morelia","lat":19.33593,"lon":-99.584209,"estado":"Edo. de México","tamano":"Parque Industrial"},
+  {"nombre":"Vesta Park Toluca I;Toluca;Edo. de México;19.3740987;-99.5816619;358.6;173.3;Morelia","lat":19.374099,"lon":-99.581662,"estado":"Edo. de México","tamano":"Parque Industrial"},
+  {"nombre":"Vesta Park Toluca II;Toluca;Edo. de México;19.3826944;-99.5634151;360.0;174.9;Morelia","lat":19.382694,"lon":-99.563415,"estado":"Edo. de México","tamano":"Parque Industrial"},
+  {"nombre":"El Cerrillo;Lerma;Edo. de México;19.2963337;-99.5393318;365.9;179.6;Morelia","lat":19.296334,"lon":-99.539332,"estado":"Edo. de México","tamano":"Parque Industrial"},
+  {"nombre":"Lerma-Toluca;Lerma/San Mateo Atenco;Edo. de México;19.2896587;-99.55205;365.0;178.5;Morelia","lat":19.289659,"lon":-99.55205,"estado":"Edo. de México","tamano":"Parque Industrial"}
 ];
