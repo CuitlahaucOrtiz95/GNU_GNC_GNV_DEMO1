@@ -1,8 +1,8 @@
 // ============================================================
 // ARCHIVO GENERADO desde: clientes_nuevos_denue.csv
 // Directorio único: lo usan Morelia y Tototlán a la vez.
-// Fecha: 21/7/2026, 10:36:36 a.m.
-// Registros: 18166
+// Fecha: 21/7/2026, 11:25:10 a.m.
+// Registros: 18171
 // NO editar a mano.
 // ============================================================
 window.CLIENTES_POTENCIALES = [
@@ -18171,5 +18171,10 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"Parque Bajío (Estación Queréndaro);Queréndaro;Michoacán;19.8865276;-100.9561838;203.7;32.7;Morelia","lat":19.886528,"lon":-100.956184,"estado":"Michoacán","tamano":"Parque Industrial"},
   {"nombre":"Agroparque Piedras de Lumbre;Jungapeo;Michoacán;19.4766576;-100.4305492;272.5;84.2;Morelia","lat":19.476658,"lon":-100.430549,"estado":"Michoacán","tamano":"Parque Industrial"},
   {"nombre":"Ciudad Industrial de Morelia;Morelia;Michoacán;19.723585;-101.1570668;192.2;5.0;Morelia","lat":19.723585,"lon":-101.157067,"estado":"Michoacán","tamano":"Parque Industrial"},
-  {"nombre":"ElevaPark Industrial & Logistics;Tarímbaro;Michoacán;19.7615488;-101.1733526;188.7;7.2;Ambas","lat":19.761549,"lon":-101.173353,"estado":"Michoacán","tamano":"Parque Industrial"}
+  {"nombre":"ElevaPark Industrial & Logistics;Tarímbaro;Michoacán;19.7615488;-101.1733526;188.7;7.2;Ambas","lat":19.761549,"lon":-101.173353,"estado":"Michoacán","tamano":"Parque Industrial"},
+  {"nombre":"Conti Papelerías | Producciones Conti, S.A. De C.V.","lat":19.705851,"lon":-101.201564,"estado":"Michoacán","tamano":"Grande"},
+  {"nombre":"Conti Papelerías | Producciones Conti, S.A. De C.V.","lat":19.710376,"lon":-101.19916,"estado":"Michoacán","tamano":"Grande"},
+  {"nombre":"Conti Papelerías | Producciones Conti, S.A. De C.V.","lat":19.694538,"lon":-101.177016,"estado":"Michoacán","tamano":"Grande"},
+  {"nombre":"Conti Papelerías | Producciones Conti, S.A. De C.V.","lat":19.706498,"lon":-101.195212,"estado":"Michoacán","tamano":"Grande"},
+  {"nombre":"Achemex","lat":19.404793,"lon":-99.240121,"estado":"Michoacán","tamano":"Grande"}
 ];
