@@ -391,8 +391,11 @@
     .modal .btn-save { background: var(--primary); color: #fff; }
 
     @media (max-width: 768px) {
-      .topbar { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+      .topbar { flex-direction: column; align-items: flex-start; gap: 0.3rem; padding: 0.4rem 0.8rem; }
       .topbar .readouts { width: 100%; justify-content: space-between; }
+      /* El texto de estado y las estadísticas ocupan mucho ancho y no caben en
+         una pantalla angosta; los números clave (clientes / en vista) bastan. */
+      .topbar .status-badge, .topbar .stats { display: none; }
       .rail { width: 100%; max-height: 45vh; border-left: none; border-top: 1px solid var(--border); position: absolute; bottom: 0; z-index: 1000; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); }
       .rail.hidden { transform: translateY(100%); }
       .toolbar .search { min-width: 100%; order: -1; }
@@ -464,13 +467,13 @@
       <input type="text" id="searchInput" placeholder="Buscar cliente…" autocomplete="off" />
       <div class="search-suggestions" id="searchSuggestions"></div>
     </div>
-    <div class="filters">
+    <div class="filters mobile-extra">
       <select id="tamanoFilter" aria-label="Filtrar por tamaño de empresa">
         <option value="all">Todos los tamaños</option>
       </select>
     </div>
     <!-- ductoFilter ELIMINADO -->
-    <div class="dist-slider">
+    <div class="dist-slider mobile-extra">
       <label for="distSlider">Max dist.</label>
       <input type="range" id="distSlider" min="60" max="190" value="190" step="5" />
       <span id="distLabel">190 km</span>
@@ -504,7 +507,7 @@
 
     <span class="separator"></span>
 
-    <button class="btn btn-success" id="geocodeBtn" aria-label="Obtener direcciones de los clientes visibles">
+    <button class="btn btn-success mobile-extra" id="geocodeBtn" aria-label="Obtener direcciones de los clientes visibles">
       <i class="fas fa-address-card"></i> Obtener direcciones
     </button>
     <button class="btn btn-outline mobile-extra" id="noAddressBtn" aria-label="Filtrar clientes sin dirección">
@@ -533,7 +536,7 @@
     <button class="btn btn-primary" id="centerTototlanBtn" aria-label="Centrar en Tototlán">
       <i class="fas fa-star" style="color:#FF6B35;"></i> Tototlán
     </button>
-    <button class="btn btn-primary" id="gotoClosestBtn" title="Centrar en el cliente más cercano">
+    <button class="btn btn-primary mobile-extra" id="gotoClosestBtn" title="Centrar en el cliente más cercano">
       <i class="fas fa-bullseye"></i> Más cercano
     </button>
     <button class="btn btn-warning mobile-extra" id="clearRouteBtn" aria-label="Limpiar ruta">
@@ -2032,6 +2035,13 @@ document.addEventListener('DOMContentLoaded', function(){
   applyFilters();
   document.getElementById('rTotal').textContent = stations.length;
   setTimeout(() => map.invalidateSize(), 100);
+
+  // En pantallas angostas el directorio es un panel que se desliza desde abajo
+  // sobre el mapa: debe empezar oculto, o el mapa quedaría casi sin espacio.
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    document.getElementById('railPanel').classList.add('hidden');
+    document.getElementById('railToggleIcon').className = 'fas fa-chevron-left';
+  }
 
   const loadingOverlay = document.getElementById('loadingOverlay');
   if (loadingOverlay) loadingOverlay.classList.add('hidden');
