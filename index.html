@@ -269,9 +269,6 @@
       display: flex; justify-content: space-between;
     }
 
-    .location-marker { background: none; border: none; }
-    .location-marker .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--secondary); border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(39,191,240,0.25), 0 0 12px rgba(39,191,240,0.7); }
-
     /* LEYENDA MEJORADA (sin ductos) */
     .price-legend {
       background: var(--glass-bg); backdrop-filter: blur(8px);
@@ -1402,12 +1399,23 @@ document.addEventListener('DOMContentLoaded', function(){
   // ============================================================
   let miUbicacionMarker = null;
 
+  // Pin de gota (como los del mapa) en el naranja del Pegman de Street View,
+  // con una siluetita de persona adentro para diferenciarlo de los demás pines.
   function miUbicacionIcon() {
+    const svg = `
+      <svg width="32" height="44" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.35));">
+        <path d="M14 0 C6.27 0 0 6.27 0 14 C0 24.5 14 40 14 40 S28 24.5 28 14 C28 6.27 21.73 0 14 0 Z" fill="#FFA000" stroke="#8a5a00" stroke-width="1.2"/>
+        <circle cx="14" cy="14" r="7.2" fill="white"/>
+        <circle cx="14" cy="10.4" r="2.3" fill="#FFA000"/>
+        <path d="M9.3 19.4 C9.3 15 11 13 14 13 C17 13 18.7 15 18.7 19.4 Z" fill="#FFA000"/>
+      </svg>
+    `;
     return L.divIcon({
-      className: 'location-marker',
-      html: '<span class="dot"></span>',
-      iconSize: [18, 18],
-      iconAnchor: [9, 9]
+      className: '',
+      html: svg,
+      iconSize: [32, 44],
+      iconAnchor: [16, 44],
+      popupAnchor: [0, -40]
     });
   }
 
