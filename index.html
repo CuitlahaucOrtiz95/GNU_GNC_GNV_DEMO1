@@ -673,12 +673,29 @@ document.addEventListener('DOMContentLoaded', function(){
   // Círculos de radio: selección MÚLTIPLE (se puede activar más de uno a la vez).
   // Mientras no haya ninguno activo, no se muestra ningún cliente en el mapa —
   // solo las dos anclas (Morelia y Tototlán).
-  let activeCircleFilters = new Set(); // ids como '150Morelia', '190Tototlan', ...
+  let activeCircleFilters = new Set(); // ids como '150Morelia', '190Tototlan', 'cercaDeMi', ...
+  let miUbicacionCoords = null; // {lat, lon} de la última geolocalización obtenida
 
   function datosCirculo(id) {
+    if (id === 'cercaDeMi') {
+      return { centro: { lat: miUbicacionCoords.lat, lon: miUbicacionCoords.lon, nombre: 'tu ubicación' }, radio: 1 };
+    }
     const centro = id.includes('Morelia') ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
     const radio = parseInt(id, 10);
     return { centro, radio };
+  }
+
+  // Crea (o reposiciona) el círculo de 1 km alrededor de la ubicación real del
+  // usuario. Se usa el mismo sistema de círculos de radio que Morelia/Tototlán.
+  function actualizarCirculoCercaDeMi(lat, lon) {
+    const yaVisible = circulos.cercaDeMi ? circulos.cercaDeMi.visible : false;
+    if (circulos.cercaDeMi && yaVisible) circulosLayer.removeLayer(circulos.cercaDeMi.capa);
+    const capa = L.circle([lat, lon], {
+      radius: 1000, color: '#38bdf8', fillColor: '#38bdf8',
+      fillOpacity: 0.1, weight: 2, dashArray: '6 6', opacity: 0.8
+    }).bindPopup('1 km alrededor de tu ubicación');
+    circulos.cercaDeMi = { capa, visible: false };
+    if (yaVisible) { circulosLayer.addLayer(capa); circulos.cercaDeMi.visible = true; }
   }
 
   function actualizarEtiquetaCirculos() {
@@ -695,16 +712,34 @@ document.addEventListener('DOMContentLoaded', function(){
     label.textContent = `${n} círculos activos`;
   }
 
+  // Activa/desactiva UN círculo puntual, sin tocar los demás ni refrescar
+  // filtros/vista todavía (eso lo hace quien llama a estas dos funciones).
+  function activarCirculoId(id) {
+    const c = circulos[id];
+    if (!c || activeCircleFilters.has(id)) return;
+    activeCircleFilters.add(id);
+    circulosLayer.addLayer(c.capa);
+    c.visible = true;
+    const btn = document.getElementById('btnCirculo' + id);
+    if (btn) btn.classList.add('active');
+  }
+
+  function desactivarCirculoId(id) {
+    const c = circulos[id];
+    if (!c || !activeCircleFilters.has(id)) return;
+    activeCircleFilters.delete(id);
+    circulosLayer.removeLayer(c.capa);
+    c.visible = false;
+    const btn = document.getElementById('btnCirculo' + id);
+    if (btn) btn.classList.remove('active');
+  }
+
   function toggleCirculo(id) {
     const c = circulos[id];
     if (!c) return;
-    const btn = document.getElementById('btnCirculo' + id);
 
     if (activeCircleFilters.has(id)) {
-      activeCircleFilters.delete(id);
-      circulosLayer.removeLayer(c.capa);
-      c.visible = false;
-      if (btn) btn.classList.remove('active');
+      desactivarCirculoId(id);
       actualizarEtiquetaCirculos();
       const visibles = applyFilters();
       if (activeCircleFilters.size) encuadrarClientes(visibles);
@@ -712,10 +747,7 @@ document.addEventListener('DOMContentLoaded', function(){
       return;
     }
 
-    activeCircleFilters.add(id);
-    circulosLayer.addLayer(c.capa);
-    c.visible = true;
-    if (btn) btn.classList.add('active');
+    activarCirculoId(id);
     actualizarEtiquetaCirculos();
     const visibles = applyFilters();
     encuadrarClientes(visibles);
@@ -728,6 +760,41 @@ document.addEventListener('DOMContentLoaded', function(){
   function activarAncla(centro) {
     const id = '190' + (centro === 'morelia' ? 'Morelia' : 'Tototlan');
     toggleCirculo(id);
+  }
+
+  // Activa EN EXCLUSIVA el círculo de 1 km alrededor de tu ubicación real
+  // (apaga cualquier otro círculo activo), y encuadra el mapa ahí cerca.
+  function activarCercaDeMi() {
+    if (!miUbicacionCoords) return;
+    [...activeCircleFilters].forEach(id => desactivarCirculoId(id));
+    activarCirculoId('cercaDeMi');
+    actualizarEtiquetaCirculos();
+    const visibles = applyFilters();
+    map.flyTo([miUbicacionCoords.lat, miUbicacionCoords.lon], 15, { duration: 1.2 });
+    toast(
+      visibles.length
+        ? `${visibles.length} cliente(s) a menos de 1 km de tu ubicación.`
+        : 'No hay clientes a menos de 1 km de tu ubicación.',
+      visibles.length ? 'success' : 'info'
+    );
+  }
+
+  // Alterna el círculo de 1 km: si estaba activo, lo apaga y muestra TODOS los
+  // clientes (activa ambos círculos de 190 km); si no, lo activa en exclusiva.
+  // Se usa al hacer clic en el pin de "Mi ubicación".
+  function toggleCercaDeMi() {
+    if (!miUbicacionCoords) return;
+    if (activeCircleFilters.has('cercaDeMi')) {
+      desactivarCirculoId('cercaDeMi');
+      activarCirculoId('190Morelia');
+      activarCirculoId('190Tototlan');
+      actualizarEtiquetaCirculos();
+      const visibles = applyFilters();
+      if (activeCircleFilters.size) encuadrarClientes(visibles); else verAmbasAnclas();
+      toast(`Mostrando todos los clientes (${visibles.length.toLocaleString()}).`, 'info');
+    } else {
+      activarCercaDeMi();
+    }
   }
 
   // ============================================================
@@ -1434,14 +1501,21 @@ document.addEventListener('DOMContentLoaded', function(){
         btn.classList.remove('loading');
         const { latitude: lat, longitude: lon } = pos.coords;
 
+        miUbicacionCoords = { lat, lon };
+        actualizarCirculoCercaDeMi(lat, lon);
+
         if (miUbicacionMarker) map.removeLayer(miUbicacionMarker);
         miUbicacionMarker = L.marker([lat, lon], {
           icon: miUbicacionIcon(),
           zIndexOffset: 2000,
           title: 'Mi ubicación'
-        }).addTo(map).bindPopup('📍 Estás aquí').openPopup();
+        }).addTo(map)
+          .bindPopup('📍 Estás aquí · clic para mostrar/ocultar clientes a 1 km')
+          .on('click', toggleCercaDeMi)
+          .openPopup();
 
-        map.flyTo([lat, lon], 13, { duration: 1.2 });
+        // Muestra solo los clientes a 1 km a la redonda (apaga cualquier otro círculo activo).
+        activarCercaDeMi();
       },
       function(err) {
         btn.classList.remove('loading');
