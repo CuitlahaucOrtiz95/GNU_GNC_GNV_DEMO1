@@ -8,7 +8,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="format-detection" content="telephone=no" />
   <script>
-    // Aplica el tema guardado ANTES de pintar, para evitar parpadeo claro→oscuro.
     (function(){
       try {
         if (localStorage.getItem('tema') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
@@ -20,7 +19,6 @@
   <meta name="theme-color" content="#1F5CA9" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231F5CA9'/%3E%3Ctext x='50' y='68' font-size='60' text-anchor='middle' fill='white' font-family='Arial'%3E%F0%9F%93%8D%3C/text%3E%3C/svg%3E" />
   <title>Clientes Potenciales · Morelia y Tototlán</title>
-  <!-- Resource hints -->
   <link rel="preconnect" href="https://unpkg.com" crossorigin />
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -29,11 +27,9 @@
   <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org" />
   <link rel="dns-prefetch" href="https://router.project-osrm.org" />
 
-  <!-- CSS crítico -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
 
-  <!-- CSS no crítico -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         media="print" onload="this.media='all';this.onload=null" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
@@ -43,12 +39,10 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
   </noscript>
 
-  <!-- JS con defer -->
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script defer src="ClientesPotenciales.js"></script>
   <style>
-    /* ===== ESTILOS OPTIMIZADOS ===== */
     :root {
       --primary: #1F5CA9;
       --primary-hover: #004a8f;
@@ -289,7 +283,6 @@
       display: flex; justify-content: space-between;
     }
 
-    /* LEYENDA MEJORADA CON MINIMIZAR */
     .price-legend {
       background: var(--glass-bg); backdrop-filter: blur(8px);
       padding: 10px 14px; border-radius: 12px; box-shadow: var(--shadow-lg);
@@ -308,7 +301,6 @@
       font-weight: 700; font-size: 14px; line-height: 1;
     }
     .price-legend .title .clear-btn:hover { background: var(--bg-main); color: #ef4444; }
-    /* Minimizado: oculta las filas */
     .price-legend.collapsed .row { display: none; }
     .price-legend.collapsed .title { border-bottom: none; margin-bottom: 0; }
     .price-legend .row { display: flex; align-items: center; gap: 6px; margin: 3px 0; padding: 3px 6px; border-radius: 6px; cursor: pointer; transition: var(--transition); }
@@ -320,7 +312,12 @@
 
     .leaflet-popup-content { font-size: 0.8rem; font-family: 'Inter', sans-serif; margin: 10px; }
 
-    .popup-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+    .popup-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 8px;
+    }
     .popup-actions .popup-btn {
       text-align: center; white-space: nowrap; text-decoration: none;
       border: none; border-radius: 2rem; padding: 0.4rem 0.5rem;
@@ -334,6 +331,7 @@
     .btn-route { background: var(--primary); }
     .btn-route-prospeccion { background: #059669; }
     .btn-geocode { background: #10b981; }
+    .btn-edit-client { background: #f59e0b; }
     .btn-delete-client { background: #dc2626; }
 
     .geocode-progress {
@@ -387,7 +385,6 @@
     .toast-success { background: #059669; }
     .toast-info { background: #1F5CA9; }
 
-    /* MODAL MEJORADO: campos de coordenadas editables */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999;
       display: none; align-items: center; justify-content: center;
@@ -450,6 +447,7 @@
       .modal { padding: 18px 20px; }
       .dropdown-menu, .search-suggestions { max-width: calc(100vw - 2rem); }
       .modal .coords-row { flex-direction: column; gap: 4px; }
+      .popup-actions { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
@@ -460,23 +458,23 @@
 </div>
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- MODAL AGREGAR CLIENTE (con campos de coordenadas editables) -->
-<div class="modal-overlay" id="addClientModalOverlay">
+<!-- MODAL AGREGAR/EDITAR CLIENTE (reutilizable) -->
+<div class="modal-overlay" id="clientModalOverlay">
   <div class="modal">
-    <h3>➕ Nuevo cliente</h3>
+    <h3 id="clientModalTitle">➕ Nuevo cliente</h3>
     <div class="coords-row">
-      <label>Latitud <input type="text" id="addLat" placeholder="19.704805" step="any" /></label>
-      <label>Longitud <input type="text" id="addLon" placeholder="-101.244791" step="any" /></label>
+      <label>Latitud <input type="text" id="editLat" placeholder="19.704805" step="any" /></label>
+      <label>Longitud <input type="text" id="editLon" placeholder="-101.244791" step="any" /></label>
     </div>
     <p class="hint-text">💡 Puedes escribir las coordenadas o hacer clic en el mapa para rellenarlas.</p>
-    <label>Nombre comercial <input type="text" id="addNombre" placeholder="Ej. Tienda Don Juan" /></label>
-    <label>Estado / Provincia <input type="text" id="addEstado" placeholder="Ej. Michoacán" /></label>
-    <label>Tamaño / Categoría <input type="text" id="addTamano" placeholder="Micro, Pequeña, Base de Combis…" /></label>
-    <label>Dirección <input type="text" id="addDireccion" placeholder="Opcional" /></label>
-    <label>Teléfono <input type="text" id="addTelefono" placeholder="Opcional" /></label>
+    <label>Nombre comercial <input type="text" id="editNombre" placeholder="Ej. Tienda Don Juan" /></label>
+    <label>Estado / Provincia <input type="text" id="editEstado" placeholder="Ej. Michoacán" /></label>
+    <label>Tamaño / Categoría <input type="text" id="editTamano" placeholder="Micro, Pequeña, Base de Combis…" /></label>
+    <label>Dirección <input type="text" id="editDireccion" placeholder="Opcional" /></label>
+    <label>Teléfono <input type="text" id="editTelefono" placeholder="Opcional" /></label>
     <div class="actions">
-      <button class="btn-cancel" id="addCancelBtn">Cancelar</button>
-      <button class="btn-save" id="addSaveBtn">Guardar cliente</button>
+      <button class="btn-cancel" id="clientModalCancelBtn">Cancelar</button>
+      <button class="btn-save" id="clientModalSaveBtn">Guardar cliente</button>
     </div>
   </div>
 </div>
@@ -1069,6 +1067,7 @@ document.addEventListener('DOMContentLoaded', function(){
             <button class="popup-btn btn-route" data-lat="${s.lat}" data-lon="${s.lon}">🚗 Ruta</button>
             <button class="popup-btn btn-route-prospeccion" data-lat="${s.lat}" data-lon="${s.lon}">🧭 Prospección</button>
             ${!s.direccion ? `<button class="popup-btn btn-geocode" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">📍 Dirección</button>` : ''}
+            <button class="popup-btn btn-edit-client" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">✏️ Editar</button>
             <button class="popup-btn btn-delete-client" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">🗑️ Eliminar</button>
           </div>
         </div>`;
@@ -1184,9 +1183,7 @@ document.addEventListener('DOMContentLoaded', function(){
     clusterTimer = setTimeout(() => e.layer.closePopup(), 1500);
   });
 
-  // ============================================================
-  // LEYENDA CON MINIMIZAR (mejora #1)
-  // ============================================================
+  // LEYENDA CON MINIMIZAR
   const legendControl = L.control({ position: 'bottomright' });
   legendControl.onAdd = function() {
     const div = L.DomUtil.create('div', 'price-legend');
@@ -1219,7 +1216,6 @@ document.addEventListener('DOMContentLoaded', function(){
     setTimeout(actualizarConteos, 100);
     div._actualizarConteos = actualizarConteos;
 
-    // Evento para minimizar/expandir la leyenda (mejora #1)
     div.querySelector('#legendToggleBtn').addEventListener('click', function(e) {
       e.stopPropagation();
       div.classList.toggle('collapsed');
@@ -1622,108 +1618,195 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ============================================================
-  //  AGREGAR CLIENTE (mejora #2: campos editables + clic en mapa)
+  //  MODAL REUTILIZABLE PARA AGREGAR Y EDITAR
   // ============================================================
-  const modalOverlay = document.getElementById('addClientModalOverlay');
-  const addLat = document.getElementById('addLat');
-  const addLon = document.getElementById('addLon');
-  const addNombre = document.getElementById('addNombre');
-  const addEstado = document.getElementById('addEstado');
-  const addTamano = document.getElementById('addTamano');
-  const addDireccion = document.getElementById('addDireccion');
-  const addTelefono = document.getElementById('addTelefono');
-  let tempCoords = null;
+  const modalOverlay = document.getElementById('clientModalOverlay');
+  const modalTitle = document.getElementById('clientModalTitle');
+  const editLat = document.getElementById('editLat');
+  const editLon = document.getElementById('editLon');
+  const editNombre = document.getElementById('editNombre');
+  const editEstado = document.getElementById('editEstado');
+  const editTamano = document.getElementById('editTamano');
+  const editDireccion = document.getElementById('editDireccion');
+  const editTelefono = document.getElementById('editTelefono');
+  const saveBtn = document.getElementById('clientModalSaveBtn');
+  const cancelBtn = document.getElementById('clientModalCancelBtn');
 
-  // Botón "Agregar cliente": abre el modal con campos vacíos
-  document.getElementById('addClientBtn').addEventListener('click', function() {
+  let clienteEnEdicion = null; // null = modo agregar, objeto = modo editar
+
+  function abrirModalAgregar() {
+    clienteEnEdicion = null;
+    modalTitle.textContent = '➕ Nuevo cliente';
+    saveBtn.textContent = 'Guardar cliente';
+    editLat.value = '';
+    editLon.value = '';
+    editNombre.value = '';
+    editEstado.value = '';
+    editTamano.value = '';
+    editDireccion.value = '';
+    editTelefono.value = '';
     modalOverlay.classList.add('open');
-    addLat.value = '';
-    addLon.value = '';
-    addNombre.value = '';
-    addEstado.value = '';
-    addTamano.value = '';
-    addDireccion.value = '';
-    addTelefono.value = '';
-    tempCoords = null;
-    // Enfocar el primer campo
-    setTimeout(() => addLat.focus(), 100);
-  });
+    setTimeout(() => editLat.focus(), 100);
+  }
 
-  // Si el modal está abierto y se hace clic en el mapa, rellenar coordenadas
+  function abrirModalEdicion(cliente) {
+    clienteEnEdicion = cliente;
+    modalTitle.textContent = '✏️ Editar cliente';
+    saveBtn.textContent = 'Guardar cambios';
+    editLat.value = cliente.lat.toFixed(6);
+    editLon.value = cliente.lon.toFixed(6);
+    editNombre.value = cliente.nombre;
+    editEstado.value = cliente.estado || '';
+    editTamano.value = cliente.tamano || '';
+    editDireccion.value = cliente.direccion || '';
+    editTelefono.value = cliente.telefono || '';
+    modalOverlay.classList.add('open');
+    setTimeout(() => editLat.focus(), 100);
+  }
+
+  function cerrarModalCliente() {
+    modalOverlay.classList.remove('open');
+    clienteEnEdicion = null;
+  }
+
+  // Botón "Agregar cliente"
+  document.getElementById('addClientBtn').addEventListener('click', abrirModalAgregar);
+
+  // Botón "Cancelar" del modal
+  cancelBtn.addEventListener('click', cerrarModalCliente);
+
+  // Clic en el mapa mientras el modal está abierto → rellena coordenadas
   map.on('click', function(e) {
     if (modalOverlay.classList.contains('open')) {
-      addLat.value = e.latlng.lat.toFixed(6);
-      addLon.value = e.latlng.lng.toFixed(6);
-      tempCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
+      editLat.value = e.latlng.lat.toFixed(6);
+      editLon.value = e.latlng.lng.toFixed(6);
       toast('Coordenadas copiadas del mapa.', 'info', 1500);
     }
-  });
-
-  document.getElementById('addCancelBtn').addEventListener('click', () => {
-    modalOverlay.classList.remove('open');
-    tempCoords = null;
-  });
-
-  document.getElementById('addSaveBtn').addEventListener('click', () => {
-    const nombre = addNombre.value.trim();
-    if (!nombre) { toast('El nombre comercial es obligatorio.', 'error'); return; }
-
-    const lat = parseFloat(addLat.value);
-    const lon = parseFloat(addLon.value);
-    if (isNaN(lat) || isNaN(lon)) { toast('Introduce latitud y longitud válidas.', 'error'); return; }
-    if (lat < -90 || lat > 90) { toast('Latitud fuera de rango (-90 a 90).', 'error'); return; }
-    if (lon < -180 || lon > 180) { toast('Longitud fuera de rango (-180 a 180).', 'error'); return; }
-
-    const estado = addEstado.value.trim();
-    const tamano = addTamano.value.trim();
-    const direccion = addDireccion.value.trim();
-    const telefono = addTelefono.value.trim();
-
-    // Redondear a 6 decimales
-    const latRed = Math.round(lat * 1e6) / 1e6;
-    const lonRed = Math.round(lon * 1e6) / 1e6;
-
-    const nuevo = {
-      nombre: nombre,
-      lat: latRed,
-      lon: lonRed,
-      estado: estado || '',
-      tamano: tamano || '',
-      direccion: direccion || '',
-      telefono: telefono || ''
-    };
-
-    // Verificar duplicado exacto (misma lat/lon y nombre)
-    const duplicado = stations.some(s => s.lat === latRed && s.lon === lonRed && s.nombre === nombre);
-    if (duplicado) {
-      toast('Ya existe un cliente con ese nombre y coordenadas.', 'error');
-      return;
-    }
-
-    enriquecer([nuevo]);
-    stations.push(nuevo);
-    reconstruirMarcadoresClientes();
-    actualizarSelectTamano();
-    applyFilters();
-    try {
-      localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
-      localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
-    } catch (e) {}
-    modalOverlay.classList.remove('open');
-    tempCoords = null;
-    toast(`Cliente "${nombre}" agregado correctamente.`, 'success');
   });
 
   // Cerrar modal con Escape
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && modalOverlay.classList.contains('open')) {
-      modalOverlay.classList.remove('open');
-      tempCoords = null;
+      cerrarModalCliente();
+    }
+  });
+
+  // Guardar (agregar o editar)
+  saveBtn.addEventListener('click', function() {
+    const nombre = editNombre.value.trim();
+    if (!nombre) { toast('El nombre comercial es obligatorio.', 'error'); return; }
+
+    const lat = parseFloat(editLat.value);
+    const lon = parseFloat(editLon.value);
+    if (isNaN(lat) || isNaN(lon)) { toast('Introduce latitud y longitud válidas.', 'error'); return; }
+    if (lat < -90 || lat > 90) { toast('Latitud fuera de rango (-90 a 90).', 'error'); return; }
+    if (lon < -180 || lon > 180) { toast('Longitud fuera de rango (-180 a 180).', 'error'); return; }
+
+    const estado = editEstado.value.trim();
+    const tamano = editTamano.value.trim();
+    const direccion = editDireccion.value.trim();
+    const telefono = editTelefono.value.trim();
+
+    const latRed = Math.round(lat * 1e6) / 1e6;
+    const lonRed = Math.round(lon * 1e6) / 1e6;
+
+    if (clienteEnEdicion) {
+      // === MODO EDICIÓN ===
+      // Verificar duplicado (mismo nombre y coordenadas, pero distinto cliente)
+      const duplicado = stations.some(s =>
+        s !== clienteEnEdicion &&
+        s.lat === latRed &&
+        s.lon === lonRed &&
+        s.nombre === nombre
+      );
+      if (duplicado) {
+        toast('Ya existe otro cliente con ese nombre y coordenadas.', 'error');
+        return;
+      }
+
+      // Actualizar los datos del cliente existente
+      clienteEnEdicion.nombre = nombre;
+      clienteEnEdicion.lat = latRed;
+      clienteEnEdicion.lon = lonRed;
+      clienteEnEdicion.estado = estado;
+      clienteEnEdicion.tamano = tamano;
+      clienteEnEdicion.direccion = direccion;
+      clienteEnEdicion.telefono = telefono;
+
+      // Recalcular distancias y metadata
+      enriquecer([clienteEnEdicion]);
+
+      // Actualizar marcador y popup
+      const entry = markerMap.get(clienteEnEdicion);
+      if (entry) {
+        const iconoEspecial = obtenerIconoEspecial(clienteEnEdicion);
+        entry.marker.setIcon(iconoEspecial || iconoPin(clienteEnEdicion.priceColor));
+        entry.marker.setTitle(clienteEnEdicion.nombre);
+        // Forzar actualización del popup (se regenera al abrirlo)
+        entry.marker.closePopup();
+      }
+
+      actualizarSelectTamano();
+      applyFilters();
+      try {
+        localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
+        localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
+      } catch (e) {}
+      cerrarModalCliente();
+      toast(`Cliente "${nombre}" actualizado correctamente.`, 'success');
+    } else {
+      // === MODO AGREGAR ===
+      // Verificar duplicado exacto
+      const duplicado = stations.some(s => s.lat === latRed && s.lon === lonRed && s.nombre === nombre);
+      if (duplicado) {
+        toast('Ya existe un cliente con ese nombre y coordenadas.', 'error');
+        return;
+      }
+
+      const nuevo = {
+        nombre: nombre,
+        lat: latRed,
+        lon: lonRed,
+        estado: estado,
+        tamano: tamano,
+        direccion: direccion,
+        telefono: telefono
+      };
+
+      enriquecer([nuevo]);
+      stations.push(nuevo);
+      reconstruirMarcadoresClientes();
+      actualizarSelectTamano();
+      applyFilters();
+      try {
+        localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
+        localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
+      } catch (e) {}
+      cerrarModalCliente();
+      toast(`Cliente "${nombre}" agregado correctamente.`, 'success');
     }
   });
 
   // ============================================================
-  //  ELIMINAR CLIENTE (con NIP)
+  //  MANEJADOR PARA BOTÓN EDITAR EN EL POPUP
+  // ============================================================
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn-edit-client');
+    if (btn) {
+      const lat = parseFloat(btn.dataset.lat);
+      const lon = parseFloat(btn.dataset.lon);
+      const nombre = btn.dataset.nombre;
+      const cliente = stations.find(s => s.lat === lat && s.lon === lon && s.nombre === nombre);
+      if (cliente) {
+        abrirModalEdicion(cliente);
+      } else {
+        toast('Cliente no encontrado.', 'error');
+      }
+    }
+  });
+
+  // ============================================================
+  //  ELIMINAR CLIENTE (con NIP) - ya existente
   // ============================================================
   const NIP_ELIMINAR = '1723';
   let clienteAEliminar = null;
@@ -1945,29 +2028,7 @@ document.addEventListener('DOMContentLoaded', function(){
         const entry = markerMap.get(s);
         if (entry) {
           entry.marker.closePopup();
-          entry.marker.bindPopup(() => {
-            const d = s._matchDist < 10 ? s._matchDist.toFixed(1) : Math.round(s._matchDist);
-            const direccion = s.direccion ? `<br><span style="font-size:0.8rem;">📍 ${s.direccion}</span>` : '';
-            const tamano = s.tamano ? `<br><span style="font-size:0.8rem;">🏢 ${s.tamano}</span>` : '';
-            return `<div style="padding:0.2rem;">
-              <strong style="font-size:1.05rem;color:var(--primary);">${s.nombre}</strong><br>
-              <span style="color:var(--text-muted);font-size:0.8rem;">${s.estado || '...'}</span>
-              ${direccion}
-              ${tamano}
-              ${s.telefono ? `<br><span style="font-size:0.8rem;">📞 ${s.telefono}</span>` : ''}
-              <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
-                <span style="display:block;width:10px;height:10px;border-radius:50%;background:${s._matchColor};"></span>
-                <span style="color:#0f172a;font-weight:600;">${d} km de ${s._matchAncla}</span>
-              </div>
-              <div class="popup-actions">
-                <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${s.lat},${s.lon}" target="_blank">🗺️ Maps</a>
-                <button class="popup-btn btn-route" data-lat="${s.lat}" data-lon="${s.lon}">🚗 Ruta</button>
-                <button class="popup-btn btn-route-prospeccion" data-lat="${s.lat}" data-lon="${s.lon}">🧭 Prospección</button>
-                ${!s.direccion ? `<button class="popup-btn btn-geocode" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">📍 Dirección</button>` : ''}
-                <button class="popup-btn btn-delete-client" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">🗑️ Eliminar</button>
-              </div>
-            </div>`;
-          });
+          // Se regenerará automáticamente al abrir
         }
       }
       procesados++;
@@ -2014,36 +2075,14 @@ document.addEventListener('DOMContentLoaded', function(){
         const entry = markerMap.get(cliente);
         if (entry) {
           entry.marker.closePopup();
-          entry.marker.bindPopup(() => {
-            const d = cliente._matchDist < 10 ? cliente._matchDist.toFixed(1) : Math.round(cliente._matchDist);
-            const direccion = cliente.direccion ? `<br><span style="font-size:0.8rem;">📍 ${cliente.direccion}</span>` : '';
-            const tamano = cliente.tamano ? `<br><span style="font-size:0.8rem;">🏢 ${cliente.tamano}</span>` : '';
-            return `<div style="padding:0.2rem;">
-              <strong style="font-size:1.05rem;color:var(--primary);">${cliente.nombre}</strong><br>
-              <span style="color:var(--text-muted);font-size:0.8rem;">${cliente.estado || '...'}</span>
-              ${direccion}
-              ${tamano}
-              ${cliente.telefono ? `<br><span style="font-size:0.8rem;">📞 ${cliente.telefono}</span>` : ''}
-              <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
-                <span style="display:block;width:10px;height:10px;border-radius:50%;background:${cliente._matchColor};"></span>
-                <span style="color:#0f172a;font-weight:600;">${d} km de ${cliente._matchAncla}</span>
-              </div>
-              <div class="popup-actions">
-                <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${cliente.lat},${cliente.lon}" target="_blank">🗺️ Maps</a>
-                <button class="popup-btn btn-route" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🚗 Ruta</button>
-                <button class="popup-btn btn-route-prospeccion" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🧭 Prospección</button>
-                ${!cliente.direccion ? `<button class="popup-btn btn-geocode" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">📍 Dirección</button>` : ''}
-                <button class="popup-btn btn-delete-client" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">🗑️ Eliminar</button>
-              </div>
-            </div>`;
-          });
-          entry.marker.openPopup();
+          // Actualización visual al abrir popup
         }
         try {
           localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
           localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
         } catch (e) {}
         applyFilters();
+        toast(`Dirección obtenida para "${cliente.nombre}".`, 'success');
       } else {
         toast('No se pudo obtener la dirección para este cliente.', 'error');
       }
