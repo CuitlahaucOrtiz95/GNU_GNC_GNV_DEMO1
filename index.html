@@ -290,6 +290,8 @@
 
     .btn-route { display: inline-block; margin-top: 4px; background: var(--primary); color: #fff; border: none; border-radius: 2rem; padding: 0.2rem 0.7rem; font-size: 0.7rem; cursor: pointer; transition: var(--transition); }
     .btn-route:hover { background: var(--primary-hover); }
+    .btn-route-prospeccion { display: inline-block; margin-top: 4px; background: #059669; color: #fff; border: none; border-radius: 2rem; padding: 0.2rem 0.7rem; font-size: 0.7rem; cursor: pointer; transition: var(--transition); }
+    .btn-route-prospeccion:hover { background: #047857; }
     .btn-geocode { display: inline-block; margin-top: 4px; background: #10b981; color: #fff; border: none; border-radius: 2rem; padding: 0.2rem 0.7rem; font-size: 0.7rem; cursor: pointer; transition: var(--transition); }
     .btn-geocode:hover { background: #059669; }
 
@@ -673,12 +675,29 @@ document.addEventListener('DOMContentLoaded', function(){
   // Círculos de radio: selección MÚLTIPLE (se puede activar más de uno a la vez).
   // Mientras no haya ninguno activo, no se muestra ningún cliente en el mapa —
   // solo las dos anclas (Morelia y Tototlán).
-  let activeCircleFilters = new Set(); // ids como '150Morelia', '190Tototlan', ...
+  let activeCircleFilters = new Set(); // ids como '150Morelia', '190Tototlan', 'cercaDeMi', ...
+  let miUbicacionCoords = null; // {lat, lon} de la última geolocalización obtenida
 
   function datosCirculo(id) {
+    if (id === 'cercaDeMi') {
+      return { centro: { lat: miUbicacionCoords.lat, lon: miUbicacionCoords.lon, nombre: 'tu ubicación' }, radio: 1 };
+    }
     const centro = id.includes('Morelia') ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
     const radio = parseInt(id, 10);
     return { centro, radio };
+  }
+
+  // Crea (o reposiciona) el círculo de 1 km alrededor de la ubicación real del
+  // usuario. Se usa el mismo sistema de círculos de radio que Morelia/Tototlán.
+  function actualizarCirculoCercaDeMi(lat, lon) {
+    const yaVisible = circulos.cercaDeMi ? circulos.cercaDeMi.visible : false;
+    if (circulos.cercaDeMi && yaVisible) circulosLayer.removeLayer(circulos.cercaDeMi.capa);
+    const capa = L.circle([lat, lon], {
+      radius: 1000, color: '#38bdf8', fillColor: '#38bdf8',
+      fillOpacity: 0.1, weight: 2, dashArray: '6 6', opacity: 0.8
+    }).bindPopup('1 km alrededor de tu ubicación');
+    circulos.cercaDeMi = { capa, visible: false };
+    if (yaVisible) { circulosLayer.addLayer(capa); circulos.cercaDeMi.visible = true; }
   }
 
   function actualizarEtiquetaCirculos() {
@@ -695,16 +714,34 @@ document.addEventListener('DOMContentLoaded', function(){
     label.textContent = `${n} círculos activos`;
   }
 
+  // Activa/desactiva UN círculo puntual, sin tocar los demás ni refrescar
+  // filtros/vista todavía (eso lo hace quien llama a estas dos funciones).
+  function activarCirculoId(id) {
+    const c = circulos[id];
+    if (!c || activeCircleFilters.has(id)) return;
+    activeCircleFilters.add(id);
+    circulosLayer.addLayer(c.capa);
+    c.visible = true;
+    const btn = document.getElementById('btnCirculo' + id);
+    if (btn) btn.classList.add('active');
+  }
+
+  function desactivarCirculoId(id) {
+    const c = circulos[id];
+    if (!c || !activeCircleFilters.has(id)) return;
+    activeCircleFilters.delete(id);
+    circulosLayer.removeLayer(c.capa);
+    c.visible = false;
+    const btn = document.getElementById('btnCirculo' + id);
+    if (btn) btn.classList.remove('active');
+  }
+
   function toggleCirculo(id) {
     const c = circulos[id];
     if (!c) return;
-    const btn = document.getElementById('btnCirculo' + id);
 
     if (activeCircleFilters.has(id)) {
-      activeCircleFilters.delete(id);
-      circulosLayer.removeLayer(c.capa);
-      c.visible = false;
-      if (btn) btn.classList.remove('active');
+      desactivarCirculoId(id);
       actualizarEtiquetaCirculos();
       const visibles = applyFilters();
       if (activeCircleFilters.size) encuadrarClientes(visibles);
@@ -712,10 +749,7 @@ document.addEventListener('DOMContentLoaded', function(){
       return;
     }
 
-    activeCircleFilters.add(id);
-    circulosLayer.addLayer(c.capa);
-    c.visible = true;
-    if (btn) btn.classList.add('active');
+    activarCirculoId(id);
     actualizarEtiquetaCirculos();
     const visibles = applyFilters();
     encuadrarClientes(visibles);
@@ -728,6 +762,41 @@ document.addEventListener('DOMContentLoaded', function(){
   function activarAncla(centro) {
     const id = '190' + (centro === 'morelia' ? 'Morelia' : 'Tototlan');
     toggleCirculo(id);
+  }
+
+  // Activa EN EXCLUSIVA el círculo de 1 km alrededor de tu ubicación real
+  // (apaga cualquier otro círculo activo), y encuadra el mapa ahí cerca.
+  function activarCercaDeMi() {
+    if (!miUbicacionCoords) return;
+    [...activeCircleFilters].forEach(id => desactivarCirculoId(id));
+    activarCirculoId('cercaDeMi');
+    actualizarEtiquetaCirculos();
+    const visibles = applyFilters();
+    map.flyTo([miUbicacionCoords.lat, miUbicacionCoords.lon], 15, { duration: 1.2 });
+    toast(
+      visibles.length
+        ? `${visibles.length} cliente(s) a menos de 1 km de tu ubicación.`
+        : 'No hay clientes a menos de 1 km de tu ubicación.',
+      visibles.length ? 'success' : 'info'
+    );
+  }
+
+  // Alterna el círculo de 1 km: si estaba activo, lo apaga y muestra TODOS los
+  // clientes (activa ambos círculos de 190 km); si no, lo activa en exclusiva.
+  // Se usa al hacer clic en el pin de "Mi ubicación".
+  function toggleCercaDeMi() {
+    if (!miUbicacionCoords) return;
+    if (activeCircleFilters.has('cercaDeMi')) {
+      desactivarCirculoId('cercaDeMi');
+      activarCirculoId('190Morelia');
+      activarCirculoId('190Tototlan');
+      actualizarEtiquetaCirculos();
+      const visibles = applyFilters();
+      if (activeCircleFilters.size) encuadrarClientes(visibles); else verAmbasAnclas();
+      toast(`Mostrando todos los clientes (${visibles.length.toLocaleString()}).`, 'info');
+    } else {
+      activarCercaDeMi();
+    }
   }
 
   // ============================================================
@@ -848,6 +917,7 @@ document.addEventListener('DOMContentLoaded', function(){
           </div>
           <a href="https://www.google.com/maps?q=${s.lat},${s.lon}" target="_blank" style="font-size:0.75rem;color:var(--primary);">Ver en Google Maps</a>
           <button class="btn-route" data-lat="${s.lat}" data-lon="${s.lon}" style="display:block;margin-top:4px;">🚗 Calcular ruta</button>
+          <button class="btn-route-prospeccion" data-lat="${s.lat}" data-lon="${s.lon}" style="display:block;margin-top:4px;">🧭 Ruta de prospección</button>
           ${!s.direccion ? `<button class="btn-geocode" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}" style="display:block;margin-top:4px;">📍 Obtener dirección</button>` : ''}
         </div>`;
       }, { className: '', maxWidth: 300 });
@@ -899,15 +969,20 @@ document.addEventListener('DOMContentLoaded', function(){
       const lat = parseFloat(e.target.dataset.lat);
       const lon = parseFloat(e.target.dataset.lon);
       mostrarRuta(lat, lon);
+    } else if (e.target.classList.contains('btn-route-prospeccion')) {
+      const lat = parseFloat(e.target.dataset.lat);
+      const lon = parseFloat(e.target.dataset.lon);
+      mostrarRutaProspeccion(lat, lon);
     }
   });
 
-  async function mostrarRuta(destLat, destLon) {
+  // Dibuja la ruta (oculta clúster/círculos, traza la línea, coloca la bandera
+  // de llegada). Lo usan tanto "Calcular ruta" (desde el ancla) como
+  // "Ruta de prospección" (desde tu ubicación real), cambiando solo el origen.
+  async function dibujarRuta(origen, destLat, destLon, color) {
     if (rutaActiva) limpiarRuta();
+    color = color || '#1F5CA9';
 
-    const dM = distanciaKm(ANCLA_MORELIA.lat,  ANCLA_MORELIA.lon,  destLat, destLon);
-    const dT = distanciaKm(ANCLA_TOTOTLAN.lat, ANCLA_TOTOTLAN.lon, destLat, destLon);
-    const origen = dM <= dT ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
     const resultado = await calcularRuta(origen.lat, origen.lon, destLat, destLon);
     if (!resultado) { toast('No se pudo calcular la ruta.', 'error'); return; }
     const coords = resultado.geometria.map(c => [c[1], c[0]]);
@@ -920,13 +995,31 @@ document.addEventListener('DOMContentLoaded', function(){
       if (c && c.visible && map.hasLayer(c.capa)) map.removeLayer(c.capa);
     });
 
-    rutaLayer = L.polyline(coords, { color: '#1F5CA9', weight: 4, opacity: 0.8, dashArray: '8,8' }).addTo(map);
+    rutaLayer = L.polyline(coords, { color, weight: 4, opacity: 0.8, dashArray: '8,8' }).addTo(map);
     map.fitBounds(rutaLayer.getBounds(), { padding: [50,50], duration: 1.2 });
     rutaMarcador = L.marker([destLat, destLon], {
-      icon: L.divIcon({ className: '', html: '<i class="fas fa-flag-checkered" style="font-size:28px;color:#1F5CA9;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>', iconSize: [28,28] })
+      icon: L.divIcon({ className: '', html: `<i class="fas fa-flag-checkered" style="font-size:28px;color:${color};filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>`, iconSize: [28,28] })
     }).addTo(map);
     rutaMarcador.bindPopup(`<strong>Ruta desde ${origen.nombre}</strong><br>Distancia: ${resultado.distanciaKm.toFixed(1)} km<br>Tiempo: ${Math.round(resultado.duracionMin)} min`).openPopup();
     rutaActiva = true;
+  }
+
+  async function mostrarRuta(destLat, destLon) {
+    const dM = distanciaKm(ANCLA_MORELIA.lat,  ANCLA_MORELIA.lon,  destLat, destLon);
+    const dT = distanciaKm(ANCLA_TOTOTLAN.lat, ANCLA_TOTOTLAN.lon, destLat, destLon);
+    const origen = dM <= dT ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
+    await dibujarRuta(origen, destLat, destLon);
+  }
+
+  // Ruta desde tu ubicación real (obtenida con el botón "Mi ubicación") hasta
+  // el cliente elegido, para planear una visita de prospección.
+  async function mostrarRutaProspeccion(destLat, destLon) {
+    if (!miUbicacionCoords) {
+      toast('Primero obtén tu ubicación con el botón "Mi ubicación".', 'info');
+      return;
+    }
+    const origen = { lat: miUbicacionCoords.lat, lon: miUbicacionCoords.lon, nombre: 'tu ubicación' };
+    await dibujarRuta(origen, destLat, destLon, '#059669');
   }
 
   // Mejora del popup de clúster con distancia promedio
@@ -1434,14 +1527,21 @@ document.addEventListener('DOMContentLoaded', function(){
         btn.classList.remove('loading');
         const { latitude: lat, longitude: lon } = pos.coords;
 
+        miUbicacionCoords = { lat, lon };
+        actualizarCirculoCercaDeMi(lat, lon);
+
         if (miUbicacionMarker) map.removeLayer(miUbicacionMarker);
         miUbicacionMarker = L.marker([lat, lon], {
           icon: miUbicacionIcon(),
           zIndexOffset: 2000,
           title: 'Mi ubicación'
-        }).addTo(map).bindPopup('📍 Estás aquí').openPopup();
+        }).addTo(map)
+          .bindPopup('📍 Estás aquí · clic para mostrar/ocultar clientes a 1 km')
+          .on('click', toggleCercaDeMi)
+          .openPopup();
 
-        map.flyTo([lat, lon], 13, { duration: 1.2 });
+        // Muestra solo los clientes a 1 km a la redonda (apaga cualquier otro círculo activo).
+        activarCercaDeMi();
       },
       function(err) {
         btn.classList.remove('loading');
@@ -1523,6 +1623,7 @@ document.addEventListener('DOMContentLoaded', function(){
               </div>
               <a href="https://www.google.com/maps?q=${s.lat},${s.lon}" target="_blank" style="font-size:0.75rem;color:var(--primary);">Ver en Google Maps</a>
               <button class="btn-route" data-lat="${s.lat}" data-lon="${s.lon}" style="display:block;margin-top:4px;">🚗 Calcular ruta</button>
+              <button class="btn-route-prospeccion" data-lat="${s.lat}" data-lon="${s.lon}" style="display:block;margin-top:4px;">🧭 Ruta de prospección</button>
               ${!s.direccion ? `<button class="btn-geocode" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}" style="display:block;margin-top:4px;">📍 Obtener dirección</button>` : ''}
             </div>`;
           });
@@ -1588,6 +1689,7 @@ document.addEventListener('DOMContentLoaded', function(){
               </div>
               <a href="https://www.google.com/maps?q=${cliente.lat},${cliente.lon}" target="_blank" style="font-size:0.75rem;color:var(--primary);">Ver en Google Maps</a>
               <button class="btn-route" data-lat="${cliente.lat}" data-lon="${cliente.lon}" style="display:block;margin-top:4px;">🚗 Calcular ruta</button>
+              <button class="btn-route-prospeccion" data-lat="${cliente.lat}" data-lon="${cliente.lon}" style="display:block;margin-top:4px;">🧭 Ruta de prospección</button>
               ${!cliente.direccion ? `<button class="btn-geocode" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}" style="display:block;margin-top:4px;">📍 Obtener dirección</button>` : ''}
             </div>`;
           });
