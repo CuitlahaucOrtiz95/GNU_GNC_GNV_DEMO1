@@ -1,8 +1,8 @@
 // ============================================================
 // ARCHIVO GENERADO desde: clientes_nuevos_denue.csv
 // Directorio único: lo usan Morelia y Tototlán a la vez.
-// Fecha: 20/7/2026, 4:16:39 p.m.
-// Registros: 18095
+// Fecha: 21/7/2026, 10:00:54 a.m.
+// Registros: 18134
 // NO editar a mano.
 // ============================================================
 window.CLIENTES_POTENCIALES = [
@@ -18100,5 +18100,44 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"Parque Aeroespacial SKYPLUS Suzuyo MÃ©xico Silao","lat":21.003856,"lon":-101.486328,"estado":"Guanajuato","tamano":"Parque Industrial"},
   {"nombre":"Vesta Park Guanajuato","lat":21.00353,"lon":-101.479373,"estado":"Guanajuato","tamano":"Parque Industrial"},
   {"nombre":"VYNMSA Guanajuato Puerto Interior I","lat":20.997737,"lon":-101.475081,"estado":"Guanajuato","tamano":"Parque Industrial"},
-  {"nombre":"VYNMSA Guanajuato Puerto Interior II","lat":21.015238,"lon":-101.51166,"estado":"Guanajuato","tamano":"Parque Industrial"}
+  {"nombre":"VYNMSA Guanajuato Puerto Interior II","lat":21.015238,"lon":-101.51166,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"ElevaPark Industrial & Logisitcs","lat":19.761549,"lon":-101.173353,"estado":"Michoacán de Ocampo","tamano":"Parque Industrial"},
+  {"nombre":"Parque de cd industrial","lat":19.723585,"lon":-101.157067,"estado":"Michoacán de Ocampo","tamano":"Parque Industrial"},
+  {"nombre":"Parque Industrial Guadalajara (Las Pintas)","lat":20.572369,"lon":-103.317244,"estado":"Jalisco","tamano":"Parque Industrial"},
+  {"nombre":"Industrial Park El Salto","lat":20.516825,"lon":-103.242014,"estado":"Jalisco","tamano":"Parque Industrial"},
+  {"nombre":"American Industries San Jorge","lat":20.437401,"lon":-103.243343,"estado":"Jalisco","tamano":"Parque Industrial"},
+  {"nombre":"Prologis Arrayanes","lat":20.431955,"lon":-103.244926,"estado":"Jalisco","tamano":"Parque Industrial"},
+  {"nombre":"Parque Industrial Nogales","lat":20.721121,"lon":-103.494804,"estado":"Jalisco","tamano":"Parque Industrial"},
+  {"nombre":"Parque Industrial Zapopan","lat":20.725154,"lon":-103.492515,"estado":"Jalisco","tamano":"Parque Industrial"},
+  {"nombre":"Technology Industrial Park II","lat":20.609724,"lon":-103.403052,"estado":"Jalisco","tamano":"Parque Industrial"},
+  {"nombre":"Parque Industrial Tlaquepaque","lat":20.620014,"lon":-103.293306,"estado":"Jalisco","tamano":"Parque Industrial"},
+  {"nombre":"Elite Toluquilla I","lat":20.552009,"lon":-103.355747,"estado":"Jalisco","tamano":"Parque Industrial"},
+  {"nombre":"Parque Industrial y Habitacional Zapotlanejo","lat":20.641098,"lon":-103.043218,"estado":"Jalisco","tamano":"Parque Industrial"},
+  {"nombre":"Colinas de Lagos","lat":21.388395,"lon":-101.87811,"estado":"Jalisco","tamano":"Parque Industrial"},
+  {"nombre":"Puerto Interior / Santa Fe I-IV","lat":21.010162,"lon":-101.48219,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"Las Colinas","lat":20.967751,"lon":-101.422262,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"Logistics Las Vías","lat":20.962929,"lon":-101.44812,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"VYNMSA Guanajuato","lat":20.832505,"lon":-101.315195,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"PILBA León-Bajío","lat":21.017655,"lon":-101.584368,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"VYNMSA León","lat":21.029905,"lon":-101.696005,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"Colinas de León","lat":21.109136,"lon":-101.759145,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"Marabis Castro del Río","lat":20.779054,"lon":-101.351757,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"Guanajuato Central Park","lat":20.63892,"lon":-101.282071,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"Bajío Industrial Park","lat":20.60298,"lon":-101.234121,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"Sendai","lat":20.437052,"lon":-101.202286,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"Amistad Celaya Sur","lat":20.40554,"lon":-100.795998,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"Amistad Bajío","lat":20.544444,"lon":-100.732901,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"Amexhe","lat":20.543089,"lon":-100.574659,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"Opción","lat":21.057752,"lon":-100.48014,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"World Port","lat":21.084459,"lon":-100.503073,"estado":"Guanajuato","tamano":"Parque Industrial"},
+  {"nombre":"Parque Industrial Querétaro (PIQ)","lat":20.826348,"lon":-100.433478,"estado":"Querétaro","tamano":"Parque Industrial"},
+  {"nombre":"El Marqués","lat":20.562568,"lon":-100.256576,"estado":"Querétaro","tamano":"Parque Industrial"},
+  {"nombre":"Bernardo Quintana","lat":20.563088,"lon":-100.276758,"estado":"Querétaro","tamano":"Parque Industrial"},
+  {"nombre":"Balvanera","lat":20.536986,"lon":-100.460292,"estado":"Querétaro","tamano":"Parque Industrial"},
+  {"nombre":"Aerotech","lat":20.634101,"lon":-100.169269,"estado":"Querétaro","tamano":"Parque Industrial"},
+  {"nombre":"Parque Aeroespacial de Querétaro","lat":20.620039,"lon":-100.171549,"estado":"Querétaro","tamano":"Parque Industrial"},
+  {"nombre":"Advance San Juan","lat":20.4389,"lon":-99.958712,"estado":"Querétaro","tamano":"Parque Industrial"},
+  {"nombre":"Valle de Oro","lat":20.398057,"lon":-99.985713,"estado":"Querétaro","tamano":"Parque Industrial"},
+  {"nombre":"San Juan del Río Business Park","lat":20.378744,"lon":-100.014145,"estado":"Querétaro","tamano":"Parque Industrial"},
+  {"nombre":"Nuevo San Juan / Parque San Juan AMD","lat":20.363598,"lon":-99.964328,"estado":"Querétaro","tamano":"Parque Industrial"}
 ];
