@@ -190,6 +190,7 @@
     .toolbar .btn-loc.loading .loc-icon { display: none; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
     .toolbar .separator { width: 1px; height: 24px; background: var(--border); margin: 0 0.2rem; }
+    .toolbar .btn-add.active { background: #f59e0b; color: #fff; border-color: #f59e0b; }
 
     .stage { display: flex; flex: 1; overflow: hidden; position: relative; }
     #map { flex: 1; height: 100%; min-height: 300px; z-index: 1; transition: width 0.3s ease; }
@@ -349,6 +350,36 @@
     .toast-success { background: #059669; }
     .toast-info { background: #1F5CA9; }
 
+    /* MODAL: agregar cliente nuevo desde el mapa */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999;
+      display: none; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg-panel);
+      border-radius: 16px;
+      padding: 24px 28px;
+      width: 90%;
+      max-width: 420px;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal h3 { font-size: 1.1rem; color: var(--primary); margin-bottom: 4px; }
+    .modal label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+    .modal input, .modal select {
+      width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; background: var(--bg-main); color: var(--text-main);
+    }
+    .modal .coords-row { display: flex; gap: 8px; }
+    .modal .coords-row input { flex: 1; }
+    .modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+    .modal .actions button { padding: 8px 16px; border-radius: 2rem; border: none; cursor: pointer; font-weight: 500; font-size: 0.8rem; }
+    .modal .btn-cancel { background: var(--border); color: var(--text-main); }
+    .modal .btn-save { background: var(--primary); color: #fff; }
+
     @media (max-width: 768px) {
       .topbar { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
       .rail { width: 100%; max-height: 40vh; border-left: none; border-top: 1px solid var(--border); position: absolute; bottom: 0; z-index: 1000; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); }
@@ -368,6 +399,24 @@
   <p>Cargando clientes…</p>
 </div>
 <div class="toast-container" id="toastContainer"></div>
+<div class="modal-overlay" id="addClientModalOverlay">
+  <div class="modal">
+    <h3>➕ Nuevo cliente</h3>
+    <div class="coords-row">
+      <label style="flex:1">Latitud <input type="text" id="addLat" readonly placeholder="Click en mapa"></label>
+      <label style="flex:1">Longitud <input type="text" id="addLon" readonly placeholder="Click en mapa"></label>
+    </div>
+    <label>Nombre <input type="text" id="addNombre" placeholder="Nombre comercial"></label>
+    <label>Estado <input type="text" id="addEstado" placeholder="Estado o provincia"></label>
+    <label>Tamaño / Categoría <input type="text" id="addTamano" placeholder="Micro, Pequeña, Base de Combis…"></label>
+    <label>Dirección <input type="text" id="addDireccion" placeholder="Opcional"></label>
+    <label>Teléfono <input type="text" id="addTelefono" placeholder="Opcional"></label>
+    <div class="actions">
+      <button class="btn-cancel" id="addCancelBtn">Cancelar</button>
+      <button class="btn-save" id="addSaveBtn">Guardar cliente</button>
+    </div>
+  </div>
+</div>
 <div class="shell">
   <div class="topbar">
     <div class="brand"><i class="fas fa-users"></i> Clientes Potenciales · Morelia y Tototlán</div>
@@ -436,7 +485,14 @@
 
     <span class="separator"></span>
 
-    <!-- Botones de ductos ELIMINADOS -->
+    <button class="btn btn-add" id="addClientBtn" title="Agregar un cliente nuevo en el mapa">
+      <i class="fas fa-plus-circle"></i> Agregar cliente
+    </button>
+    <button class="btn btn-primary" id="exportCsvBtn" title="Descargar todos los clientes como CSV">
+      <i class="fas fa-file-csv"></i> Exportar CSV
+    </button>
+
+    <span class="separator"></span>
 
     <button class="btn btn-loc" id="locBtn" title="Centrar en mi ubicación">
       <span class="loc-icon"><i class="fas fa-location-crosshairs"></i></span>
@@ -525,6 +581,11 @@ document.addEventListener('DOMContentLoaded', function(){
     let json = raw.slice(i + 1).trim();
     if (json.endsWith(';')) json = json.slice(0, -1);
     try { return JSON.parse(json); } catch (e) { return null; }
+  }
+
+  // Compara texto ignorando mayúsculas/acentos (para que "Morelia" y "morelía" coincidan).
+  function normalizarTexto(str) {
+    return String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   }
 
   // ============================================================
@@ -886,14 +947,62 @@ document.addEventListener('DOMContentLoaded', function(){
     </svg>`;
   }
 
+  // Íconos especiales por categoría (combis, taxis, parques industriales), en vez
+  // del pin de color genérico. Se activan según el texto de "tamano".
+  function iconoCombiSVG() {
+    return `<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.2));">
+      <rect x="4" y="12" width="20" height="12" rx="2" fill="#f59e0b" stroke="#92400e" stroke-width="1"/>
+      <path d="M4 14 L10 7 L18 7 L24 14 Z" fill="#f59e0b" stroke="#92400e" stroke-width="1"/>
+      <rect x="11" y="8" width="3" height="4" fill="#fff" stroke="#92400e" stroke-width="0.5"/>
+      <rect x="15" y="8" width="3" height="4" fill="#fff" stroke="#92400e" stroke-width="0.5"/>
+      <circle cx="8" cy="26" r="3" fill="#1e293b" stroke="#0f172a" stroke-width="1"/>
+      <circle cx="20" cy="26" r="3" fill="#1e293b" stroke="#0f172a" stroke-width="1"/>
+    </svg>`;
+  }
+  function iconoTaxiSVG() {
+    return `<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.2));">
+      <rect x="3" y="15" width="22" height="10" rx="3" fill="#facc15" stroke="#854d0e" stroke-width="1"/>
+      <path d="M5 15 L7 10 L21 10 L23 15 Z" fill="#facc15" stroke="#854d0e" stroke-width="1"/>
+      <rect x="8" y="11" width="4" height="3" fill="#fff" stroke="#854d0e" stroke-width="0.5"/>
+      <rect x="15" y="11" width="4" height="3" fill="#fff" stroke="#854d0e" stroke-width="0.5"/>
+      <rect x="11" y="7" width="6" height="3" rx="1" fill="#facc15" stroke="#854d0e" stroke-width="0.5"/>
+      <text x="14" y="9.5" font-size="2.5" font-family="sans-serif" font-weight="bold" fill="#000" text-anchor="middle">TAXI</text>
+      <circle cx="8" cy="27" r="3" fill="#1e293b" stroke="#0f172a" stroke-width="1"/>
+      <circle cx="20" cy="27" r="3" fill="#1e293b" stroke="#0f172a" stroke-width="1"/>
+    </svg>`;
+  }
+  function iconoParqueIndustrialSVG() {
+    return `<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.2));">
+      <rect x="4" y="14" width="20" height="14" fill="#3b82f6" stroke="#1e40af" stroke-width="1"/>
+      <path d="M2 14 L14 4 L26 14 Z" fill="#3b82f6" stroke="#1e40af" stroke-width="1"/>
+      <rect x="18" y="5" width="4" height="8" fill="#64748b" stroke="#475569" stroke-width="1"/>
+      <rect x="17" y="3" width="6" height="2" fill="#64748b" stroke="#475569" stroke-width="1"/>
+      <rect x="8" y="18" width="4" height="4" fill="#fef08a" stroke="#1e40af" stroke-width="0.5"/>
+      <rect x="16" y="18" width="4" height="4" fill="#fef08a" stroke="#1e40af" stroke-width="0.5"/>
+      <rect x="11" y="24" width="6" height="4" fill="#1e40af" stroke="#1e40af" stroke-width="0.5"/>
+    </svg>`;
+  }
+  function obtenerIconoEspecial(s) {
+    const t = normalizarTexto(s.tamano || '');
+    if (t === 'base de combis') {
+      return L.divIcon({ className: '', html: iconoCombiSVG(), iconSize: [28,40], iconAnchor: [14,40], popupAnchor: [0,-37] });
+    } else if (t === 'estaciones de taxis' || t === 'estacion de taxis' || t === 'estaciones de taxi' || t === 'estacion de taxi') {
+      return L.divIcon({ className: '', html: iconoTaxiSVG(), iconSize: [28,40], iconAnchor: [14,40], popupAnchor: [0,-37] });
+    } else if (t === 'parque industrial') {
+      return L.divIcon({ className: '', html: iconoParqueIndustrialSVG(), iconSize: [28,40], iconAnchor: [14,40], popupAnchor: [0,-37] });
+    }
+    return null;
+  }
+
   // Construye los marcadores en memoria (markerMap) pero NO los agrega al mapa:
   // applyFilters() decide cuáles mostrar según los círculos de radio activos.
   function reconstruirMarcadoresClientes() {
     cluster.clearLayers();
     markerMap.clear();
     stations.forEach(s => {
+      const iconoEspecial = obtenerIconoEspecial(s);
       const marker = L.marker([s.lat, s.lon], {
-        icon: iconoPin(s.priceColor),
+        icon: iconoEspecial || iconoPin(s.priceColor),
         title: s.nombre
       });
       marker.bindPopup(() => {
@@ -1117,7 +1226,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function applyFilters() {
     if (rutaActiva) return [];
 
-    const term = searchTerm.toLowerCase();
+    const term = searchTerm; // ya viene normalizado (sin acentos/mayúsculas) desde el input
     const selectedTam = document.getElementById('tamanoFilter').value;
 
     // Sin ningún círculo de radio activo no se muestra ningún cliente:
@@ -1125,7 +1234,7 @@ document.addEventListener('DOMContentLoaded', function(){
     let visible = [];
     for (const s of stations) {
       if (!activeCircleFilters.size) break;
-      if (term !== '' && !s.nombre.toLowerCase().includes(term)) continue;
+      if (term !== '' && !normalizarTexto(s.nombre).includes(term)) continue;
       if (selectedTam !== 'all' && s.tamano !== selectedTam) continue;
       const match = mejorCoincidenciaCirculo(s);
       if (!match) continue;
@@ -1146,7 +1255,10 @@ document.addEventListener('DOMContentLoaded', function(){
 
     visible.forEach(s => {
       const entry = markerMap.get(s);
-      if (entry) entry.marker.setIcon(iconoPin(s._matchColor));
+      if (entry) {
+        const iconoEspecial = obtenerIconoEspecial(s);
+        entry.marker.setIcon(iconoEspecial || iconoPin(s._matchColor));
+      }
     });
 
     cluster.clearLayers();
@@ -1227,17 +1339,17 @@ document.addEventListener('DOMContentLoaded', function(){
   document.getElementById('searchInput').addEventListener('input', function() {
     clearTimeout(debounceTimer);
     const valorActual = this.value;
-    debounceTimer = setTimeout(() => { searchTerm = valorActual; applyFilters(); }, 300);
+    debounceTimer = setTimeout(() => { searchTerm = normalizarTexto(valorActual); applyFilters(); }, 300);
     actualizarSugerenciasBusqueda(valorActual);
   });
 
   // Autocompletar: sugerencias de nombre mientras se escribe en el buscador
   function actualizarSugerenciasBusqueda(texto) {
     const box = document.getElementById('searchSuggestions');
-    const term = texto.trim().toLowerCase();
+    const term = normalizarTexto(texto.trim());
     if (!term) { box.classList.remove('show'); box.innerHTML = ''; return; }
 
-    const coincidencias = stations.filter(s => s.nombre.toLowerCase().includes(term)).slice(0, 8);
+    const coincidencias = stations.filter(s => normalizarTexto(s.nombre).includes(term)).slice(0, 8);
     box.innerHTML = '';
     if (!coincidencias.length) { box.classList.remove('show'); return; }
 
@@ -1255,6 +1367,14 @@ document.addEventListener('DOMContentLoaded', function(){
       item.addEventListener('click', () => {
         document.getElementById('searchInput').value = s.nombre;
         box.classList.remove('show');
+        // Si ningún círculo activo alcanza a este cliente, activa el de su ancla
+        // más cercana para que sí se vea (si no, el marcador no estaría en el mapa).
+        const idCirculo = '190' + (s.origen === 'morelia' ? 'Morelia' : 'Tototlan');
+        if (!activeCircleFilters.has(idCirculo)) {
+          activarCirculoId(idCirculo);
+          actualizarEtiquetaCirculos();
+        }
+        applyFilters();
         map.flyTo([s.lat, s.lon], 14, { duration: 1.2 });
         const entry = markerMap.get(s);
         if (entry) entry.marker.openPopup();
@@ -1485,6 +1605,120 @@ document.addEventListener('DOMContentLoaded', function(){
     activeNoAddress = !activeNoAddress;
     this.classList.toggle('active');
     applyFilters();
+  });
+
+  // ============================================================
+  //  10a. AGREGAR CLIENTE DESDE EL MAPA
+  // ============================================================
+  let addingClientMode = false;
+  const addClientBtn = document.getElementById('addClientBtn');
+  const modalOverlay = document.getElementById('addClientModalOverlay');
+  const addLat = document.getElementById('addLat');
+  const addLon = document.getElementById('addLon');
+  const addNombre = document.getElementById('addNombre');
+  const addEstado = document.getElementById('addEstado');
+  const addTamano = document.getElementById('addTamano');
+  const addDireccion = document.getElementById('addDireccion');
+  const addTelefono = document.getElementById('addTelefono');
+  let tempCoords = null;
+
+  function toggleAddMode() {
+    addingClientMode = !addingClientMode;
+    addClientBtn.classList.toggle('active', addingClientMode);
+    if (addingClientMode) {
+      map.getContainer().style.cursor = 'crosshair';
+      toast('Haz clic en el mapa para colocar el nuevo cliente.', 'info');
+    } else {
+      map.getContainer().style.cursor = '';
+    }
+  }
+
+  addClientBtn.addEventListener('click', toggleAddMode);
+
+  map.on('click', function(e) {
+    if (!addingClientMode) return;
+    addingClientMode = false;
+    addClientBtn.classList.remove('active');
+    map.getContainer().style.cursor = '';
+    tempCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
+    addLat.value = tempCoords.lat.toFixed(6);
+    addLon.value = tempCoords.lng.toFixed(6);
+    addNombre.value = '';
+    addEstado.value = '';
+    addTamano.value = '';
+    addDireccion.value = '';
+    addTelefono.value = '';
+    modalOverlay.classList.add('open');
+  });
+
+  document.getElementById('addCancelBtn').addEventListener('click', () => {
+    modalOverlay.classList.remove('open');
+    tempCoords = null;
+  });
+
+  document.getElementById('addSaveBtn').addEventListener('click', () => {
+    const nombre = addNombre.value.trim();
+    if (!nombre) { toast('El nombre es obligatorio.', 'error'); return; }
+    const estado = addEstado.value.trim();
+    const tamano = addTamano.value.trim();
+    const direccion = addDireccion.value.trim();
+    const telefono = addTelefono.value.trim();
+
+    const nuevo = {
+      nombre: nombre,
+      lat: Math.round(tempCoords.lat * 1e6) / 1e6,
+      lon: Math.round(tempCoords.lng * 1e6) / 1e6,
+      estado: estado || '',
+      tamano: tamano || '',
+      direccion: direccion || '',
+      telefono: telefono || ''
+    };
+    enriquecer([nuevo]);
+    stations.push(nuevo);
+    reconstruirMarcadoresClientes();
+    actualizarSelectTamano();
+    applyFilters();
+    try {
+      localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
+      localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
+    } catch (e) {}
+    modalOverlay.classList.remove('open');
+    tempCoords = null;
+    toast(`Cliente "${nombre}" agregado correctamente.`, 'success');
+  });
+
+  // ============================================================
+  //  10b2. EXPORTAR CSV
+  // ============================================================
+  document.getElementById('exportCsvBtn').addEventListener('click', function() {
+    if (stations.length === 0) { toast('No hay clientes para exportar.', 'info'); return; }
+
+    const encabezados = ['nombre', 'lat', 'lon', 'estado', 'tamano', 'direccion', 'telefono'];
+    let csv = encabezados.join(',') + '\n';
+
+    stations.forEach(s => {
+      const fila = [
+        `"${(s.nombre || '').replace(/"/g, '""')}"`,
+        s.lat,
+        s.lon,
+        `"${(s.estado || '').replace(/"/g, '""')}"`,
+        `"${(s.tamano || '').replace(/"/g, '""')}"`,
+        `"${(s.direccion || '').replace(/"/g, '""')}"`,
+        `"${(s.telefono || '').replace(/"/g, '""')}"`
+      ];
+      csv += fila.join(',') + '\n';
+    });
+
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'clientes_exportados.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast(`CSV exportado con ${stations.length.toLocaleString()} clientes.`, 'success');
   });
 
   // ============================================================
