@@ -6,9 +6,21 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="format-detection" content="telephone=no" />
+  <script>
+    // Aplica el tema guardado ANTES de pintar, para evitar parpadeo claro→oscuro.
+    (function(){
+      try {
+        if (localStorage.getItem('tema') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      } catch (e) {}
+    })();
+  </script>
+  <meta name="description" content="Mapa de clientes potenciales en Morelia y Tototlán con filtros por distancia, tamaño y estado, cálculo de rutas y geocodificación." />
+  <meta name="robots" content="noindex, nofollow" />
   <meta name="theme-color" content="#1F5CA9" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231F5CA9'/%3E%3Ctext x='50' y='68' font-size='60' text-anchor='middle' fill='white' font-family='Arial'%3E%F0%9F%93%8D%3C/text%3E%3C/svg%3E" />
   <title>Clientes Potenciales · Morelia y Tototlán</title>
+  <!-- Resource hints -->
   <link rel="preconnect" href="https://unpkg.com" crossorigin />
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,441 +29,2164 @@
   <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org" />
   <link rel="dns-prefetch" href="https://router.project-osrm.org" />
 
+  <!-- CSS crítico -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
 
+  <!-- CSS no crítico -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        media="print" onload="this.media='all';this.onload=null" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        media="print" onload="this.media='all';this.onload=null" />
+  <noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  </noscript>
+
+  <!-- JS con defer -->
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <!-- ductos.js ELIMINADO -->
   <script defer src="ClientesPotenciales.js"></script>
   <style>
+    /* ===== ESTILOS OPTIMIZADOS (sin ductos) ===== */
     :root {
       --primary: #1F5CA9;
-      --primary-hover: #17497f;
+      --primary-hover: #004a8f;
       --secondary: #27BFF0;
-      --bg-app: #f1f5f9;
-      --bg-surface: #ffffff;
-      --text-primary: #0f172a;
-      --text-secondary: #475569;
+      --bg-main: #f0f4f8;
+      --bg-panel: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
       --border: #e2e8f0;
       --border-hover: #cbd5e1;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-      --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
-      --radius-sm: 10px;
-      --radius-md: 16px;
-      --radius-full: 999px;
-      --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+      --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.08);
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      --glass-bg: rgba(255, 255, 255, 0.95);
     }
     :root[data-theme="dark"] {
       --primary: #3b82f6;
       --primary-hover: #60a5fa;
       --secondary: #38bdf8;
-      --bg-app: #0f172a;
-      --bg-surface: #1e293b;
-      --text-primary: #e2e8f0;
-      --text-secondary: #94a3b8;
+      --bg-main: #0f172a;
+      --bg-panel: #1e293b;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
       --border: #334155;
       --border-hover: #475569;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-      --shadow-lg: 0 10px 30px rgba(0,0,0,0.5);
+      --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+      --glass-bg: rgba(30, 41, 59, 0.92);
     }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg-app);
-      color: var(--text-primary);
-      height: 100vh; height: 100dvh;
-      overflow: hidden;
-      transition: background .3s, color .3s;
-    }
-    .app {
-      display: flex;
-      height: 100%;
-      width: 100%;
-      position: relative;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-main); transition: background .2s ease, color .2s ease; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-    /* SIDEBAR */
-    .sidebar {
-      width: 340px;
-      min-width: 280px;
-      background: var(--bg-surface);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      z-index: 20;
-      box-shadow: var(--shadow-md);
-      transition: transform 0.35s ease, width 0.35s ease;
-      position: relative;
+    .shell {
+      display: flex; flex-direction: column; max-width: 100%; background: var(--bg-panel); box-shadow: var(--shadow-lg);
+      height: 100vh; /* respaldo para navegadores sin soporte de dvh */
+      height: 100dvh; /* evita el salto de la barra de direcciones en Safari/Chrome móvil */
+      padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
     }
-    .sidebar.collapsed {
-      transform: translateX(-100%);
-      width: 0;
-      min-width: 0;
-      border: none;
-    }
-    .sidebar-header {
-      padding: 20px 20px 10px;
+    .topbar {
+      background: linear-gradient(135deg, #1F5CA9 0%, #0082D6 50%, #27BFF0 100%);
+      color: #fff;
+      padding: 0.5rem 1.2rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-    }
-    .sidebar-header h2 {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--primary);
-      display: flex;
-      align-items: center;
+      flex-wrap: wrap;
       gap: 0.5rem;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+      z-index: 10;
     }
-    .close-sidebar {
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      color: var(--text-secondary);
-      cursor: pointer;
-      display: none;
+    .topbar .brand { display: flex; align-items: center; gap: 0.6rem; font-weight: 700; font-size: 1.1rem; letter-spacing: -0.02em; }
+    .topbar .brand i { font-size: 1.2rem; color: rgba(255,255,255,0.9); }
+    .topbar .readouts { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+    .topbar .readout { background: rgba(255,255,255,0.15); border-radius: 2rem; padding: 0.2rem 0.7rem; display: flex; align-items: baseline; gap: 0.3rem; font-size: 0.8rem; backdrop-filter: blur(4px); }
+    .topbar .readout .num { font-weight: 700; font-size: 1rem; }
+    .topbar .status-badge { background: rgba(255,255,255,0.2); border-radius: 2rem; padding: 0.2rem 0.7rem; font-size: 0.7rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+    .topbar .stats { display: flex; gap: 0.8rem; font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 0.2rem 0.8rem; border-radius: 2rem; }
+    .topbar .stats .stat { display: flex; align-items: center; gap: 0.2rem; }
+    .theme-toggle {
+      background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 50%;
+      width: 30px; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: var(--transition); flex-shrink: 0;
     }
-    .search-box {
-      padding: 15px 20px;
-      position: relative;
-      border-bottom: 1px solid var(--border);
-    }
-    .search-box input {
-      width: 100%;
-      padding: 12px 16px 12px 40px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-full);
-      font-size: 0.9rem;
-      background: var(--bg-app);
-      color: var(--text-primary);
-      outline: none;
-      transition: var(--transition);
-    }
-    .search-box input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(31,92,169,0.15);
-    }
-    .search-box i {
-      position: absolute;
-      left: 32px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-secondary);
-    }
-    .filters-area {
-      padding: 12px 20px;
+    .theme-toggle:hover { background: rgba(255,255,255,0.3); }
+
+    .toolbar {
+      background: var(--bg-main);
+      padding: 0.4rem 1.2rem;
       border-bottom: 1px solid var(--border);
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
       align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+      z-index: 9;
     }
-    .filters-area select, .filter-btn {
-      padding: 8px 14px;
-      border-radius: var(--radius-full);
-      border: 1px solid var(--border);
-      font-size: 0.8rem;
-      background: var(--bg-surface);
-      color: var(--text-primary);
-      cursor: pointer;
+    .toolbar .search { position: relative; flex: 1; min-width: 150px; display: flex; align-items: center; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 2rem; padding: 0.2rem 0.8rem; transition: var(--transition); }
+    .toolbar .search:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(31,92,169,0.1); }
+    .toolbar .search input { border: none; outline: none; flex: 1; padding: 0.3rem 0.4rem; font-size: 0.8rem; background: transparent; color: var(--text-main); }
+    .toolbar .search i { color: #94a3b8; }
+    .search-suggestions {
+      position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: var(--shadow-lg); max-height: 260px; overflow-y: auto; z-index: 30; display: none;
     }
-    .directory-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 10px 0;
-    }
-    .directory-list .item {
-      padding: 12px 20px;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      transition: background 0.15s;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .directory-list .item:hover { background: var(--bg-app); }
-    .directory-list .item .name { font-weight: 600; font-size: 0.9rem; }
-    .directory-list .item .meta { color: var(--text-secondary); font-size: 0.75rem; }
-    .sort-tabs {
-      display: flex;
-      gap: 5px;
-      padding: 8px 20px;
-      border-bottom: 1px solid var(--border);
-    }
-    .sort-tabs button {
-      background: none;
-      border: 1px solid var(--border);
-      padding: 5px 12px;
-      border-radius: var(--radius-full);
-      font-size: 0.7rem;
-      cursor: pointer;
-      color: var(--text-secondary);
-    }
-    .sort-tabs button.active {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
-
-    /* MAP AREA */
-    .map-container {
-      flex: 1;
-      position: relative;
-      background: var(--bg-app);
-    }
-    #map {
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-    }
-
-    /* FLOATING TOOLBAR */
-    .floating-toolbar {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      z-index: 10;
-      background: var(--bg-surface);
-      padding: 10px;
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-lg);
-      backdrop-filter: blur(10px);
-      background: rgba(255,255,255,0.8);
-    }
-    :root[data-theme="dark"] .floating-toolbar {
-      background: rgba(30,41,59,0.85);
-    }
-    .floating-toolbar button, .floating-toolbar .tool-btn {
-      width: 42px;
-      height: 42px;
-      border-radius: var(--radius-full);
-      border: none;
-      background: var(--bg-surface);
-      color: var(--text-primary);
-      font-size: 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: var(--shadow-sm);
-      transition: var(--transition);
-      position: relative;
-    }
-    .floating-toolbar button:hover, .tool-btn:hover {
-      background: var(--bg-app);
-      transform: scale(1.05);
-    }
-    .tool-btn.active { background: var(--primary); color: #fff; }
-    .tooltip {
-      visibility: hidden;
-      background: var(--text-primary);
-      color: var(--bg-surface);
-      font-size: 0.7rem;
-      padding: 4px 10px;
-      border-radius: 6px;
-      position: absolute;
-      right: 50px;
+    .search-suggestions.show { display: block; }
+    .search-suggestions .item { padding: 0.5rem 0.9rem; cursor: pointer; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+    .search-suggestions .item:hover, .search-suggestions .item.active { background: var(--bg-main); }
+    .search-suggestions .item .name { font-weight: 600; color: var(--text-main); }
+    .search-suggestions .item .meta { color: var(--text-muted); font-size: 0.7rem; white-space: nowrap; }
+    .toolbar .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; }
+    .toolbar .filters select { padding: 0.3rem 1.8rem 0.3rem 0.8rem; border-radius: 2rem; border: 1px solid var(--border); background: var(--bg-panel); font-size: 0.75rem; cursor: pointer; appearance: none; color: var(--text-main); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236A767D' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.6rem center; background-size: 10px; transition: var(--transition); max-width: 200px; min-width: 120px; }
+    .toolbar .filters select:hover { border-color: #cbd5e1; }
+    .toolbar .filters select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(31,92,169,0.1); }
+    .toolbar .dist-slider { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--text-muted); }
+    .toolbar .dist-slider input[type="range"] { width: 80px; accent-color: var(--primary); cursor: pointer; }
+    .toolbar .dist-slider span { min-width: 40px; font-weight: 600; color: var(--text-main); }
+    .toolbar .btn {
+      background: var(--border); color: var(--text-main); border: none; border-radius: 2rem;
+      padding: 0.3rem 0.8rem; font-size: 0.75rem; font-weight: 500; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.3rem; transition: var(--transition);
       white-space: nowrap;
-      opacity: 0;
-      transition: opacity 0.2s;
-      pointer-events: none;
     }
-    .floating-toolbar button:hover .tooltip, .tool-btn:hover .tooltip {
-      visibility: visible;
-      opacity: 1;
+    .toolbar .btn:hover { background: var(--border-hover); transform: translateY(-1px); }
+    .toolbar .btn:active { transform: scale(0.95); }
+    .toolbar .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .toolbar .dropdown { position: relative; }
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 6px); left: 0; min-width: 200px;
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: var(--shadow-lg); padding: 6px; z-index: 30; display: none; flex-direction: column; gap: 2px;
     }
+    .dropdown-menu.open { display: flex; }
+    .dropdown-item {
+      background: transparent; border: none; border-radius: 8px; padding: 0.5rem 0.7rem;
+      font-size: 0.78rem; text-align: left; cursor: pointer; color: var(--text-main);
+      display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+      transition: var(--transition); white-space: nowrap;
+    }
+    .dropdown-item-label { display: flex; align-items: center; gap: 0.5rem; }
+    .dropdown-item .check-icon { font-size: 0.7rem; opacity: 0; color: currentColor; }
+    .dropdown-item.active .check-icon { opacity: 1; }
+    .dropdown-item:hover { background: var(--bg-main); }
+    .dropdown-item.active { background: var(--primary); color: #fff; }
+    .toolbar .btn-primary { background: var(--primary); color: #fff; }
+    .toolbar .btn-primary:hover { background: var(--primary-hover); }
+    .toolbar .btn-secondary { background: #6b7280; color: #fff; }
+    .toolbar .btn-secondary:hover { background: #4b5563; }
+    .toolbar .btn-clear-all { background: #fee2e2; color: #ef4444; }
+    .toolbar .btn-clear-all:hover { background: #fecaca; }
+    .toolbar .btn-clear-all.hidden { display: none; }
+    .toolbar .btn-success { background: #10b981; color: #fff; }
+    .toolbar .btn-success:hover { background: #059669; }
+    .toolbar .btn-warning { background: #f59e0b; color: #fff; }
+    .toolbar .btn-warning:hover { background: #d97706; }
+    .toolbar .btn-outline { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
+    .toolbar .btn-outline:hover { background: var(--primary); color: #fff; transform: translateY(-1px); }
+    .toolbar .btn-outline.active { background: var(--primary); color: #fff; }
+    .toolbar .btn-loc .spinner { display: none; animation: spin 0.8s linear infinite; }
+    .toolbar .btn-loc.loading .spinner { display: inline-block; }
+    .toolbar .btn-loc.loading .loc-icon { display: none; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .toolbar .separator { width: 1px; height: 24px; background: var(--border); margin: 0 0.2rem; }
+    .toolbar .btn-add.active { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+    .toolbar .more-toggle { display: none; } /* solo aparece en móvil, ver @media más abajo */
 
-    /* TOP BAR */
-    .topbar {
-      position: absolute;
-      top: 20px;
-      left: 360px;
-      z-index: 15;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      background: var(--bg-surface);
-      padding: 8px 20px;
-      border-radius: var(--radius-full);
-      box-shadow: var(--shadow-md);
-      transition: left 0.35s ease;
+    /* Botones de anclas: agrupados para que Morelia y Tototlán queden siempre
+       juntos (nunca se separan al saltar de línea) y con el color de cada
+       ancla para distinguirlos de los demás botones azules de la barra. */
+    .toolbar .anchor-group {
+      display: inline-flex; border-radius: 2rem; overflow: hidden;
+      box-shadow: var(--shadow-sm); flex-shrink: 0;
     }
-    .sidebar.collapsed ~ .map-container .topbar {
-      left: 20px;
-    }
-    .anchor-pills {
-      display: flex;
-      gap: 8px;
-    }
-    .anchor-pill {
-      padding: 8px 20px;
-      border-radius: var(--radius-full);
-      border: none;
-      font-weight: 700;
-      color: white;
-      cursor: pointer;
-      box-shadow: var(--shadow-sm);
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.9rem;
-    }
-    .anchor-pill.morelia { background: #004D99; }
-    .anchor-pill.morelia:hover { background: #003b77; }
-    .anchor-pill.tototlan { background: #FF6B35; }
-    .anchor-pill.tototlan:hover { background: #e65a00; }
-    .stats-badge {
-      display: flex;
-      gap: 10px;
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-    }
-    .theme-toggle {
-      background: none;
-      border: none;
-      font-size: 1.3rem;
-      cursor: pointer;
-      color: var(--text-secondary);
-    }
+    .toolbar .anchor-btn { border-radius: 0; color: #fff; }
+    .toolbar .anchor-btn:not(:last-child) { border-right: 1px solid rgba(255,255,255,0.3); }
+    .toolbar .anchor-btn-morelia { background: #004D99; }
+    .toolbar .anchor-btn-morelia:hover { background: #003b77; }
+    .toolbar .anchor-btn-tototlan { background: #FF6B35; }
+    .toolbar .anchor-btn-tototlan:hover { background: #e25b26; }
 
-    /* TOGGLE SIDEBAR BUTTON */
-    .sidebar-toggle {
-      position: absolute;
-      left: 350px;
-      top: 20px;
-      z-index: 25;
-      background: var(--bg-surface);
-      border: none;
-      box-shadow: var(--shadow-md);
-      width: 38px;
-      height: 38px;
+    .stage { display: flex; flex: 1; overflow: hidden; position: relative; }
+    #map { flex: 1; height: 100%; min-height: 300px; z-index: 1; transition: width 0.3s ease; }
+    .map-hint {
+      position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+      background: var(--glass-bg); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.5); border-radius: 2rem;
+      padding: 0.55rem 1.1rem; font-size: 0.8rem; color: var(--text-main);
+      box-shadow: var(--shadow-lg); z-index: 15; display: flex; align-items: center; gap: 0.5rem;
+      transition: opacity .3s ease, transform .3s ease; pointer-events: none;
+      max-width: 90%; text-align: center;
+    }
+    .map-hint.hidden { opacity: 0; transform: translate(-50%, -10px); visibility: hidden; }
+    .rail {
+      width: 320px; max-height: 100%; overflow-y: auto; overflow-x: hidden;
+      border-left: 1px solid var(--border); background: var(--bg-panel); flex-shrink: 0;
+      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s ease;
+    }
+    .rail.hidden { width: 0; border-left: none; }
+    .rail-head {
+      padding: 0.8rem 1.2rem; background: var(--bg-main); border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      font-weight: 600; font-size: 0.8rem; color: var(--text-main);
+      position: sticky; top: 0; z-index: 2;
+      gap: 0.5rem; flex-wrap: wrap;
+    }
+    .rail-head .sort-options { display: flex; gap: 0.3rem; font-weight: 400; font-size: 0.7rem; }
+    .rail-head .sort-options button {
+      background: transparent; border: 1px solid var(--border); border-radius: 1rem;
+      padding: 0.1rem 0.6rem; cursor: pointer; font-size: 0.65rem;
+      transition: var(--transition); color: var(--text-muted);
+    }
+    .rail-head .sort-options button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .rail-head .sort-options button:hover { background: var(--border-hover); }
+    .rail-list { list-style: none; padding: 0; margin: 0; }
+    .rail-list li { padding: 0.6rem 1.2rem; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.8rem; transition: var(--transition); }
+    .rail-list li:hover { background: var(--bg-main); padding-left: 1.5rem; }
+    .rail-list li:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; background: var(--bg-main); padding-left: 1.5rem; }
+    .rail-list li .top-row { display: flex; justify-content: space-between; align-items: center; }
+    .rail-list li .name { font-weight: 600; color: var(--text-main); }
+    .rail-list li .dist { font-weight: 700; color: var(--primary); font-size: 0.8rem; }
+    .rail-list li .state-tag { background: #e0f2fe; color: #0369a1; padding: 0.1rem 0.5rem; border-radius: 1rem; font-size: 0.6rem; font-weight: 500; align-self: flex-start; }
+    .rail-list li .group-header { background: var(--bg-main); font-weight: 600; padding: 0.4rem 1rem; color: var(--text-muted); font-size: 0.75rem; border-bottom: 1px solid var(--border); }
+    .empty { padding: 2rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+
+    /* CLÚSTERES MEJORADOS */
+    .my-cluster { background: transparent !important; }
+    .cluster-bubble {
+      background: rgba(31, 92, 169, 0.88);
       border-radius: 50%;
-      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: left 0.35s ease;
-      color: var(--text-primary);
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+      border: 2px solid white;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.3);
     }
-    .sidebar.collapsed ~ .sidebar-toggle {
-      left: 20px;
+    .cluster-bubble:hover {
+      transform: scale(1.08);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .cluster-popup-list { max-height: 220px; overflow-y: auto; padding-right: 6px; }
+    .cluster-popup-list .item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 0; border-bottom: 1px solid #f1f5f9;
+    }
+    .cluster-popup-list .item:last-child { border-bottom: none; }
+    .cluster-popup-list .item .name { color: var(--text-main); font-weight: 500; font-size: 0.85rem; }
+    .cluster-popup-list .item .state { color: var(--text-muted); font-size: 0.7rem; background: #f1f5f9; padding: 2px 10px; border-radius: 12px; }
+    .cluster-popup-list .item .dist { font-size: 0.7rem; color: var(--primary); font-weight: 600; margin-left: 8px; }
+    .cluster-popup-title {
+      font-weight: 700; font-size: 0.9rem; color: var(--primary);
+      padding-bottom: 4px; margin-bottom: 6px; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between;
     }
 
-    /* MOBILE ADAPTATIONS */
+    /* LEYENDA MEJORADA (sin ductos) */
+    .price-legend {
+      background: var(--glass-bg); backdrop-filter: blur(8px);
+      padding: 10px 14px; border-radius: 12px; box-shadow: var(--shadow-lg);
+      font-size: 11px; line-height: 1.5; min-width: 150px;
+      border: 1px solid rgba(255,255,255,0.5); cursor: default;
+    }
+    .price-legend .title { font-weight: 700; margin-bottom: 6px; font-size: 12px; color: var(--text-main); border-bottom: 1px solid var(--border); padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+    .price-legend .title .clear-btn { background: none; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: var(--transition); }
+    .price-legend .title .clear-btn:hover { background: var(--bg-main); color: #ef4444; }
+    .price-legend .row { display: flex; align-items: center; gap: 6px; margin: 3px 0; padding: 3px 6px; border-radius: 6px; cursor: pointer; transition: var(--transition); }
+    .price-legend .row:hover { background: var(--bg-main); }
+    .price-legend .row.active { background: rgba(56, 189, 248, 0.15); box-shadow: inset 0 0 0 1px var(--secondary); }
+    .price-legend .color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1); }
+    .price-legend .label { color: var(--text-main); flex: 1; font-weight: 500; font-size: 11px; }
+    .price-legend .count { font-size: 9px; color: var(--text-muted); background: var(--bg-main); padding: 1px 5px; border-radius: 10px; font-weight: 600; }
+
+    .leaflet-popup-content { font-size: 0.8rem; font-family: 'Inter', sans-serif; margin: 10px; }
+
+    /* Acciones del popup de cliente: cuadrícula compacta en vez de botones apilados */
+    .popup-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+    .popup-actions .popup-btn {
+      text-align: center; white-space: nowrap; text-decoration: none;
+      border: none; border-radius: 2rem; padding: 0.4rem 0.5rem;
+      font-size: 0.7rem; font-weight: 600; cursor: pointer; color: #fff; transition: var(--transition);
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;
+    }
+    .popup-actions .popup-btn.btn-delete-client { grid-column: 1 / -1; }
+    .popup-actions .popup-btn:hover { transform: translateY(-1px); filter: brightness(0.93); }
+    .popup-actions .popup-btn:active { transform: scale(0.96); }
+    .btn-maps { background: #475569; }
+    .btn-route { background: var(--primary); }
+    .btn-route-prospeccion { background: #059669; }
+    .btn-geocode { background: #10b981; }
+    .btn-delete-client { background: #dc2626; }
+
+    .geocode-progress {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 18px;
+      box-shadow: var(--shadow-lg);
+      font-size: 0.85rem;
+      z-index: 9999;
+      max-width: 300px;
+      display: none;
+    }
+    .geocode-progress .bar { width: 100%; height: 4px; background: var(--border); border-radius: 4px; margin-top: 6px; overflow: hidden; }
+    .geocode-progress .bar .fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease; }
+    .btn-cancel-geo {
+      margin-top: 8px; background: transparent; border: 1px solid var(--border); color: var(--text-muted);
+      border-radius: 2rem; padding: 0.25rem 0.8rem; font-size: 0.7rem; cursor: pointer; transition: var(--transition);
+    }
+    .btn-cancel-geo:hover { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
+
+    /* FILTRO SIN DIRECCIÓN */
+    .btn-no-address.active { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+
+    /* OVERLAY DE CARGA INICIAL */
+    .loading-overlay {
+      position: fixed; inset: 0; background: var(--bg-main); z-index: 99999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+      transition: opacity .3s ease, visibility .3s ease;
+    }
+    .loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loading-overlay .spinner-ring {
+      width: 46px; height: 46px; border: 4px solid var(--border); border-top-color: var(--primary);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    .loading-overlay p { color: var(--text-muted); font-size: 0.9rem; }
+
+    /* NOTIFICACIONES (toast) */
+    .toast-container {
+      position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 100000;
+      display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto; background: #1e293b; color: #fff; padding: 0.6rem 1.1rem; border-radius: 2rem;
+      font-size: 0.8rem; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 0.5rem;
+      opacity: 0; transform: translateY(-12px); transition: opacity .25s ease, transform .25s ease;
+      max-width: 90vw;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast-error { background: #dc2626; }
+    .toast-success { background: #059669; }
+    .toast-info { background: #1F5CA9; }
+
+    /* MODAL: agregar cliente nuevo desde el mapa */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999;
+      display: none; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg-panel);
+      border-radius: 16px;
+      padding: 24px 28px;
+      width: 90%;
+      max-width: 420px;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal h3 { font-size: 1.1rem; color: var(--primary); margin-bottom: 4px; }
+    .modal label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+    .modal input, .modal select {
+      width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; background: var(--bg-main); color: var(--text-main);
+    }
+    .modal .coords-row { display: flex; gap: 8px; }
+    .modal .coords-row input { flex: 1; }
+    .modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+    .modal .actions button { padding: 8px 16px; border-radius: 2rem; border: none; cursor: pointer; font-weight: 500; font-size: 0.8rem; }
+    .modal .btn-cancel { background: var(--border); color: var(--text-main); }
+    .modal .btn-save { background: var(--primary); color: #fff; }
+    .modal .btn-danger { background: #dc2626; color: #fff; }
+    .modal .btn-danger:hover { background: #b91c1c; }
+    .modal .pin-input {
+      width: 100%; text-align: center; letter-spacing: 0.5em; font-size: 1.3rem; font-weight: 700;
+      padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg-main); color: var(--text-main);
+    }
+    .modal .warning-text { font-size: 0.85rem; color: var(--text-main); line-height: 1.5; }
+
     @media (max-width: 768px) {
-      .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        height: 100%;
-        width: 85%;
-        max-width: 320px;
-        transform: translateX(0);
-        z-index: 30;
-      }
-      .sidebar.collapsed {
-        transform: translateX(-100%);
-        width: 85%;
-        min-width: auto;
-      }
-      .close-sidebar { display: block; }
-      .sidebar-toggle { left: 20px; }
-      .topbar {
-        left: 20px;
-        right: 20px;
-        justify-content: space-between;
-      }
-      .floating-toolbar {
-        bottom: 20px;
-        top: auto;
-        right: 10px;
-        flex-direction: row;
-      }
+      .topbar { flex-direction: column; align-items: flex-start; gap: 0.3rem; padding: 0.4rem 0.8rem; }
+      .topbar .readouts { width: 100%; justify-content: space-between; }
+      /* El texto de estado y las estadísticas ocupan mucho ancho y no caben en
+         una pantalla angosta; los números clave (clientes / en vista) bastan. */
+      .topbar .status-badge, .topbar .stats { display: none; }
+      .rail { width: 100%; max-height: 45vh; border-left: none; border-top: 1px solid var(--border); position: absolute; bottom: 0; z-index: 1000; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); }
+      .rail.hidden { transform: translateY(100%); }
+      .toolbar .search { min-width: 100%; order: -1; }
+      .toolbar { gap: 0.4rem; justify-content: space-between; }
+      .toolbar .filters select, .toolbar .btn { flex: 1; text-align: center; justify-content: center; font-size: 0.7rem; min-height: 40px; }
+      .toolbar .dropdown, .toolbar .dropdown .btn { flex: 1; }
+      .toolbar .anchor-group { flex: 1 1 100%; }
+      .toolbar .dist-slider { flex: 1 1 100%; justify-content: center; }
+      .toolbar .dist-slider input[type="range"] { flex: 1; min-width: 0; }
+      .toolbar .separator { display: none; }
+      .rail-head .sort-options { font-size: 0.6rem; }
+
+      /* Botones de uso poco frecuente: se ocultan detrás de "Más" para no saturar la barra */
+      .toolbar .mobile-extra { display: none; }
+      .toolbar.mobile-more-open .mobile-extra { display: inline-flex; }
+      .toolbar .more-toggle { display: inline-flex; }
+
+      /* Objetivos táctiles más grandes */
+      .dropdown-item, .rail-list li, .search-suggestions .item, .price-legend .row { min-height: 40px; }
+      .theme-toggle { width: 36px; height: 36px; }
+
+      .map-hint { font-size: 0.72rem; padding: 0.45rem 0.8rem; top: 8px; }
+      .price-legend { font-size: 10px; padding: 8px 10px; min-width: 130px; }
+      .geocode-progress { left: 12px; right: 12px; bottom: 12px; max-width: none; }
+      .modal { padding: 18px 20px; }
+      .dropdown-menu, .search-suggestions { max-width: calc(100vw - 2rem); }
     }
   </style>
 </head>
 <body>
-<div class="app">
-  <!-- Sidebar -->
-  <div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <h2><i class="fas fa-users"></i> Directorio</h2>
-      <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner-ring"></div>
+  <p>Cargando clientes…</p>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<div class="modal-overlay" id="addClientModalOverlay">
+  <div class="modal">
+    <h3>➕ Nuevo cliente</h3>
+    <div class="coords-row">
+      <label style="flex:1">Latitud <input type="text" id="addLat" readonly placeholder="Click en mapa"></label>
+      <label style="flex:1">Longitud <input type="text" id="addLon" readonly placeholder="Click en mapa"></label>
     </div>
-    <div class="search-box">
-      <i class="fas fa-search"></i>
-      <input type="text" id="searchInput" placeholder="Buscar cliente…" autocomplete="off" />
-      <div class="search-suggestions" id="searchSuggestions" style="display:none; position:absolute; top:100%; left:20px; right:20px; background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); z-index:30; max-height:200px; overflow-y:auto;"></div>
-    </div>
-    <div class="filters-area">
-      <select id="tamanoFilter">
-        <option value="all">Todos los tamaños</option>
-      </select>
-      <div style="display:flex; align-items:center; gap:5px;">
-        <label style="font-size:0.75rem;">Dist. máx</label>
-        <input type="range" id="distSlider" min="60" max="190" value="190" style="width:80px;" />
-        <span id="distLabel" style="font-size:0.7rem; font-weight:600;">190 km</span>
-      </div>
-    </div>
-    <div class="sort-tabs" id="sortTabs">
-      <button id="sortDist" class="active" data-sort="dist">📏 Distancia</button>
-      <button id="sortState" data-sort="state">📌 Estado</button>
-      <button id="sortName" data-sort="name">🔤 A-Z</button>
-    </div>
-    <div class="directory-list" id="list"></div>
-  </div>
-
-  <!-- Sidebar toggle button -->
-  <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-chevron-right"></i></button>
-
-  <!-- Map container -->
-  <div class="map-container">
-    <div id="map"></div>
-    <!-- Floating toolbar -->
-    <div class="floating-toolbar">
-      <button id="circulosToggleBtn"><i class="fas fa-bullseye"></i><span class="tooltip">Círculos de radio</span></button>
-      <button id="geocodeBtn"><i class="fas fa-address-card"></i><span class="tooltip">Geocodificar</span></button>
-      <button id="noAddressBtn"><i class="fas fa-envelope"></i><span class="tooltip">Sin dirección</span></button>
-      <button id="addClientBtn"><i class="fas fa-plus-circle"></i><span class="tooltip">Agregar cliente</span></button>
-      <button id="exportCsvBtn"><i class="fas fa-file-csv"></i><span class="tooltip">Exportar CSV</span></button>
-      <button id="clearRouteBtn"><i class="fas fa-route"></i><span class="tooltip">Limpiar ruta</span></button>
-      <button id="gotoClosestBtn"><i class="fas fa-bullseye"></i><span class="tooltip">Más cercano</span></button>
-      <button id="resetBtn"><i class="fas fa-home"></i><span class="tooltip">Restablecer vista</span></button>
-    </div>
-    <!-- Topbar -->
-    <div class="topbar">
-      <div class="anchor-pills">
-        <button class="anchor-pill morelia" id="centerMoreliaBtn"><i class="fas fa-star"></i> Morelia</button>
-        <button class="anchor-pill tototlan" id="centerTototlanBtn"><i class="fas fa-star"></i> Tototlán</button>
-      </div>
-      <div class="stats-badge">
-        <span><span id="rTotal">0</span> total</span>
-        <span><span id="rMatch">0</span> visibles</span>
-      </div>
-      <button class="theme-toggle" id="themeToggleBtn"><i class="fas fa-moon"></i></button>
+    <label>Nombre <input type="text" id="addNombre" placeholder="Nombre comercial"></label>
+    <label>Estado <input type="text" id="addEstado" placeholder="Estado o provincia"></label>
+    <label>Tamaño / Categoría <input type="text" id="addTamano" placeholder="Micro, Pequeña, Base de Combis…"></label>
+    <label>Dirección <input type="text" id="addDireccion" placeholder="Opcional"></label>
+    <label>Teléfono <input type="text" id="addTelefono" placeholder="Opcional"></label>
+    <div class="actions">
+      <button class="btn-cancel" id="addCancelBtn">Cancelar</button>
+      <button class="btn-save" id="addSaveBtn">Guardar cliente</button>
     </div>
   </div>
 </div>
 
-<!-- Modales y otros elementos ocultos (se mantienen igual) -->
-<div class="modal-overlay" id="addClientModalOverlay">...</div>
-<div class="modal-overlay" id="deleteClientModalOverlay">...</div>
-<!-- ... (copiar exactamente los modales y scripts de la versión anterior) ... -->
+<div class="modal-overlay" id="deleteClientModalOverlay">
+  <div class="modal">
+    <h3>🗑️ Eliminar cliente</h3>
+    <div id="deleteStepPin">
+      <p class="warning-text">Para eliminar a <strong id="deleteClientName"></strong> introduce el NIP de seguridad.</p>
+      <label>NIP <input type="password" class="pin-input" id="deletePinInput" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off"></label>
+      <div class="actions">
+        <button class="btn-cancel" id="deletePinCancelBtn">Cancelar</button>
+        <button class="btn-save" id="deletePinConfirmBtn">Continuar</button>
+      </div>
+    </div>
+    <div id="deleteStepConfirm" style="display:none;">
+      <p class="warning-text">¿Seguro que quieres eliminar a <strong id="deleteClientNameConfirm"></strong>? Esta acción no se puede deshacer.</p>
+      <div class="actions">
+        <button class="btn-cancel" id="deleteConfirmCancelBtn">Cancelar</button>
+        <button class="btn-danger" id="deleteConfirmOkBtn">Eliminar definitivamente</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><i class="fas fa-users"></i> Clientes Potenciales · Morelia y Tototlán</div>
+    <div class="readouts">
+      <span class="readout"><span class="num" id="rTotal">0</span> clientes</span>
+      <span class="readout"><span class="num" id="rMatch">0</span> en vista</span>
+      <span class="status-badge" id="stateStatus"><i class="fas fa-check-circle"></i> <span id="statusText">Cargando…</span></span>
+      <span class="stats" id="stats"></span>
+      <button class="theme-toggle" id="themeToggleBtn" title="Cambiar tema claro/oscuro" aria-label="Cambiar tema claro/oscuro">
+        <i class="fas fa-moon" id="themeIcon"></i>
+      </button>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div class="search">
+      <i class="fas fa-search"></i>
+      <input type="text" id="searchInput" placeholder="Buscar cliente…" autocomplete="off" />
+      <div class="search-suggestions" id="searchSuggestions"></div>
+    </div>
+    <div class="filters mobile-extra">
+      <select id="tamanoFilter" aria-label="Filtrar por tamaño de empresa">
+        <option value="all">Todos los tamaños</option>
+      </select>
+    </div>
+    <!-- ductoFilter ELIMINADO -->
+    <div class="dist-slider mobile-extra">
+      <label for="distSlider">Max dist.</label>
+      <input type="range" id="distSlider" min="60" max="190" value="190" step="5" />
+      <span id="distLabel">190 km</span>
+    </div>
+
+    <span class="separator"></span>
+
+    <div class="dropdown" id="circulosDropdown">
+      <button class="btn btn-outline" id="circulosToggleBtn" aria-haspopup="true" aria-expanded="false">
+        <i class="fas fa-bullseye"></i> <span id="circulosLabel">Círculos de radio</span> <i class="fas fa-chevron-down" style="font-size:0.6rem;"></i>
+      </button>
+      <div class="dropdown-menu" id="circulosMenu">
+        <button class="dropdown-item" id="btnCirculo150Morelia">
+          <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#10b981;"></i> 150 km · Morelia</span>
+          <i class="fas fa-check check-icon" aria-hidden="true"></i>
+        </button>
+        <button class="dropdown-item" id="btnCirculo190Morelia">
+          <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#ef4444;"></i> 190 km · Morelia</span>
+          <i class="fas fa-check check-icon" aria-hidden="true"></i>
+        </button>
+        <button class="dropdown-item" id="btnCirculo150Tototlan">
+          <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#10b981;"></i> 150 km · Tototlán</span>
+          <i class="fas fa-check check-icon" aria-hidden="true"></i>
+        </button>
+        <button class="dropdown-item" id="btnCirculo190Tototlan">
+          <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#ef4444;"></i> 190 km · Tototlán</span>
+          <i class="fas fa-check check-icon" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+
+    <span class="separator"></span>
+
+    <button class="btn btn-success mobile-extra" id="geocodeBtn" aria-label="Obtener direcciones de los clientes visibles">
+      <i class="fas fa-address-card"></i> Obtener direcciones
+    </button>
+    <button class="btn btn-outline mobile-extra" id="noAddressBtn" aria-label="Filtrar clientes sin dirección">
+      <i class="fas fa-envelope"></i> Sin dirección
+    </button>
+
+    <span class="separator"></span>
+
+    <button class="btn btn-add mobile-extra" id="addClientBtn" title="Agregar un cliente nuevo en el mapa">
+      <i class="fas fa-plus-circle"></i> Agregar cliente
+    </button>
+    <button class="btn btn-primary mobile-extra" id="exportCsvBtn" title="Descargar todos los clientes como CSV">
+      <i class="fas fa-file-csv"></i> Exportar CSV
+    </button>
+
+    <span class="separator"></span>
+
+    <button class="btn btn-loc" id="locBtn" title="Centrar en mi ubicación">
+      <span class="loc-icon"><i class="fas fa-location-crosshairs"></i></span>
+      <span class="spinner"><i class="fas fa-circle-notch"></i></span>
+      <span>Mi ubicación</span>
+    </button>
+    <div class="anchor-group">
+      <button class="btn anchor-btn anchor-btn-morelia" id="centerMoreliaBtn" aria-label="Centrar en Morelia">
+        <i class="fas fa-star"></i> Morelia
+      </button>
+      <button class="btn anchor-btn anchor-btn-tototlan" id="centerTototlanBtn" aria-label="Centrar en Tototlán">
+        <i class="fas fa-star"></i> Tototlán
+      </button>
+    </div>
+    <button class="btn btn-primary mobile-extra" id="gotoClosestBtn" title="Centrar en el cliente más cercano">
+      <i class="fas fa-bullseye"></i> Más cercano
+    </button>
+    <button class="btn btn-warning mobile-extra" id="clearRouteBtn" aria-label="Limpiar ruta">
+      <i class="fas fa-route"></i> Limpiar ruta
+    </button>
+    <button class="btn btn-outline more-toggle" id="moreToggleBtn" title="Más opciones" aria-haspopup="true" aria-expanded="false">
+      <i class="fas fa-ellipsis-vertical"></i> Más
+    </button>
+    <button class="btn btn-toggle-rail" id="toggleRailBtn" title="Mostrar/ocultar directorio">
+      <i class="fas fa-chevron-right" id="railToggleIcon"></i> <span id="railToggleLabel">Directorio</span>
+    </button>
+    <button class="btn btn-clear-all hidden" id="clearAllBtn" title="Limpiar todos los filtros">
+      <i class="fas fa-times"></i> Limpiar filtros
+    </button>
+    <button class="btn btn-primary mobile-extra" id="resetBtn" aria-label="Restablecer vista"><i class="fas fa-home"></i> Restablecer</button>
+  </div>
+  <div class="stage">
+    <div id="map"></div>
+    <div class="map-hint" id="mapHint">
+      <i class="fas fa-hand-pointer"></i>
+      Activa uno o más <strong>círculos de radio</strong> (o toca una ancla ⭐) para ver los clientes.
+    </div>
+    <div class="rail" id="railPanel">
+      <div class="rail-head">
+        <span>Directorio</span>
+        <div class="sort-options">
+          <button id="sortDist" class="active" data-sort="dist">📏 Distancia</button>
+          <button id="sortState" data-sort="state">📌 Estado</button>
+          <button id="sortName" data-sort="name">🔤 A-Z</button>
+        </div>
+        <span id="listCnt" style="color: var(--primary);">0</span>
+      </div>
+      <ul class="rail-list" id="list"></ul>
+    </div>
+  </div>
+</div>
+
+<!-- Notificación de progreso de geocodificación -->
+<div class="geocode-progress" id="geocodeProgress">
+  <div><span id="geoStatus">Obteniendo direcciones…</span> <span id="geoCount">0/0</span></div>
+  <div class="bar"><div class="fill" id="geoFill"></div></div>
+  <button class="btn-cancel-geo" id="cancelGeoBtn">Cancelar</button>
+</div>
 
 <script>
-  // El JavaScript es el mismo de la última versión funcional que proporcionaste,
-  // solo se ajustan los selectores de ID si es necesario (ninguno ha cambiado).
-  // Incluyo el script completo aquí para que sea autónomo.
-  (function(){ /* ... TODO EL CÓDIGO JS DE LA VERSIÓN ANTERIOR ... */ })();
+document.addEventListener('DOMContentLoaded', function(){
+  "use strict";
+
+  const DEBUG = false;
+  const log  = (...a) => { if (DEBUG) console.log(...a); };
+  const warn = (...a) => { if (DEBUG) console.warn(...a); };
+
+  // Notificación flotante no bloqueante, en vez de alert().
+  function toast(msg, tipo, duracionMs) {
+    tipo = tipo || 'info';
+    duracionMs = duracionMs || 3500;
+    const cont = document.getElementById('toastContainer');
+    if (!cont) { console.warn(msg); return; }
+    const icono = tipo === 'error' ? 'fa-circle-exclamation' : tipo === 'success' ? 'fa-circle-check' : 'fa-circle-info';
+    const el = document.createElement('div');
+    el.className = 'toast toast-' + tipo;
+    el.innerHTML = '<i class="fas ' + icono + '"></i><span></span>';
+    el.querySelector('span').textContent = msg;
+    cont.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => {
+      el.classList.remove('show');
+      setTimeout(() => el.remove(), 300);
+    }, duracionMs);
+  }
+
+  function leerArrayGuardado(raw) {
+    if (!raw) return null;
+    const i = raw.indexOf('=');
+    if (i === -1) return null;
+    let json = raw.slice(i + 1).trim();
+    if (json.endsWith(';')) json = json.slice(0, -1);
+    try { return JSON.parse(json); } catch (e) { return null; }
+  }
+
+  // Compara texto ignorando mayúsculas/acentos (para que "Morelia" y "morelía" coincidan).
+  function normalizarTexto(str) {
+    return String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  }
+
+  // ============================================================
+  //  0. COORDENADAS ANCLA
+  // ============================================================
+  const ANCLA_MORELIA  = { nombre: "Morelia",  lat: 19.70480534245386, lon: -101.24479193126763, color: '#004D99' };
+  const ANCLA_TOTOTLAN = { nombre: "Tototlán", lat: 20.534806, lon: -102.782470, color: '#FF6B35' };
+  const ANCLAS = [ANCLA_MORELIA, ANCLA_TOTOTLAN];
+  const ANCLA = ANCLA_MORELIA;
+
+  // ============================================================
+  //  1. FUNCIONES AUXILIARES
+  // ============================================================
+  function distanciaKm(lat1, lon1, lat2, lon2) {
+    const R = 6371, rad = Math.PI/180;
+    const dLat = (lat2-lat1)*rad, dLon = (lon2-lon1)*rad;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*rad)*Math.cos(lat2*rad)*Math.sin(dLon/2)**2;
+    return 2*R*Math.asin(Math.sqrt(a));
+  }
+
+  function deduplicate(data) {
+    const seen = new Set();
+    return data.filter(e => {
+      const latRound = Math.round(e.lat * 1e5) / 1e5;
+      const lonRound = Math.round(e.lon * 1e5) / 1e5;
+      const key = `${latRound}|${lonRound}|${e.nombre.trim()}`;
+      if (!seen.has(key)) { seen.add(key); return true; }
+      return false;
+    });
+  }
+
+  function getDistRange(km) {
+    if (km <= 50) return { label: '0 – 50 km',   key: 'very-low', color: '#10b981' };
+    if (km <= 100) return { label: '50 – 100 km', key: 'low',     color: '#34d399' };
+    if (km <= 150) return { label: '100 – 150 km', key: 'mid',    color: '#fbbf24' };
+    if (km <= 190) return { label: '150 – 190 km', key: 'high',   color: '#fb923c' };
+    return { label: '> 190 km', key: 'no-price', color: '#94a3b8' };
+  }
+
+  // ============================================================
+  //  2. CARGA DE CLIENTES (sin ductos)
+  // ============================================================
+
+  let rawClientes = Array.isArray(window.CLIENTES_POTENCIALES) ? window.CLIENTES_POTENCIALES : [];
+
+  const clientesGuardado = localStorage.getItem('CLIENTES_JS');
+  if (clientesGuardado) {
+    const arr = leerArrayGuardado(clientesGuardado);
+    if (arr && Array.isArray(arr)) {
+      rawClientes = arr;
+      log('Clientes cargados desde localStorage');
+    } else {
+      warn('CLIENTES_JS no se pudo interpretar; se usa ClientesPotenciales.js');
+    }
+  }
+
+  function actualizarEstadoCarga(n, porAncla) {
+    const el = document.getElementById('statusText');
+    if (!el) return;
+    if (!n) {
+      el.textContent = '⚠️ No se detectó ningún cliente. Revisa que ClientesPotenciales.js esté junto al index.html';
+    } else {
+      el.textContent = `✅ ${n.toLocaleString()} clientes · más cerca de Morelia: ${porAncla.morelia.toLocaleString()} · de Tototlán: ${porAncla.tototlan.toLocaleString()}`;
+    }
+  }
+
+  function enriquecer(lista) {
+    for (const s of lista) {
+      const dM = distanciaKm(ANCLA_MORELIA.lat,  ANCLA_MORELIA.lon,  s.lat, s.lon);
+      const dT = distanciaKm(ANCLA_TOTOTLAN.lat, ANCLA_TOTOTLAN.lon, s.lat, s.lon);
+      s.distMorelia  = dM;
+      s.distTototlan = dT;
+      s.ancla  = dM <= dT ? 'Morelia' : 'Tototlán';
+      s.origen = dM <= dT ? 'morelia' : 'tototlan';
+      s.distKm = Math.min(dM, dT);
+      const r = getDistRange(s.distKm);
+      s.priceKey = r.key;
+      s.priceColor = r.color;
+      s.priceLabel = r.label;
+      s.direccion = s.direccion || '';
+      s.estado = s.estado || '';
+      s.tamano = s.tamano || '';
+      s.telefono = s.telefono || '';
+    }
+    return lista;
+  }
+
+  // Filtro geográfico: solo clientes dentro de 190 km de Morelia O Tototlán
+  // Requiere que `lista` ya haya pasado por enriquecer() (usa distMorelia/distTototlan).
+  function filtrarPorRadio190(lista) {
+    return lista.filter(s => s.distMorelia <= 190 || s.distTototlan <= 190);
+  }
+
+  let stations = filtrarPorRadio190(enriquecer(deduplicate(rawClientes)));
+
+  function contarPorAncla(lista) {
+    let morelia = 0, tototlan = 0;
+    for (const s of lista) (s.origen === 'morelia' ? morelia++ : tototlan++);
+    return { morelia, tototlan };
+  }
+  actualizarEstadoCarga(stations.length, contarPorAncla(stations));
+  log(`Clientes tras filtro geográfico: ${stations.length}`);
+
+  // ============================================================
+  //  3. MAPA Y CAPAS BASE
+  // ============================================================
+  const map = L.map('map', { zoomControl: true });
+
+  // Vista "de reposo": encuadra solo las dos anclas (Morelia y Tototlán).
+  // Los clientes solo aparecen al activar uno o más círculos de radio.
+  const ANCLAS_BOUNDS = L.latLngBounds(ANCLAS.map(a => [a.lat, a.lon]));
+  function verAmbasAnclas(animar) {
+    map.flyToBounds(ANCLAS_BOUNDS, { padding: [80, 80], maxZoom: 9, duration: animar === false ? 0 : 1 });
+  }
+  map.fitBounds(ANCLAS_BOUNDS, { padding: [80, 80], maxZoom: 9 });
+
+  const baseLayers = {
+    "Calles": L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap · © CARTO', subdomains: 'abcd', maxZoom: 19
+    }),
+    "Satélite": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles © Esri', maxZoom: 19
+    }),
+    "Oscuro": L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap · © CARTO', subdomains: 'abcd', maxZoom: 19
+    })
+  };
+  baseLayers["Calles"].addTo(map);
+  L.control.layers(baseLayers).addTo(map);
+  L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
+
+  // ============================================================
+  //  4. CÍRCULOS DE RADIO (150 y 190 km) con FILTRO
+  // ============================================================
+  const circulosLayer = L.layerGroup().addTo(map);
+  const circulos = {};
+  function crearCirculo(ancla, radioKm, color) {
+    return L.circle([ancla.lat, ancla.lon], {
+      radius: radioKm * 1000, color: color, fillColor: color,
+      fillOpacity: radioKm === 150 ? 0.08 : 0.06, weight: 2, dashArray: '6 6', opacity: 0.7
+    }).bindPopup(`${radioKm} km desde ${ancla.nombre}`);
+  }
+  [['Morelia', ANCLA_MORELIA], ['Tototlan', ANCLA_TOTOTLAN]].forEach(([suf, a]) => {
+    circulos['150' + suf] = { capa: crearCirculo(a, 150, '#10b981'), visible: false };
+    circulos['190' + suf] = { capa: crearCirculo(a, 190, '#ef4444'), visible: false };
+  });
+
+  // Círculos de radio: selección MÚLTIPLE (se puede activar más de uno a la vez).
+  // Mientras no haya ninguno activo, no se muestra ningún cliente en el mapa —
+  // solo las dos anclas (Morelia y Tototlán).
+  let activeCircleFilters = new Set(); // ids como '150Morelia', '190Tototlan', 'cercaDeMi', ...
+  let miUbicacionCoords = null; // {lat, lon} de la última geolocalización obtenida
+
+  function datosCirculo(id) {
+    if (id === 'cercaDeMi') {
+      return { centro: { lat: miUbicacionCoords.lat, lon: miUbicacionCoords.lon, nombre: 'tu ubicación' }, radio: 1 };
+    }
+    const centro = id.includes('Morelia') ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
+    const radio = parseInt(id, 10);
+    return { centro, radio };
+  }
+
+  // Crea (o reposiciona) el círculo de 1 km alrededor de la ubicación real del
+  // usuario. Se usa el mismo sistema de círculos de radio que Morelia/Tototlán.
+  function actualizarCirculoCercaDeMi(lat, lon) {
+    const yaVisible = circulos.cercaDeMi ? circulos.cercaDeMi.visible : false;
+    if (circulos.cercaDeMi && yaVisible) circulosLayer.removeLayer(circulos.cercaDeMi.capa);
+    const capa = L.circle([lat, lon], {
+      radius: 1000, color: '#38bdf8', fillColor: '#38bdf8',
+      fillOpacity: 0.1, weight: 2, dashArray: '6 6', opacity: 0.8
+    }).bindPopup('1 km alrededor de tu ubicación');
+    circulos.cercaDeMi = { capa, visible: false };
+    if (yaVisible) { circulosLayer.addLayer(capa); circulos.cercaDeMi.visible = true; }
+  }
+
+  function actualizarEtiquetaCirculos() {
+    const label = document.getElementById('circulosLabel');
+    if (!label) return;
+    const n = activeCircleFilters.size;
+    if (n === 0) { label.textContent = 'Círculos de radio'; return; }
+    if (n === 1) {
+      const id = [...activeCircleFilters][0];
+      const { centro, radio } = datosCirculo(id);
+      label.textContent = `${radio} km · ${centro.nombre}`;
+      return;
+    }
+    label.textContent = `${n} círculos activos`;
+  }
+
+  // Activa/desactiva UN círculo puntual, sin tocar los demás ni refrescar
+  // filtros/vista todavía (eso lo hace quien llama a estas dos funciones).
+  function activarCirculoId(id) {
+    const c = circulos[id];
+    if (!c || activeCircleFilters.has(id)) return;
+    activeCircleFilters.add(id);
+    circulosLayer.addLayer(c.capa);
+    c.visible = true;
+    const btn = document.getElementById('btnCirculo' + id);
+    if (btn) btn.classList.add('active');
+  }
+
+  function desactivarCirculoId(id) {
+    const c = circulos[id];
+    if (!c || !activeCircleFilters.has(id)) return;
+    activeCircleFilters.delete(id);
+    circulosLayer.removeLayer(c.capa);
+    c.visible = false;
+    const btn = document.getElementById('btnCirculo' + id);
+    if (btn) btn.classList.remove('active');
+  }
+
+  function toggleCirculo(id) {
+    const c = circulos[id];
+    if (!c) return;
+
+    if (activeCircleFilters.has(id)) {
+      desactivarCirculoId(id);
+      actualizarEtiquetaCirculos();
+      const visibles = applyFilters();
+      if (activeCircleFilters.size) encuadrarClientes(visibles);
+      else verAmbasAnclas();
+      return;
+    }
+
+    activarCirculoId(id);
+    actualizarEtiquetaCirculos();
+    const visibles = applyFilters();
+    encuadrarClientes(visibles);
+  }
+
+  // Alterna (activa/desactiva) el círculo de 190 km de una ancla para
+  // mostrar u ocultar sus clientes. Se usa al hacer clic en el pin de
+  // Morelia/Tototlán en el mapa y en los botones "Morelia"/"Tototlán" de la
+  // barra de herramientas: el primer clic los muestra, el siguiente los oculta.
+  function activarAncla(centro) {
+    const id = '190' + (centro === 'morelia' ? 'Morelia' : 'Tototlan');
+    toggleCirculo(id);
+  }
+
+  // Activa EN EXCLUSIVA el círculo de 1 km alrededor de tu ubicación real
+  // (apaga cualquier otro círculo activo), y encuadra el mapa ahí cerca.
+  function activarCercaDeMi() {
+    if (!miUbicacionCoords) return;
+    [...activeCircleFilters].forEach(id => desactivarCirculoId(id));
+    activarCirculoId('cercaDeMi');
+    actualizarEtiquetaCirculos();
+    const visibles = applyFilters();
+    map.flyTo([miUbicacionCoords.lat, miUbicacionCoords.lon], 15, { duration: 1.2 });
+    toast(
+      visibles.length
+        ? `${visibles.length} cliente(s) a menos de 1 km de tu ubicación.`
+        : 'No hay clientes a menos de 1 km de tu ubicación.',
+      visibles.length ? 'success' : 'info'
+    );
+  }
+
+  // Alterna el círculo de 1 km: si estaba activo, lo apaga y muestra TODOS los
+  // clientes (activa ambos círculos de 190 km); si no, lo activa en exclusiva.
+  // Se usa al hacer clic en el pin de "Mi ubicación".
+  function toggleCercaDeMi() {
+    if (!miUbicacionCoords) return;
+    if (activeCircleFilters.has('cercaDeMi')) {
+      desactivarCirculoId('cercaDeMi');
+      activarCirculoId('190Morelia');
+      activarCirculoId('190Tototlan');
+      actualizarEtiquetaCirculos();
+      const visibles = applyFilters();
+      if (activeCircleFilters.size) encuadrarClientes(visibles); else verAmbasAnclas();
+      toast(`Mostrando todos los clientes (${visibles.length.toLocaleString()}).`, 'info');
+    } else {
+      activarCercaDeMi();
+    }
+  }
+
+  // ============================================================
+  //  5. CLÚSTER Y MARCADORES DE CLIENTES
+  // ============================================================
+  const cluster = L.markerClusterGroup({
+    chunkedLoading: true,
+    removeOutsideVisibleBounds: true,
+    maxClusterRadius: 50,
+    iconCreateFunction: function(c) {
+      const n = c.getChildCount();
+      const size = n < 10 ? 44 : n < 50 ? 52 : 60;
+      const fontSize = n < 100 ? 16 : 14;
+      return L.divIcon({
+        html: `<div class="cluster-bubble" style="width:${size}px;height:${size}px;font-size:${fontSize}px;">${n}</div>`,
+        className: 'my-cluster',
+        iconSize: [size, size]
+      });
+    },
+    zoomToBoundsOnClick: true,
+    spiderfyOnMaxZoom: true
+  });
+  map.addLayer(cluster);
+  const markerMap = new Map();
+
+  // === ANCLAS CON ICONOS MEJORADOS ===
+  // Estrella con destellos (tipo ⭐/🌟), coloreada según cada ancla para
+  // distinguir Morelia de Tototlán de un vistazo.
+  function anclaIcon(ancla) {
+    const color = ancla.color;
+    const filtroId = 'anclaShadow-' + (ancla.nombre === 'Morelia' ? 'morelia' : 'tototlan');
+    const destello = 'M0,-7 Q3.2,0 0,9 Q-3.2,0 0,-7 Z';
+    const svg = `
+      <svg width="56" height="56" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="${filtroId}" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.35"/>
+          </filter>
+        </defs>
+        <g filter="url(#${filtroId})">
+          <path d="${destello}" fill="${color}" opacity="0.55" transform="translate(49.68,14.32) rotate(45)"/>
+          <path d="${destello}" fill="${color}" opacity="0.55" transform="translate(14.32,14.32) rotate(-45)"/>
+          <path d="${destello}" fill="${color}" opacity="0.55" transform="translate(49.68,49.68) rotate(135)"/>
+          <path d="${destello}" fill="${color}" opacity="0.55" transform="translate(14.32,49.68) rotate(225)"/>
+          <path d="M32.00,15.00 L36.11,26.34 L48.17,26.75 L38.66,34.16 L41.99,45.75 L32.00,39.00 L22.01,45.75 L25.34,34.16 L15.83,26.75 L27.89,26.34 Z"
+                fill="${color}" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>
+        </g>
+      </svg>
+    `;
+    return L.divIcon({
+      className: '',
+      html: svg,
+      iconSize: [56, 56],
+      iconAnchor: [28, 28]
+    });
+  }
+
+  ANCLAS.forEach(a => {
+    const centro = a === ANCLA_MORELIA ? 'morelia' : 'tototlan';
+    L.marker([a.lat, a.lon], {
+      icon: anclaIcon(a),
+      zIndexOffset: 1000,
+      title: a.nombre
+    }).addTo(map).bindPopup(
+      `<strong style="color:${a.color};">⭐ ${a.nombre}</strong><br>` +
+      `<span style="font-size:.8rem;color:#64748b;">Ancla de referencia para distancias</span>`
+    ).on('click', () => activarAncla(centro));
+  });
+
+  const iconCache = new Map();
+  function iconoPin(color) {
+    let ic = iconCache.get(color);
+    if (!ic) {
+      ic = L.divIcon({
+        className: '', html: pinSVG(color),
+        iconSize: [28,40], iconAnchor: [14,40], popupAnchor: [0,-37]
+      });
+      iconCache.set(color, ic);
+    }
+    return ic;
+  }
+
+  function pinSVG(color) {
+    return `<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.2));">
+      <path d="M14 0 C6.27 0 0 6.27 0 14 C0 24.5 14 40 14 40 S28 24.5 28 14 C28 6.27 21.73 0 14 0 Z" fill="${color}" stroke="#1e293b" stroke-width="1.2"/>
+      <circle cx="14" cy="14" r="5" fill="white" stroke="#1e293b" stroke-width="1"/>
+    </svg>`;
+  }
+
+  // Íconos especiales por categoría (combis, taxis, parques industriales), en vez
+  // del pin de color genérico. Se activan según el texto de "tamano".
+  function iconoCombiSVG() {
+    return `<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.2));">
+      <rect x="4" y="12" width="20" height="12" rx="2" fill="#f59e0b" stroke="#92400e" stroke-width="1"/>
+      <path d="M4 14 L10 7 L18 7 L24 14 Z" fill="#f59e0b" stroke="#92400e" stroke-width="1"/>
+      <rect x="11" y="8" width="3" height="4" fill="#fff" stroke="#92400e" stroke-width="0.5"/>
+      <rect x="15" y="8" width="3" height="4" fill="#fff" stroke="#92400e" stroke-width="0.5"/>
+      <circle cx="8" cy="26" r="3" fill="#1e293b" stroke="#0f172a" stroke-width="1"/>
+      <circle cx="20" cy="26" r="3" fill="#1e293b" stroke="#0f172a" stroke-width="1"/>
+    </svg>`;
+  }
+  function iconoTaxiSVG() {
+    return `<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.2));">
+      <rect x="3" y="15" width="22" height="10" rx="3" fill="#facc15" stroke="#854d0e" stroke-width="1"/>
+      <path d="M5 15 L7 10 L21 10 L23 15 Z" fill="#facc15" stroke="#854d0e" stroke-width="1"/>
+      <rect x="8" y="11" width="4" height="3" fill="#fff" stroke="#854d0e" stroke-width="0.5"/>
+      <rect x="15" y="11" width="4" height="3" fill="#fff" stroke="#854d0e" stroke-width="0.5"/>
+      <rect x="11" y="7" width="6" height="3" rx="1" fill="#facc15" stroke="#854d0e" stroke-width="0.5"/>
+      <text x="14" y="9.5" font-size="2.5" font-family="sans-serif" font-weight="bold" fill="#000" text-anchor="middle">TAXI</text>
+      <circle cx="8" cy="27" r="3" fill="#1e293b" stroke="#0f172a" stroke-width="1"/>
+      <circle cx="20" cy="27" r="3" fill="#1e293b" stroke="#0f172a" stroke-width="1"/>
+    </svg>`;
+  }
+  function iconoParqueIndustrialSVG() {
+    return `<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.2));">
+      <rect x="4" y="14" width="20" height="14" fill="#3b82f6" stroke="#1e40af" stroke-width="1"/>
+      <path d="M2 14 L14 4 L26 14 Z" fill="#3b82f6" stroke="#1e40af" stroke-width="1"/>
+      <rect x="18" y="5" width="4" height="8" fill="#64748b" stroke="#475569" stroke-width="1"/>
+      <rect x="17" y="3" width="6" height="2" fill="#64748b" stroke="#475569" stroke-width="1"/>
+      <rect x="8" y="18" width="4" height="4" fill="#fef08a" stroke="#1e40af" stroke-width="0.5"/>
+      <rect x="16" y="18" width="4" height="4" fill="#fef08a" stroke="#1e40af" stroke-width="0.5"/>
+      <rect x="11" y="24" width="6" height="4" fill="#1e40af" stroke="#1e40af" stroke-width="0.5"/>
+    </svg>`;
+  }
+  function obtenerIconoEspecial(s) {
+    const t = normalizarTexto(s.tamano || '');
+    if (t === 'base de combis') {
+      return L.divIcon({ className: '', html: iconoCombiSVG(), iconSize: [28,40], iconAnchor: [14,40], popupAnchor: [0,-37] });
+    } else if (t === 'estaciones de taxis' || t === 'estacion de taxis' || t === 'estaciones de taxi' || t === 'estacion de taxi') {
+      return L.divIcon({ className: '', html: iconoTaxiSVG(), iconSize: [28,40], iconAnchor: [14,40], popupAnchor: [0,-37] });
+    } else if (t === 'parque industrial') {
+      return L.divIcon({ className: '', html: iconoParqueIndustrialSVG(), iconSize: [28,40], iconAnchor: [14,40], popupAnchor: [0,-37] });
+    }
+    return null;
+  }
+
+  // Construye los marcadores en memoria (markerMap) pero NO los agrega al mapa:
+  // applyFilters() decide cuáles mostrar según los círculos de radio activos.
+  function reconstruirMarcadoresClientes() {
+    cluster.clearLayers();
+    markerMap.clear();
+    stations.forEach(s => {
+      const iconoEspecial = obtenerIconoEspecial(s);
+      const marker = L.marker([s.lat, s.lon], {
+        icon: iconoEspecial || iconoPin(s.priceColor),
+        title: s.nombre
+      });
+      marker.bindPopup(() => {
+        // El cliente solo puede tener su popup abierto si está visible, así que
+        // _matchDist/_matchColor/_matchAncla ya los puso applyFilters().
+        const d = s._matchDist < 10 ? s._matchDist.toFixed(1) : Math.round(s._matchDist);
+        const direccion = s.direccion ? `<br><span style="font-size:0.8rem;">📍 ${s.direccion}</span>` : '';
+        const tamano = s.tamano ? `<br><span style="font-size:0.8rem;">🏢 ${s.tamano}</span>` : '';
+        return `<div style="padding:0.2rem;">
+          <strong style="font-size:1.05rem;color:var(--primary);">${s.nombre}</strong><br>
+          <span style="color:var(--text-muted);font-size:0.8rem;">${s.estado || '...'}</span>
+          ${direccion}
+          ${tamano}
+          ${s.telefono ? `<br><span style="font-size:0.8rem;">📞 ${s.telefono}</span>` : ''}
+          <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
+            <span style="display:block;width:10px;height:10px;border-radius:50%;background:${s._matchColor};"></span>
+            <span style="color:#0f172a;font-weight:600;">${d} km de ${s._matchAncla}</span>
+          </div>
+          <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">
+            Morelia ${Math.round(s.distMorelia)} km · Tototlán ${Math.round(s.distTototlan)} km
+          </div>
+          <div class="popup-actions">
+            <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${s.lat},${s.lon}" target="_blank">🗺️ Maps</a>
+            <button class="popup-btn btn-route" data-lat="${s.lat}" data-lon="${s.lon}">🚗 Ruta</button>
+            <button class="popup-btn btn-route-prospeccion" data-lat="${s.lat}" data-lon="${s.lon}">🧭 Prospección</button>
+            ${!s.direccion ? `<button class="popup-btn btn-geocode" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">📍 Dirección</button>` : ''}
+            <button class="popup-btn btn-delete-client" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">🗑️ Eliminar</button>
+          </div>
+        </div>`;
+      }, { className: '', maxWidth: 300 });
+      marker.data = s;
+      markerMap.set(s, { marker, data: s });
+    });
+    document.getElementById('rTotal').textContent = stations.length;
+    log(`Marcadores reconstruidos: ${stations.length}`);
+  }
+
+  // ============================================================
+  //  6. RUTAS (OSRM) - oculta marcadores al trazar ruta
+  // ============================================================
+  let rutaLayer = null;
+  let rutaMarcador = null;
+  let rutaActiva = false;
+
+  async function calcularRuta(origenLat, origenLon, destinoLat, destinoLon) {
+    const url = `https://router.project-osrm.org/route/v1/driving/${origenLon},${origenLat};${destinoLon},${destinoLat}?overview=full&geometries=geojson`;
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('Error en OSRM');
+      const data = await resp.json();
+      if (data.code !== 'Ok') throw new Error('Ruta no encontrada');
+      const ruta = data.routes[0];
+      return { distanciaKm: ruta.distance / 1000, duracionMin: ruta.duration / 60, geometria: ruta.geometry.coordinates };
+    } catch (e) { console.error('Error calculando ruta:', e); return null; }
+  }
+
+  function limpiarRuta() {
+    if (rutaLayer) { map.removeLayer(rutaLayer); rutaLayer = null; }
+    if (rutaMarcador) { map.removeLayer(rutaMarcador); rutaMarcador = null; }
+    if (rutaActiva) {
+      rutaActiva = false;
+      // Restaurar el clúster
+      if (!map.hasLayer(cluster)) map.addLayer(cluster);
+      // Restaurar círculos activos
+      activeCircleFilters.forEach(id => {
+        const c = circulos[id];
+        if (c && c.visible && !map.hasLayer(c.capa)) map.addLayer(c.capa);
+      });
+      // Reaplicar filtros para mostrar los marcadores correctos
+      applyFilters();
+    }
+  }
+
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('btn-route')) {
+      const lat = parseFloat(e.target.dataset.lat);
+      const lon = parseFloat(e.target.dataset.lon);
+      mostrarRuta(lat, lon);
+    } else if (e.target.classList.contains('btn-route-prospeccion')) {
+      const lat = parseFloat(e.target.dataset.lat);
+      const lon = parseFloat(e.target.dataset.lon);
+      mostrarRutaProspeccion(lat, lon);
+    }
+  });
+
+  // Dibuja la ruta (oculta clúster/círculos, traza la línea, coloca la bandera
+  // de llegada). Lo usan tanto "Calcular ruta" (desde el ancla) como
+  // "Ruta de prospección" (desde tu ubicación real), cambiando solo el origen.
+  async function dibujarRuta(origen, destLat, destLon, color) {
+    if (rutaActiva) limpiarRuta();
+    color = color || '#1F5CA9';
+
+    const resultado = await calcularRuta(origen.lat, origen.lon, destLat, destLon);
+    if (!resultado) { toast('No se pudo calcular la ruta.', 'error'); return; }
+    const coords = resultado.geometria.map(c => [c[1], c[0]]);
+
+    // Ocultar el clúster
+    if (map.hasLayer(cluster)) map.removeLayer(cluster);
+    // Ocultar círculos activos
+    activeCircleFilters.forEach(id => {
+      const c = circulos[id];
+      if (c && c.visible && map.hasLayer(c.capa)) map.removeLayer(c.capa);
+    });
+
+    rutaLayer = L.polyline(coords, { color, weight: 4, opacity: 0.8, dashArray: '8,8' }).addTo(map);
+    map.fitBounds(rutaLayer.getBounds(), { padding: [50,50], duration: 1.2 });
+    rutaMarcador = L.marker([destLat, destLon], {
+      icon: L.divIcon({ className: '', html: `<i class="fas fa-flag-checkered" style="font-size:28px;color:${color};filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>`, iconSize: [28,28] })
+    }).addTo(map);
+    rutaMarcador.bindPopup(`<strong>Ruta desde ${origen.nombre}</strong><br>Distancia: ${resultado.distanciaKm.toFixed(1)} km<br>Tiempo: ${Math.round(resultado.duracionMin)} min`).openPopup();
+    rutaActiva = true;
+  }
+
+  async function mostrarRuta(destLat, destLon) {
+    const dM = distanciaKm(ANCLA_MORELIA.lat,  ANCLA_MORELIA.lon,  destLat, destLon);
+    const dT = distanciaKm(ANCLA_TOTOTLAN.lat, ANCLA_TOTOTLAN.lon, destLat, destLon);
+    const origen = dM <= dT ? ANCLA_MORELIA : ANCLA_TOTOTLAN;
+    await dibujarRuta(origen, destLat, destLon);
+  }
+
+  // Ruta desde tu ubicación real (obtenida con el botón "Mi ubicación") hasta
+  // el cliente elegido, para planear una visita de prospección.
+  async function mostrarRutaProspeccion(destLat, destLon) {
+    if (!miUbicacionCoords) {
+      toast('Primero obtén tu ubicación con el botón "Mi ubicación".', 'info');
+      return;
+    }
+    const origen = { lat: miUbicacionCoords.lat, lon: miUbicacionCoords.lon, nombre: 'tu ubicación' };
+    await dibujarRuta(origen, destLat, destLon, '#059669');
+  }
+
+  // Mejora del popup de clúster con distancia promedio
+  cluster.on('clustermouseover', function(e) {
+    if (clusterTimer) clearTimeout(clusterTimer);
+    const layer = e.layer;
+    const markers = layer.getAllChildMarkers().sort((a,b)=>a.data.nombre.localeCompare(b.data.nombre));
+    let totalDist = 0;
+    markers.forEach(m => totalDist += m.data._matchDist);
+    const avgDist = (totalDist / markers.length).toFixed(1);
+    let html = `<div class="cluster-popup-title">
+      <span>📍 ${markers.length} clientes</span>
+      <span style="font-weight:400;font-size:0.75rem;">📏 ${avgDist} km promedio</span>
+    </div><div class="cluster-popup-list">`;
+    markers.forEach(m => {
+      html += `<div class="item"><span class="name">${m.data.nombre}</span><span class="state">${m.data.estado || ''}</span></div>`;
+    });
+    html += '</div>';
+    layer.bindPopup(html, { className: 'cluster-popup', maxWidth: 320, maxHeight: 280 }).openPopup();
+  });
+
+  let clusterTimer = null;
+  cluster.on('clustermouseout', function(e) {
+    clusterTimer = setTimeout(() => e.layer.closePopup(), 1500);
+  });
+
+  // ============================================================
+  //  7. LEYENDA DE DISTANCIAS
+  // ============================================================
+  const legendControl = L.control({ position: 'bottomright' });
+  legendControl.onAdd = function() {
+    const div = L.DomUtil.create('div', 'price-legend');
+    div.innerHTML = `<div class="title">Distancia al círculo activo <button class="clear-btn" id="legendClearBtn">✕</button></div>`;
+    const ranges = [
+      { label: '0 – 50 km',   key: 'very-low', color: '#10b981' },
+      { label: '50 – 100 km', key: 'low',     color: '#34d399' },
+      { label: '100 – 150 km', key: 'mid',    color: '#fbbf24' },
+      { label: '150 – 190 km', key: 'high',   color: '#fb923c' },
+      { label: '> 190 km',    key: 'no-price', color: '#94a3b8' }
+    ];
+    // Cuenta por color entre los clientes VISIBLES (según su círculo activo más cercano),
+    // no entre todos los clientes cargados, para que coincida con lo que se ve en el mapa.
+    function actualizarConteos(visibles) {
+      const conteo = new Map();
+      (visibles || []).forEach(s => conteo.set(s._matchKey, (conteo.get(s._matchKey) || 0) + 1));
+      div.querySelectorAll('.row').forEach(row => {
+        const key = row.dataset.key;
+        const count = conteo.get(key) || 0;
+        const span = row.querySelector('.count');
+        if (span) span.textContent = count;
+      });
+    }
+    div.innerHTML += ranges.map(r => `<div class="row" data-key="${r.key}">
+        <span class="color-dot" style="background:${r.color};"></span>
+        <span class="label">${r.label}</span>
+        <span class="count">0</span>
+      </div>`).join('');
+    setTimeout(actualizarConteos, 100);
+    div._actualizarConteos = actualizarConteos;
+    return div;
+  };
+  legendControl.addTo(map);
+
+  // Aviso flotante sobre el mapa: visible mientras no haya ningún círculo de
+  // radio activo, para que quede claro que hay que elegir uno para ver clientes.
+  function actualizarPistaMapa() {
+    const hint = document.getElementById('mapHint');
+    if (!hint) return;
+    hint.classList.toggle('hidden', activeCircleFilters.size > 0);
+  }
+
+  // ============================================================
+  //  8. FILTROS Y EVENTOS
+  // ============================================================
+  let activePrice = null, activeTamano = 'all', searchTerm = '', maxDist = 190;
+  let activeNoAddress = false;
+
+  // Para un cliente, busca el círculo activo más cercano que lo alcance (si hay varios,
+  // gana el de menor distancia). "Max dist." recorta el radio de CADA círculo activo,
+  // en vez de compararse contra el ancla más cercana en general — así nunca contradice
+  // al círculo que el usuario seleccionó.
+  function mejorCoincidenciaCirculo(s) {
+    let mejor = null;
+    for (const id of activeCircleFilters) {
+      const { centro, radio } = datosCirculo(id);
+      const limite = Math.min(radio, maxDist);
+      const d = distanciaKm(centro.lat, centro.lon, s.lat, s.lon);
+      if (d <= limite && (!mejor || d < mejor.dist)) {
+        mejor = { dist: d, anclaNombre: centro.nombre };
+      }
+    }
+    return mejor;
+  }
+
+  function applyFilters() {
+    if (rutaActiva) return [];
+
+    const term = searchTerm; // ya viene normalizado (sin acentos/mayúsculas) desde el input
+    const selectedTam = document.getElementById('tamanoFilter').value;
+
+    // Sin ningún círculo de radio activo no se muestra ningún cliente:
+    // solo quedan visibles las dos anclas (Morelia y Tototlán).
+    let visible = [];
+    for (const s of stations) {
+      if (!activeCircleFilters.size) break;
+      if (term !== '' && !normalizarTexto(s.nombre).includes(term)) continue;
+      if (selectedTam !== 'all' && s.tamano !== selectedTam) continue;
+      const match = mejorCoincidenciaCirculo(s);
+      if (!match) continue;
+      const rango = getDistRange(match.dist);
+      if (activePrice !== null && rango.key !== activePrice) continue;
+      // El color del pin y la banda de la leyenda reflejan el círculo activo que
+      // reveló a este cliente, no el ancla más cercana en términos absolutos.
+      s._matchDist = match.dist;
+      s._matchAncla = match.anclaNombre;
+      s._matchColor = rango.color;
+      s._matchKey = rango.key;
+      visible.push(s);
+    }
+
+    if (activeNoAddress) {
+      visible = visible.filter(s => !s.direccion);
+    }
+
+    visible.forEach(s => {
+      const entry = markerMap.get(s);
+      if (entry) {
+        const iconoEspecial = obtenerIconoEspecial(s);
+        entry.marker.setIcon(iconoEspecial || iconoPin(s._matchColor));
+      }
+    });
+
+    cluster.clearLayers();
+    cluster.addLayers(visible.map(s => markerMap.get(s).marker));
+    document.getElementById('rMatch').textContent = visible.length;
+    document.getElementById('listCnt').textContent = visible.length;
+    renderList(visible);
+    updateLegendUI();
+    updateStats(visible);
+    document.getElementById('clearAllBtn').classList.toggle('hidden', !(activePrice || selectedTam !== 'all' || term || maxDist < 190 || activeNoAddress));
+    const legendDiv = document.querySelector('.price-legend');
+    if (legendDiv && legendDiv._actualizarConteos) legendDiv._actualizarConteos(visible);
+    actualizarPistaMapa();
+
+    return visible;
+  }
+
+  function updateLegendUI() {
+    document.querySelectorAll('.price-legend .row').forEach(row => {
+      row.classList.toggle('active', row.dataset.key === activePrice);
+    });
+  }
+
+  function updateStats(items) {
+    const statsEl = document.getElementById('stats');
+    if (items.length === 0) { statsEl.innerHTML = ''; return; }
+    const dists = items.map(s => s._matchDist);
+    const min = Math.min(...dists);
+    const max = Math.max(...dists);
+    const avg = dists.reduce((a,b) => a+b, 0) / dists.length;
+    const closest = items.find(s => s._matchDist === min);
+    const closestName = closest ? ` (${closest.nombre})` : '';
+    let minDisplay = min.toFixed(1) + ' km';
+    if (min < 0.01) minDisplay = `0.0 km (Mismo punto que ${closest ? closest._matchAncla : 'el ancla'})`;
+    statsEl.innerHTML = `
+      <span class="stat">📏 Más cercano: ${minDisplay}${closestName}</span>
+      <span class="stat">📏 Más lejano: ${max.toFixed(1)} km</span>
+      <span class="stat">📊 Promedio: ${avg.toFixed(1)} km</span>
+    `;
+  }
+
+  setTimeout(() => {
+    const legend = document.querySelector('.price-legend');
+    if (legend) {
+      legend.addEventListener('click', e => {
+        if (e.target.closest('#legendClearBtn')) {
+          activePrice = null;
+          const visibles = applyFilters();
+          if (activeCircleFilters.size) encuadrarClientes(visibles); else verAmbasAnclas();
+          return;
+        }
+        const row = e.target.closest('.row');
+        if (row) {
+          if (activeCircleFilters.size === 0) { toast('Primero selecciona un círculo de radio.', 'info'); return; }
+          activePrice = (activePrice === row.dataset.key) ? null : row.dataset.key;
+          const visibles = applyFilters();
+          encuadrarClientes(visibles);
+        }
+      });
+    }
+  }, 100);
+
+  function encuadrarClientes(lista) {
+    if (!lista || !lista.length) { verAmbasAnclas(); return; }
+    const b = L.latLngBounds(lista.map(s => [s.lat, s.lon]));
+    ANCLAS.forEach(a => b.extend([a.lat, a.lon]));
+    map.flyToBounds(b, { padding: [60, 60], duration: 1.2, maxZoom: 12 });
+  }
+
+  document.getElementById('tamanoFilter').addEventListener('change', applyFilters);
+  document.getElementById('distSlider').addEventListener('input', function() {
+    maxDist = parseInt(this.value);
+    document.getElementById('distLabel').textContent = maxDist + ' km';
+    applyFilters();
+  });
+
+  let debounceTimer;
+  document.getElementById('searchInput').addEventListener('input', function() {
+    clearTimeout(debounceTimer);
+    const valorActual = this.value;
+    debounceTimer = setTimeout(() => { searchTerm = normalizarTexto(valorActual); applyFilters(); }, 300);
+    actualizarSugerenciasBusqueda(valorActual);
+  });
+
+  // Autocompletar: sugerencias de nombre mientras se escribe en el buscador
+  function actualizarSugerenciasBusqueda(texto) {
+    const box = document.getElementById('searchSuggestions');
+    const term = normalizarTexto(texto.trim());
+    if (!term) { box.classList.remove('show'); box.innerHTML = ''; return; }
+
+    const coincidencias = stations.filter(s => normalizarTexto(s.nombre).includes(term)).slice(0, 8);
+    box.innerHTML = '';
+    if (!coincidencias.length) { box.classList.remove('show'); return; }
+
+    coincidencias.forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'item';
+      const nombreEl = document.createElement('span');
+      nombreEl.className = 'name';
+      nombreEl.textContent = s.nombre;
+      const metaEl = document.createElement('span');
+      metaEl.className = 'meta';
+      metaEl.textContent = `${Math.round(s.distKm)} km · ${s.estado || '...'}`;
+      item.appendChild(nombreEl);
+      item.appendChild(metaEl);
+      item.addEventListener('click', () => {
+        document.getElementById('searchInput').value = s.nombre;
+        box.classList.remove('show');
+        // Si ningún círculo activo alcanza a este cliente, activa el de su ancla
+        // más cercana para que sí se vea (si no, el marcador no estaría en el mapa).
+        const idCirculo = '190' + (s.origen === 'morelia' ? 'Morelia' : 'Tototlan');
+        if (!activeCircleFilters.has(idCirculo)) {
+          activarCirculoId(idCirculo);
+          actualizarEtiquetaCirculos();
+        }
+        applyFilters();
+        map.flyTo([s.lat, s.lon], 14, { duration: 1.2 });
+        const entry = markerMap.get(s);
+        if (entry) entry.marker.openPopup();
+      });
+      box.appendChild(item);
+    });
+    box.classList.add('show');
+  }
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search')) {
+      document.getElementById('searchSuggestions').classList.remove('show');
+    }
+  });
+
+  // "Limpiar filtros" solo limpia búsqueda/tamaño/distancia/leyenda/sin-dirección.
+  // Los círculos de radio NO se tocan aquí: se activan/desactivan solo desde su
+  // propio botón, el pin del ancla o el botón "Morelia"/"Tototlán".
+  document.getElementById('clearAllBtn').addEventListener('click', () => {
+    activePrice = null; searchTerm = '';
+    document.getElementById('tamanoFilter').value = 'all';
+    document.getElementById('searchInput').value = '';
+    maxDist = 190;
+    document.getElementById('distSlider').value = 190;
+    document.getElementById('distLabel').textContent = '190 km';
+    activeNoAddress = false;
+    document.getElementById('noAddressBtn').classList.remove('active');
+    const visibles = applyFilters();
+    if (activeCircleFilters.size) encuadrarClientes(visibles); else verAmbasAnclas();
+  });
+
+  // ============================================================
+  //  9. RENDERIZAR LISTA (directorio) CON ORDEN
+  // ============================================================
+  let sortMode = 'dist';
+
+  // Un solo <li> reutilizado por los tres modos de orden: clic o teclado
+  // (Enter/Espacio) centran el mapa en ese cliente y abren su popup.
+  function crearItemLista(s) {
+    const li = document.createElement('li');
+    li.tabIndex = 0;
+    li.setAttribute('role', 'button');
+    li.setAttribute('aria-label', `Ver ${s.nombre} en el mapa`);
+
+    const topRow = document.createElement('div');
+    topRow.className = 'top-row';
+    const nombreEl = document.createElement('span');
+    nombreEl.className = 'name';
+    nombreEl.textContent = s.nombre;
+    const distEl = document.createElement('span');
+    distEl.className = 'dist';
+    distEl.textContent = `${s._matchDist < 10 ? s._matchDist.toFixed(1) : Math.round(s._matchDist)} km`;
+    topRow.appendChild(nombreEl);
+    topRow.appendChild(distEl);
+
+    const stateEl = document.createElement('span');
+    stateEl.className = 'state-tag';
+    stateEl.textContent = s.estado || '...';
+
+    li.appendChild(topRow);
+    li.appendChild(stateEl);
+
+    const activar = () => { map.flyTo([s.lat, s.lon], 14, { duration: 1.2 }); markerMap.get(s).marker.openPopup(); };
+    li.addEventListener('click', activar);
+    li.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activar(); }
+    });
+    return li;
+  }
+
+  // Sugiere qué filtro relajar cuando no hay resultados, en vez de un mensaje genérico.
+  function mensajeSinResultados() {
+    const li = document.createElement('li');
+    li.className = 'empty';
+
+    if (activeCircleFilters.size === 0) {
+      const p1 = document.createElement('div');
+      p1.textContent = 'Selecciona uno o más "Círculos de radio" para ver los clientes.';
+      li.appendChild(p1);
+      return li;
+    }
+
+    const sugerencias = [];
+    if (searchTerm) sugerencias.push('revisa lo que escribiste en el buscador');
+    if (activePrice) sugerencias.push('quita el filtro de distancia por color en la leyenda');
+    if (document.getElementById('tamanoFilter').value !== 'all') sugerencias.push('quita el filtro de tamaño de empresa');
+    if (maxDist < 190) sugerencias.push('amplía el máximo de distancia');
+    if (activeNoAddress) sugerencias.push('quita el filtro "Sin dirección"');
+
+    const p1 = document.createElement('div');
+    p1.textContent = 'No hay clientes que coincidan.';
+    li.appendChild(p1);
+    if (sugerencias.length) {
+      const p2 = document.createElement('div');
+      p2.style.fontSize = '0.75rem';
+      p2.style.marginTop = '0.4rem';
+      p2.textContent = 'Prueba: ' + sugerencias.join(', ') + '.';
+      li.appendChild(p2);
+    }
+    return li;
+  }
+
+  function renderList(items) {
+    const ul = document.getElementById('list');
+    ul.innerHTML = '';
+    if (!items.length) { ul.appendChild(mensajeSinResultados()); return; }
+
+    const frag = document.createDocumentFragment();
+
+    if (sortMode === 'dist') {
+      [...items].sort((a,b) => a._matchDist - b._matchDist).forEach(s => frag.appendChild(crearItemLista(s)));
+    } else if (sortMode === 'name') {
+      [...items].sort((a,b) => a.nombre.localeCompare(b.nombre)).forEach(s => frag.appendChild(crearItemLista(s)));
+    } else {
+      const grouped = items.reduce((acc, s) => {
+        const state = s.estado || 'Sin estado';
+        if (!acc[state]) acc[state] = [];
+        acc[state].push(s);
+        return acc;
+      }, {});
+      Object.keys(grouped).sort().forEach(state => {
+        const header = document.createElement('li');
+        header.className = 'group-header';
+        header.textContent = `${state} (${grouped[state].length})`;
+        frag.appendChild(header);
+        grouped[state].sort((a,b) => a.nombre.localeCompare(b.nombre)).forEach(s => frag.appendChild(crearItemLista(s)));
+      });
+    }
+
+    ul.appendChild(frag);
+  }
+
+  function marcarSortActivo(modo) {
+    ['sortDist','sortState','sortName'].forEach(id => {
+      document.getElementById(id).classList.toggle('active', id === modo);
+    });
+  }
+  document.getElementById('sortDist').addEventListener('click', function() {
+    sortMode = 'dist';
+    marcarSortActivo('sortDist');
+    applyFilters();
+  });
+  document.getElementById('sortState').addEventListener('click', function() {
+    sortMode = 'state';
+    marcarSortActivo('sortState');
+    applyFilters();
+  });
+  document.getElementById('sortName').addEventListener('click', function() {
+    sortMode = 'name';
+    marcarSortActivo('sortName');
+    applyFilters();
+  });
+
+  // ============================================================
+  //  10. CONTROLES ADICIONALES
+  // ============================================================
+
+  // Tema claro/oscuro (persistente en localStorage; el <head> ya evita el parpadeo)
+  function aplicarTema(tema) {
+    document.documentElement.setAttribute('data-theme', tema);
+    const icon = document.getElementById('themeIcon');
+    if (icon) icon.className = tema === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    try { localStorage.setItem('tema', tema); } catch (e) {}
+  }
+  aplicarTema(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+  document.getElementById('themeToggleBtn').addEventListener('click', () => {
+    const actual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    aplicarTema(actual === 'dark' ? 'light' : 'dark');
+  });
+
+  // Botón "Más" (solo visible en pantallas angostas): agrupa las acciones menos
+  // frecuentes (Agregar cliente, Exportar CSV, Sin dirección, Limpiar ruta,
+  // Restablecer) para no saturar la barra de herramientas en el celular.
+  document.getElementById('moreToggleBtn').addEventListener('click', function() {
+    const toolbar = document.querySelector('.toolbar');
+    const abierto = toolbar.classList.toggle('mobile-more-open');
+    this.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+    this.querySelector('i').className = abierto ? 'fas fa-chevron-up' : 'fas fa-ellipsis-vertical';
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => verAmbasAnclas());
+  document.getElementById('centerMoreliaBtn').addEventListener('click', () => {
+    limpiarRuta();
+    activarAncla('morelia');
+  });
+  document.getElementById('centerTototlanBtn').addEventListener('click', () => {
+    limpiarRuta();
+    activarAncla('tototlan');
+  });
+  document.getElementById('clearRouteBtn').addEventListener('click', limpiarRuta);
+
+  document.getElementById('gotoClosestBtn').addEventListener('click', function() {
+    const visible = applyFilters();
+    if (!visible.length) {
+      toast(activeCircleFilters.size === 0 ? 'Primero selecciona un círculo de radio.' : 'No hay clientes visibles con los filtros actuales.', 'info');
+      return;
+    }
+    const closest = visible.reduce((a, b) => a._matchDist < b._matchDist ? a : b);
+    map.flyTo([closest.lat, closest.lon], 14, { duration: 1.2 });
+    markerMap.get(closest).marker.openPopup();
+  });
+
+  document.getElementById('toggleRailBtn').addEventListener('click', () => {
+    const rail = document.getElementById('railPanel');
+    rail.classList.toggle('hidden');
+    document.getElementById('railToggleIcon').className = rail.classList.contains('hidden') ? 'fas fa-chevron-left' : 'fas fa-chevron-right';
+    setTimeout(() => map.invalidateSize(), 350);
+  });
+
+  ['150Morelia','190Morelia','150Tototlan','190Tototlan'].forEach(id => {
+    const b = document.getElementById('btnCirculo' + id);
+    if (b) b.addEventListener('click', () => toggleCirculo(id));
+  });
+
+  // Menú desplegable de círculos de radio (agrupa los 4 botones anteriores)
+  const circulosToggleBtn = document.getElementById('circulosToggleBtn');
+  const circulosMenu = document.getElementById('circulosMenu');
+  circulosToggleBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const abierto = circulosMenu.classList.toggle('open');
+    circulosToggleBtn.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+  });
+  // El menú NO se cierra al elegir un círculo: se puede marcar más de uno seguido.
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('#circulosDropdown')) {
+      circulosMenu.classList.remove('open');
+      circulosToggleBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      circulosMenu.classList.remove('open');
+      circulosToggleBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  document.getElementById('noAddressBtn').addEventListener('click', function() {
+    activeNoAddress = !activeNoAddress;
+    this.classList.toggle('active');
+    applyFilters();
+  });
+
+  // ============================================================
+  //  10a. AGREGAR CLIENTE DESDE EL MAPA
+  // ============================================================
+  let addingClientMode = false;
+  const addClientBtn = document.getElementById('addClientBtn');
+  const modalOverlay = document.getElementById('addClientModalOverlay');
+  const addLat = document.getElementById('addLat');
+  const addLon = document.getElementById('addLon');
+  const addNombre = document.getElementById('addNombre');
+  const addEstado = document.getElementById('addEstado');
+  const addTamano = document.getElementById('addTamano');
+  const addDireccion = document.getElementById('addDireccion');
+  const addTelefono = document.getElementById('addTelefono');
+  let tempCoords = null;
+
+  function toggleAddMode() {
+    addingClientMode = !addingClientMode;
+    addClientBtn.classList.toggle('active', addingClientMode);
+    if (addingClientMode) {
+      map.getContainer().style.cursor = 'crosshair';
+      toast('Haz clic en el mapa para colocar el nuevo cliente.', 'info');
+    } else {
+      map.getContainer().style.cursor = '';
+    }
+  }
+
+  addClientBtn.addEventListener('click', toggleAddMode);
+
+  map.on('click', function(e) {
+    if (!addingClientMode) return;
+    addingClientMode = false;
+    addClientBtn.classList.remove('active');
+    map.getContainer().style.cursor = '';
+    tempCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
+    addLat.value = tempCoords.lat.toFixed(6);
+    addLon.value = tempCoords.lng.toFixed(6);
+    addNombre.value = '';
+    addEstado.value = '';
+    addTamano.value = '';
+    addDireccion.value = '';
+    addTelefono.value = '';
+    modalOverlay.classList.add('open');
+  });
+
+  document.getElementById('addCancelBtn').addEventListener('click', () => {
+    modalOverlay.classList.remove('open');
+    tempCoords = null;
+  });
+
+  document.getElementById('addSaveBtn').addEventListener('click', () => {
+    const nombre = addNombre.value.trim();
+    if (!nombre) { toast('El nombre es obligatorio.', 'error'); return; }
+    const estado = addEstado.value.trim();
+    const tamano = addTamano.value.trim();
+    const direccion = addDireccion.value.trim();
+    const telefono = addTelefono.value.trim();
+
+    const nuevo = {
+      nombre: nombre,
+      lat: Math.round(tempCoords.lat * 1e6) / 1e6,
+      lon: Math.round(tempCoords.lng * 1e6) / 1e6,
+      estado: estado || '',
+      tamano: tamano || '',
+      direccion: direccion || '',
+      telefono: telefono || ''
+    };
+    enriquecer([nuevo]);
+    stations.push(nuevo);
+    reconstruirMarcadoresClientes();
+    actualizarSelectTamano();
+    applyFilters();
+    try {
+      localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
+      localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
+    } catch (e) {}
+    modalOverlay.classList.remove('open');
+    tempCoords = null;
+    toast(`Cliente "${nombre}" agregado correctamente.`, 'success');
+  });
+
+  // ============================================================
+  //  10c. ELIMINAR CLIENTE (con NIP de seguridad)
+  // ============================================================
+  const NIP_ELIMINAR = '1723';
+  let clienteAEliminar = null;
+  const deleteModalOverlay = document.getElementById('deleteClientModalOverlay');
+  const deleteStepPin = document.getElementById('deleteStepPin');
+  const deleteStepConfirm = document.getElementById('deleteStepConfirm');
+  const deletePinInput = document.getElementById('deletePinInput');
+
+  function abrirModalEliminar(cliente) {
+    clienteAEliminar = cliente;
+    document.getElementById('deleteClientName').textContent = cliente.nombre;
+    document.getElementById('deleteClientNameConfirm').textContent = cliente.nombre;
+    deletePinInput.value = '';
+    deleteStepPin.style.display = 'block';
+    deleteStepConfirm.style.display = 'none';
+    deleteModalOverlay.classList.add('open');
+    setTimeout(() => deletePinInput.focus(), 50);
+  }
+
+  function cerrarModalEliminar() {
+    deleteModalOverlay.classList.remove('open');
+    clienteAEliminar = null;
+  }
+
+  document.getElementById('deletePinCancelBtn').addEventListener('click', cerrarModalEliminar);
+  document.getElementById('deleteConfirmCancelBtn').addEventListener('click', cerrarModalEliminar);
+
+  document.getElementById('deletePinConfirmBtn').addEventListener('click', () => {
+    if (deletePinInput.value.trim() !== NIP_ELIMINAR) {
+      toast('NIP incorrecto.', 'error');
+      deletePinInput.value = '';
+      deletePinInput.focus();
+      return;
+    }
+    deleteStepPin.style.display = 'none';
+    deleteStepConfirm.style.display = 'block';
+  });
+
+  deletePinInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('deletePinConfirmBtn').click();
+  });
+
+  document.getElementById('deleteConfirmOkBtn').addEventListener('click', () => {
+    if (!clienteAEliminar) return;
+    const nombre = clienteAEliminar.nombre;
+    const idx = stations.indexOf(clienteAEliminar);
+    if (idx !== -1) stations.splice(idx, 1);
+    map.closePopup();
+    reconstruirMarcadoresClientes();
+    actualizarSelectTamano();
+    applyFilters();
+    try {
+      localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
+      localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
+    } catch (e) {}
+    cerrarModalEliminar();
+    toast(`Cliente "${nombre}" eliminado.`, 'success');
+  });
+
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn-delete-client');
+    if (!btn) return;
+    const lat = parseFloat(btn.dataset.lat);
+    const lon = parseFloat(btn.dataset.lon);
+    const nombre = btn.dataset.nombre;
+    const cliente = stations.find(s => s.lat === lat && s.lon === lon && s.nombre === nombre);
+    if (!cliente) return;
+    abrirModalEliminar(cliente);
+  });
+
+  // ============================================================
+  //  10b2. EXPORTAR CSV
+  // ============================================================
+  document.getElementById('exportCsvBtn').addEventListener('click', function() {
+    if (stations.length === 0) { toast('No hay clientes para exportar.', 'info'); return; }
+
+    const encabezados = ['nombre', 'lat', 'lon', 'estado', 'tamano', 'direccion', 'telefono'];
+    let csv = encabezados.join(',') + '\n';
+
+    stations.forEach(s => {
+      const fila = [
+        `"${(s.nombre || '').replace(/"/g, '""')}"`,
+        s.lat,
+        s.lon,
+        `"${(s.estado || '').replace(/"/g, '""')}"`,
+        `"${(s.tamano || '').replace(/"/g, '""')}"`,
+        `"${(s.direccion || '').replace(/"/g, '""')}"`,
+        `"${(s.telefono || '').replace(/"/g, '""')}"`
+      ];
+      csv += fila.join(',') + '\n';
+    });
+
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'clientes_exportados.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast(`CSV exportado con ${stations.length.toLocaleString()} clientes.`, 'success');
+  });
+
+  // ============================================================
+  //  10b. MI UBICACIÓN (Geolocalización del navegador)
+  // ============================================================
+  let miUbicacionMarker = null;
+
+  // Pin de gota (como los del mapa) en el naranja del Pegman de Street View,
+  // con una siluetita de persona adentro para diferenciarlo de los demás pines.
+  function miUbicacionIcon() {
+    const svg = `
+      <svg width="32" height="44" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.35));">
+        <path d="M14 0 C6.27 0 0 6.27 0 14 C0 24.5 14 40 14 40 S28 24.5 28 14 C28 6.27 21.73 0 14 0 Z" fill="#FFA000" stroke="#8a5a00" stroke-width="1.2"/>
+        <circle cx="14" cy="14" r="7.2" fill="white"/>
+        <circle cx="14" cy="10.4" r="2.3" fill="#FFA000"/>
+        <path d="M9.3 19.4 C9.3 15 11 13 14 13 C17 13 18.7 15 18.7 19.4 Z" fill="#FFA000"/>
+      </svg>
+    `;
+    return L.divIcon({
+      className: '',
+      html: svg,
+      iconSize: [32, 44],
+      iconAnchor: [16, 44],
+      popupAnchor: [0, -40]
+    });
+  }
+
+  document.getElementById('locBtn').addEventListener('click', function() {
+    const btn = this;
+    if (btn.classList.contains('loading')) return;
+
+    if (!navigator.geolocation) {
+      toast('Tu navegador no soporta geolocalización.', 'error');
+      return;
+    }
+
+    btn.classList.add('loading');
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        btn.classList.remove('loading');
+        const { latitude: lat, longitude: lon } = pos.coords;
+
+        miUbicacionCoords = { lat, lon };
+        actualizarCirculoCercaDeMi(lat, lon);
+
+        if (miUbicacionMarker) map.removeLayer(miUbicacionMarker);
+        miUbicacionMarker = L.marker([lat, lon], {
+          icon: miUbicacionIcon(),
+          zIndexOffset: 2000,
+          title: 'Mi ubicación'
+        }).addTo(map)
+          .bindPopup('📍 Estás aquí · clic para mostrar/ocultar clientes a 1 km')
+          .on('click', toggleCercaDeMi)
+          .openPopup();
+
+        // Muestra solo los clientes a 1 km a la redonda (apaga cualquier otro círculo activo).
+        activarCercaDeMi();
+      },
+      function(err) {
+        btn.classList.remove('loading');
+        let msg = 'No se pudo obtener tu ubicación.';
+        if (err.code === err.PERMISSION_DENIED) {
+          msg = 'Permiso de ubicación denegado. Actívalo en la configuración del navegador para usar esta función.';
+        } else if (err.code === err.TIMEOUT) {
+          msg = 'Tiempo de espera agotado al obtener tu ubicación. Intenta de nuevo.';
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          msg = 'No se pudo determinar tu ubicación actual.';
+        }
+        toast(msg, 'error');
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  });
+
+  // ============================================================
+  //  11. GEOCODIFICACIÓN INVERSA (Nominatim)
+  // ============================================================
+  async function geocodeCliente(cliente) {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${cliente.lat}&lon=${cliente.lon}&format=json&zoom=16&addressdetails=1`;
+    try {
+      const resp = await fetch(url, { headers: { 'User-Agent': 'ClientesPotencialesMap/1.0' } });
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      if (data && data.display_name) {
+        return { direccion: data.display_name, estado: data.address?.state || data.address?.region || '' };
+      }
+      return null;
+    } catch (e) { console.warn(`Error geocodificando ${cliente.nombre}:`, e); return null; }
+  }
+
+  let geocodeCancelado = false;
+
+  async function geocodeClientesVisibles() {
+    const visible = applyFilters();
+    if (visible.length === 0) { toast('Primero selecciona un círculo de radio para ver clientes.', 'info'); return; }
+    const sinDireccion = visible.filter(s => !s.direccion);
+    if (sinDireccion.length === 0) { toast('Todos los clientes visibles ya tienen dirección.', 'info'); return; }
+
+    geocodeCancelado = false;
+    const geocodeBtn = document.getElementById('geocodeBtn');
+    geocodeBtn.disabled = true;
+
+    const progress = document.getElementById('geocodeProgress');
+    const status = document.getElementById('geoStatus');
+    const count = document.getElementById('geoCount');
+    const fill = document.getElementById('geoFill');
+    progress.style.display = 'block';
+    let procesados = 0;
+    const total = sinDireccion.length;
+
+    for (const s of sinDireccion) {
+      if (geocodeCancelado) break;
+      status.textContent = `Obteniendo dirección para: ${s.nombre}`;
+      count.textContent = `${procesados+1}/${total}`;
+      fill.style.width = `${((procesados)/total)*100}%`;
+      const result = await geocodeCliente(s);
+      if (result) {
+        s.direccion = result.direccion;
+        s.estado = result.estado || s.estado;
+        const entry = markerMap.get(s);
+        if (entry) {
+          entry.marker.closePopup();
+          entry.marker.bindPopup(() => {
+            const d = s._matchDist < 10 ? s._matchDist.toFixed(1) : Math.round(s._matchDist);
+            const direccion = s.direccion ? `<br><span style="font-size:0.8rem;">📍 ${s.direccion}</span>` : '';
+            const tamano = s.tamano ? `<br><span style="font-size:0.8rem;">🏢 ${s.tamano}</span>` : '';
+            return `<div style="padding:0.2rem;">
+              <strong style="font-size:1.05rem;color:var(--primary);">${s.nombre}</strong><br>
+              <span style="color:var(--text-muted);font-size:0.8rem;">${s.estado || '...'}</span>
+              ${direccion}
+              ${tamano}
+              ${s.telefono ? `<br><span style="font-size:0.8rem;">📞 ${s.telefono}</span>` : ''}
+              <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
+                <span style="display:block;width:10px;height:10px;border-radius:50%;background:${s._matchColor};"></span>
+                <span style="color:#0f172a;font-weight:600;">${d} km de ${s._matchAncla}</span>
+              </div>
+              <div class="popup-actions">
+                <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${s.lat},${s.lon}" target="_blank">🗺️ Maps</a>
+                <button class="popup-btn btn-route" data-lat="${s.lat}" data-lon="${s.lon}">🚗 Ruta</button>
+                <button class="popup-btn btn-route-prospeccion" data-lat="${s.lat}" data-lon="${s.lon}">🧭 Prospección</button>
+                ${!s.direccion ? `<button class="popup-btn btn-geocode" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">📍 Dirección</button>` : ''}
+                <button class="popup-btn btn-delete-client" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">🗑️ Eliminar</button>
+              </div>
+            </div>`;
+          });
+        }
+      }
+      procesados++;
+      fill.style.width = `${(procesados/total)*100}%`;
+      await new Promise(r => setTimeout(r, 200));
+    }
+
+    geocodeBtn.disabled = false;
+
+    if (geocodeCancelado) {
+      status.textContent = 'Proceso cancelado.';
+      toast(`Geocodificación cancelada: ${procesados}/${total} procesados.`, 'info');
+    } else {
+      status.textContent = '¡Proceso completado!';
+      toast(`Direcciones obtenidas para ${total.toLocaleString()} cliente(s).`, 'success');
+    }
+    count.textContent = `${procesados}/${total}`;
+    fill.style.width = `${(procesados/total)*100}%`;
+    setTimeout(() => { progress.style.display = 'none'; }, 2000);
+
+    try {
+      localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
+      localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
+    } catch (e) { console.warn('No se pudo guardar en localStorage:', e); }
+
+    applyFilters();
+  }
+
+  document.getElementById('geocodeBtn').addEventListener('click', geocodeClientesVisibles);
+  document.getElementById('cancelGeoBtn').addEventListener('click', () => { geocodeCancelado = true; });
+
+  document.addEventListener('click', async function(e) {
+    if (e.target.classList.contains('btn-geocode')) {
+      const lat = parseFloat(e.target.dataset.lat);
+      const lon = parseFloat(e.target.dataset.lon);
+      const nombre = e.target.dataset.nombre;
+      const cliente = stations.find(s => s.lat === lat && s.lon === lon && s.nombre === nombre);
+      if (!cliente) return;
+      if (cliente.direccion) { toast('Este cliente ya tiene dirección.', 'info'); return; }
+      const result = await geocodeCliente(cliente);
+      if (result) {
+        cliente.direccion = result.direccion;
+        cliente.estado = result.estado || cliente.estado;
+        const entry = markerMap.get(cliente);
+        if (entry) {
+          entry.marker.closePopup();
+          entry.marker.bindPopup(() => {
+            const d = cliente._matchDist < 10 ? cliente._matchDist.toFixed(1) : Math.round(cliente._matchDist);
+            const direccion = cliente.direccion ? `<br><span style="font-size:0.8rem;">📍 ${cliente.direccion}</span>` : '';
+            const tamano = cliente.tamano ? `<br><span style="font-size:0.8rem;">🏢 ${cliente.tamano}</span>` : '';
+            return `<div style="padding:0.2rem;">
+              <strong style="font-size:1.05rem;color:var(--primary);">${cliente.nombre}</strong><br>
+              <span style="color:var(--text-muted);font-size:0.8rem;">${cliente.estado || '...'}</span>
+              ${direccion}
+              ${tamano}
+              ${cliente.telefono ? `<br><span style="font-size:0.8rem;">📞 ${cliente.telefono}</span>` : ''}
+              <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
+                <span style="display:block;width:10px;height:10px;border-radius:50%;background:${cliente._matchColor};"></span>
+                <span style="color:#0f172a;font-weight:600;">${d} km de ${cliente._matchAncla}</span>
+              </div>
+              <div class="popup-actions">
+                <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${cliente.lat},${cliente.lon}" target="_blank">🗺️ Maps</a>
+                <button class="popup-btn btn-route" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🚗 Ruta</button>
+                <button class="popup-btn btn-route-prospeccion" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🧭 Prospección</button>
+                ${!cliente.direccion ? `<button class="popup-btn btn-geocode" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">📍 Dirección</button>` : ''}
+                <button class="popup-btn btn-delete-client" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">🗑️ Eliminar</button>
+              </div>
+            </div>`;
+          });
+          entry.marker.openPopup();
+        }
+        try {
+          localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
+          localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
+        } catch (e) {}
+        applyFilters();
+      } else {
+        toast('No se pudo obtener la dirección para este cliente.', 'error');
+      }
+    }
+  });
+
+  // ============================================================
+  //  12. ACTUALIZAR SELECT DE TAMAÑOS
+  // ============================================================
+  function actualizarSelectTamano() {
+    const select = document.getElementById('tamanoFilter');
+    const currentVal = select.value;
+    while (select.options.length > 1) select.remove(1);
+    const tamanos = [...new Set(stations.map(s => s.tamano).filter(Boolean))].sort();
+    tamanos.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = t;
+      select.appendChild(opt);
+    });
+    if ([...select.options].some(o => o.value === currentVal)) select.value = currentVal;
+    else select.value = 'all';
+    log(`Tamaños actualizados: ${tamanos.length}`);
+  }
+
+  // ============================================================
+  //  13. RECARGA DE CLIENTES DESDE LOCALSTORAGE
+  // ============================================================
+  function recargarClientes() {
+    const nuevoJS = localStorage.getItem('CLIENTES_JS');
+    if (!nuevoJS) return;
+    try {
+      const nuevos = leerArrayGuardado(nuevoJS);
+      if (!nuevos || !Array.isArray(nuevos)) { warn('CLIENTES_JS inválido'); return; }
+      const nuevosFiltrados = filtrarPorRadio190(enriquecer(deduplicate(nuevos)));
+      stations.length = 0;
+      stations.push(...nuevosFiltrados);
+      reconstruirMarcadoresClientes();
+      actualizarSelectTamano();
+      applyFilters();
+      actualizarEstadoCarga(stations.length, contarPorAncla(stations));
+      log(`Clientes recargados: ${stations.length}`);
+    } catch (e) { console.error('Error al recargar clientes:', e); }
+  }
+
+  window.addEventListener('storage', function(e) {
+    if (e.key === 'CLIENTES_ACTUALIZADO') { log('Actualización de clientes detectada.'); recargarClientes(); }
+  });
+
+  // ============================================================
+  //  14. INICIALIZACIÓN FINAL
+  // ============================================================
+  reconstruirMarcadoresClientes();
+  actualizarSelectTamano();
+  applyFilters();
+  document.getElementById('rTotal').textContent = stations.length;
+  setTimeout(() => map.invalidateSize(), 100);
+
+  // En pantallas angostas el directorio es un panel que se desliza desde abajo
+  // sobre el mapa: debe empezar oculto, o el mapa quedaría casi sin espacio.
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    document.getElementById('railPanel').classList.add('hidden');
+    document.getElementById('railToggleIcon').className = 'fas fa-chevron-left';
+  }
+
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  if (loadingOverlay) loadingOverlay.classList.add('hidden');
+
+  log(`Mapa iniciado con ${stations.length} clientes.`);
+
+});
 </script>
 </body>
 </html>
