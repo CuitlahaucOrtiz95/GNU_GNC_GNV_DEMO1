@@ -2,7 +2,11 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="format-detection" content="telephone=no" />
   <script>
     // Aplica el tema guardado ANTES de pintar, para evitar parpadeo claro→oscuro.
     (function(){
@@ -83,7 +87,12 @@
     ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-    .shell { display: flex; flex-direction: column; height: 100vh; max-width: 100%; background: var(--bg-panel); box-shadow: var(--shadow-lg); }
+    .shell {
+      display: flex; flex-direction: column; max-width: 100%; background: var(--bg-panel); box-shadow: var(--shadow-lg);
+      height: 100vh; /* respaldo para navegadores sin soporte de dvh */
+      height: 100dvh; /* evita el salto de la barra de direcciones en Safari/Chrome móvil */
+      padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+    }
     .topbar {
       background: linear-gradient(135deg, #1F5CA9 0%, #0082D6 50%, #27BFF0 100%);
       color: #fff;
@@ -191,6 +200,7 @@
     @keyframes spin { 100% { transform: rotate(360deg); } }
     .toolbar .separator { width: 1px; height: 24px; background: var(--border); margin: 0 0.2rem; }
     .toolbar .btn-add.active { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+    .toolbar .more-toggle { display: none; } /* solo aparece en móvil, ver @media más abajo */
 
     .stage { display: flex; flex: 1; overflow: hidden; position: relative; }
     #map { flex: 1; height: 100%; min-height: 300px; z-index: 1; transition: width 0.3s ease; }
@@ -382,14 +392,32 @@
 
     @media (max-width: 768px) {
       .topbar { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
-      .rail { width: 100%; max-height: 40vh; border-left: none; border-top: 1px solid var(--border); position: absolute; bottom: 0; z-index: 1000; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); }
+      .topbar .readouts { width: 100%; justify-content: space-between; }
+      .rail { width: 100%; max-height: 45vh; border-left: none; border-top: 1px solid var(--border); position: absolute; bottom: 0; z-index: 1000; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); }
       .rail.hidden { transform: translateY(100%); }
-      .toolbar .search { min-width: 100%; }
+      .toolbar .search { min-width: 100%; order: -1; }
       .toolbar { gap: 0.4rem; justify-content: space-between; }
-      .toolbar .filters select, .toolbar .btn { flex: 1; text-align: center; justify-content: center; font-size: 0.7rem; }
-      .toolbar .dist-slider input[type="range"] { width: 60px; }
+      .toolbar .filters select, .toolbar .btn { flex: 1; text-align: center; justify-content: center; font-size: 0.7rem; min-height: 40px; }
+      .toolbar .dropdown, .toolbar .dropdown .btn { flex: 1; }
+      .toolbar .dist-slider { flex: 1 1 100%; justify-content: center; }
+      .toolbar .dist-slider input[type="range"] { flex: 1; min-width: 0; }
       .toolbar .separator { display: none; }
       .rail-head .sort-options { font-size: 0.6rem; }
+
+      /* Botones de uso poco frecuente: se ocultan detrás de "Más" para no saturar la barra */
+      .toolbar .mobile-extra { display: none; }
+      .toolbar.mobile-more-open .mobile-extra { display: inline-flex; }
+      .toolbar .more-toggle { display: inline-flex; }
+
+      /* Objetivos táctiles más grandes */
+      .dropdown-item, .rail-list li, .search-suggestions .item, .price-legend .row { min-height: 40px; }
+      .theme-toggle { width: 36px; height: 36px; }
+
+      .map-hint { font-size: 0.72rem; padding: 0.45rem 0.8rem; top: 8px; }
+      .price-legend { font-size: 10px; padding: 8px 10px; min-width: 130px; }
+      .geocode-progress { left: 12px; right: 12px; bottom: 12px; max-width: none; }
+      .modal { padding: 18px 20px; }
+      .dropdown-menu, .search-suggestions { max-width: calc(100vw - 2rem); }
     }
   </style>
 </head>
@@ -479,16 +507,16 @@
     <button class="btn btn-success" id="geocodeBtn" aria-label="Obtener direcciones de los clientes visibles">
       <i class="fas fa-address-card"></i> Obtener direcciones
     </button>
-    <button class="btn btn-outline" id="noAddressBtn" aria-label="Filtrar clientes sin dirección">
+    <button class="btn btn-outline mobile-extra" id="noAddressBtn" aria-label="Filtrar clientes sin dirección">
       <i class="fas fa-envelope"></i> Sin dirección
     </button>
 
     <span class="separator"></span>
 
-    <button class="btn btn-add" id="addClientBtn" title="Agregar un cliente nuevo en el mapa">
+    <button class="btn btn-add mobile-extra" id="addClientBtn" title="Agregar un cliente nuevo en el mapa">
       <i class="fas fa-plus-circle"></i> Agregar cliente
     </button>
-    <button class="btn btn-primary" id="exportCsvBtn" title="Descargar todos los clientes como CSV">
+    <button class="btn btn-primary mobile-extra" id="exportCsvBtn" title="Descargar todos los clientes como CSV">
       <i class="fas fa-file-csv"></i> Exportar CSV
     </button>
 
@@ -508,8 +536,11 @@
     <button class="btn btn-primary" id="gotoClosestBtn" title="Centrar en el cliente más cercano">
       <i class="fas fa-bullseye"></i> Más cercano
     </button>
-    <button class="btn btn-warning" id="clearRouteBtn" aria-label="Limpiar ruta">
+    <button class="btn btn-warning mobile-extra" id="clearRouteBtn" aria-label="Limpiar ruta">
       <i class="fas fa-route"></i> Limpiar ruta
+    </button>
+    <button class="btn btn-outline more-toggle" id="moreToggleBtn" title="Más opciones" aria-haspopup="true" aria-expanded="false">
+      <i class="fas fa-ellipsis-vertical"></i> Más
     </button>
     <button class="btn btn-toggle-rail" id="toggleRailBtn" title="Mostrar/ocultar directorio">
       <i class="fas fa-chevron-right" id="railToggleIcon"></i> <span id="railToggleLabel">Directorio</span>
@@ -517,7 +548,7 @@
     <button class="btn btn-clear-all hidden" id="clearAllBtn" title="Limpiar todos los filtros">
       <i class="fas fa-times"></i> Limpiar filtros
     </button>
-    <button class="btn btn-primary" id="resetBtn" aria-label="Restablecer vista"><i class="fas fa-home"></i> Restablecer</button>
+    <button class="btn btn-primary mobile-extra" id="resetBtn" aria-label="Restablecer vista"><i class="fas fa-home"></i> Restablecer</button>
   </div>
   <div class="stage">
     <div id="map"></div>
@@ -1543,6 +1574,16 @@ document.addEventListener('DOMContentLoaded', function(){
   document.getElementById('themeToggleBtn').addEventListener('click', () => {
     const actual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
     aplicarTema(actual === 'dark' ? 'light' : 'dark');
+  });
+
+  // Botón "Más" (solo visible en pantallas angostas): agrupa las acciones menos
+  // frecuentes (Agregar cliente, Exportar CSV, Sin dirección, Limpiar ruta,
+  // Restablecer) para no saturar la barra de herramientas en el celular.
+  document.getElementById('moreToggleBtn').addEventListener('click', function() {
+    const toolbar = document.querySelector('.toolbar');
+    const abierto = toolbar.classList.toggle('mobile-more-open');
+    this.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+    this.querySelector('i').className = abierto ? 'fas fa-chevron-up' : 'fas fa-ellipsis-vertical';
   });
 
   document.getElementById('resetBtn').addEventListener('click', () => verAmbasAnclas());
