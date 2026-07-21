@@ -1,8 +1,8 @@
 // ============================================================
 // ARCHIVO GENERADO desde: clientes_nuevos_denue.csv
 // Directorio único: lo usan Morelia y Tototlán a la vez.
-// Fecha: 21/7/2026, 10:22:11 a.m.
-// Registros: 18154
+// Fecha: 21/7/2026, 10:36:36 a.m.
+// Registros: 18166
 // NO editar a mano.
 // ============================================================
 window.CLIENTES_POTENCIALES = [
@@ -18159,5 +18159,17 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"Vesta Park Toluca I;Toluca;Edo. de México;19.3740987;-99.5816619;358.6;173.3;Morelia","lat":19.374099,"lon":-99.581662,"estado":"Edo. de México","tamano":"Parque Industrial"},
   {"nombre":"Vesta Park Toluca II;Toluca;Edo. de México;19.3826944;-99.5634151;360.0;174.9;Morelia","lat":19.382694,"lon":-99.563415,"estado":"Edo. de México","tamano":"Parque Industrial"},
   {"nombre":"El Cerrillo;Lerma;Edo. de México;19.2963337;-99.5393318;365.9;179.6;Morelia","lat":19.296334,"lon":-99.539332,"estado":"Edo. de México","tamano":"Parque Industrial"},
-  {"nombre":"Lerma-Toluca;Lerma/San Mateo Atenco;Edo. de México;19.2896587;-99.55205;365.0;178.5;Morelia","lat":19.289659,"lon":-99.55205,"estado":"Edo. de México","tamano":"Parque Industrial"}
+  {"nombre":"Lerma-Toluca;Lerma/San Mateo Atenco;Edo. de México;19.2896587;-99.55205;365.0;178.5;Morelia","lat":19.289659,"lon":-99.55205,"estado":"Edo. de México","tamano":"Parque Industrial"},
+  {"nombre":"San Cayetano;Toluca;Edo. de México;19.4198875;-99.7162536;343.6;158.4;Morelia","lat":19.419888,"lon":-99.716254,"estado":"Edo. de México","tamano":"Parque Industrial"},
+  {"nombre":"Doña Rosa;Lerma;Edo. de México;19.2867496;-99.5455514;365.8;179.3;Morelia","lat":19.28675,"lon":-99.545551,"estado":"Edo. de México","tamano":"Parque Industrial"},
+  {"nombre":"San Antonio Buenavista;Toluca;Edo. de México;19.302778;-99.6137802;358.5;171.9;Morelia","lat":19.302778,"lon":-99.61378,"estado":"Edo. de México","tamano":"Parque Industrial"},
+  {"nombre":"Zona Industrial Santiago Tianguistenco;Santiago Tianguistenco;Edo. de México;19.1723799;-99.4699825;378.1;190.5;Fuera de 190 km","lat":19.17238,"lon":-99.469982,"estado":"Edo. de México","tamano":"Parque Industrial"},
+  {"nombre":"Pastejé;Jocotitlán;Edo. de México;19.6570728;-99.7950591;326.9;147.0;Morelia","lat":19.657073,"lon":-99.795059,"estado":"Edo. de México","tamano":"Parque Industrial"},
+  {"nombre":"Fidepark Ixtlahuaca;Ixtlahuaca;Edo. de México;19.574127;-99.7553507;333.7;151.8;Morelia","lat":19.574127,"lon":-99.755351,"estado":"Edo. de México","tamano":"Parque Industrial"},
+  {"nombre":"Toluca 2000;Toluca;Edo. de México;19.3717359;-99.5689299;359.9;174.6;Morelia","lat":19.371736,"lon":-99.56893,"estado":"Edo. de México","tamano":"Parque Industrial"},
+  {"nombre":"Zona/Parque Industrial Zacapu;Zacapu;Michoacán;19.8296;-101.7716103;131.5;61.7;Ambas","lat":19.8296,"lon":-101.77161,"estado":"Michoacán","tamano":"Parque Industrial"},
+  {"nombre":"Parque Bajío (Estación Queréndaro);Queréndaro;Michoacán;19.8865276;-100.9561838;203.7;32.7;Morelia","lat":19.886528,"lon":-100.956184,"estado":"Michoacán","tamano":"Parque Industrial"},
+  {"nombre":"Agroparque Piedras de Lumbre;Jungapeo;Michoacán;19.4766576;-100.4305492;272.5;84.2;Morelia","lat":19.476658,"lon":-100.430549,"estado":"Michoacán","tamano":"Parque Industrial"},
+  {"nombre":"Ciudad Industrial de Morelia;Morelia;Michoacán;19.723585;-101.1570668;192.2;5.0;Morelia","lat":19.723585,"lon":-101.157067,"estado":"Michoacán","tamano":"Parque Industrial"},
+  {"nombre":"ElevaPark Industrial & Logistics;Tarímbaro;Michoacán;19.7615488;-101.1733526;188.7;7.2;Ambas","lat":19.761549,"lon":-101.173353,"estado":"Michoacán","tamano":"Parque Industrial"}
 ];
