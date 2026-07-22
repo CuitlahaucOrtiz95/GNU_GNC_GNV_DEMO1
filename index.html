@@ -242,10 +242,16 @@
     .toolbar .btn-loc { background: #0891b2; color: #fff; }
     .toolbar .btn-loc:hover { background: #0e7490; }
 
-    /* Botón "Más": abre el menú de acciones secundarias (en escritorio y móvil) */
-    .toolbar .btn-mas { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
-    .toolbar .btn-mas:hover { background: var(--bg-panel); color: var(--text-main); border-color: var(--border-hover); }
-    .toolbar .btn-mas .chevron { font-size: 0.6rem; opacity: 0.85; }
+    /* Botón "Más": destacado (degradado índigo) para que resalte de la barra,
+       porque abre las acciones que más se usan. */
+    .toolbar .btn-mas {
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+      color: #fff; border: none; font-weight: 600; padding: 0.35rem 0.9rem;
+      box-shadow: 0 2px 8px rgba(79,70,229,0.35);
+    }
+    .toolbar .btn-mas:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    .toolbar .btn-mas .chevron { font-size: 0.6rem; opacity: 0.9; }
+    .toolbar .btn-mas.open .chevron { transform: rotate(180deg); }
 
     /* Menú de "Más": alineado a la derecha, con secciones etiquetadas */
     .dropdown-menu-right { left: auto; right: 0; }
@@ -258,6 +264,30 @@
     .dropdown-item.menu-action .dropdown-item-label i { width: 1.1rem; text-align: center; color: var(--text-muted); }
     .dropdown-item.menu-action:hover .dropdown-item-label i,
     .dropdown-item.menu-action.active .dropdown-item-label i { color: inherit; }
+
+    /* Menú "Más" rediseñado: cuadrícula de acciones rápidas (mosaicos con color) */
+    #masMenu.masmenu-v2 { min-width: 288px; padding: 10px; }
+    .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 2px 0 4px; }
+    .quick-tile {
+      display: flex; flex-direction: column; align-items: center; gap: 7px;
+      padding: 12px 8px; border: 1px solid var(--border); border-radius: 12px;
+      background: var(--bg-main); color: var(--text-main); cursor: pointer;
+      transition: var(--transition); text-align: center;
+    }
+    .quick-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); border-color: var(--border-hover); }
+    .quick-tile:active { transform: scale(0.97); }
+    .quick-tile .qt-icon {
+      width: 40px; height: 40px; border-radius: 50%; display: inline-flex;
+      align-items: center; justify-content: center; color: #fff; font-size: 1.05rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .quick-tile .qt-label { font-size: 0.72rem; font-weight: 600; line-height: 1.2; }
+    .quick-tile[data-accent="add"]   .qt-icon { background: #10b981; }
+    .quick-tile[data-accent="pin"]   .qt-icon { background: #8b5cf6; }
+    .quick-tile[data-accent="near"]  .qt-icon { background: var(--primary); }
+    .quick-tile[data-accent="reset"] .qt-icon { background: #64748b; }
+    /* Modo "agregar cliente" activo: resalta el mosaico */
+    .quick-tile.active { border-color: #f59e0b; box-shadow: 0 0 0 2px rgba(245,158,11,0.35); }
 
     .stage { display: flex; flex: 1; overflow: hidden; position: relative; }
     #map { flex: 1; height: 100%; min-height: 300px; z-index: 1; transition: width 0.3s ease; }
@@ -681,45 +711,47 @@
 
     <span class="tb-spacer"></span>
 
-    <!-- ==================== MENÚ: MÁS ACCIONES ==================== -->
+    <!-- ==================== MENÚ: ACCIONES ==================== -->
     <div class="dropdown" id="masDropdown">
-      <button class="btn btn-mas" id="moreToggleBtn" title="Más acciones" aria-haspopup="true" aria-expanded="false">
-        <i class="fas fa-ellipsis-vertical"></i> Más <i class="fas fa-chevron-down chevron"></i>
+      <button class="btn btn-mas" id="moreToggleBtn" title="Acciones rápidas" aria-haspopup="true" aria-expanded="false">
+        <i class="fas fa-bolt"></i> Acciones <i class="fas fa-chevron-down chevron"></i>
       </button>
-      <div class="dropdown-menu dropdown-menu-right" id="masMenu">
-        <div class="menu-section-label">Datos</div>
-        <button class="dropdown-item menu-action" id="addClientBtn" title="Agregar un cliente nuevo en el mapa">
-          <span class="dropdown-item-label"><i class="fas fa-plus-circle"></i> Agregar cliente</span>
-        </button>
+      <div class="dropdown-menu dropdown-menu-right masmenu-v2" id="masMenu">
+        <div class="menu-section-label">Acciones rápidas</div>
+        <div class="quick-grid">
+          <button class="quick-tile menu-action" id="addClientBtn" data-accent="add" title="Agregar un cliente nuevo en el mapa">
+            <span class="qt-icon"><i class="fas fa-plus-circle"></i></span>
+            <span class="qt-label">Agregar cliente</span>
+          </button>
+          <button class="quick-tile menu-action" id="addPinBtn" data-accent="pin" title="Dejar un pin de recordatorio en el mapa">
+            <span class="qt-icon"><i class="fas fa-map-pin"></i></span>
+            <span class="qt-label">Poner marcador</span>
+          </button>
+          <button class="quick-tile menu-action" id="gotoClosestBtn" data-accent="near" title="Centrar en el cliente más cercano">
+            <span class="qt-icon"><i class="fas fa-bullseye"></i></span>
+            <span class="qt-label">Cliente más cercano</span>
+          </button>
+          <button class="quick-tile menu-action" id="resetBtn" data-accent="reset" title="Restablecer la vista del mapa">
+            <span class="qt-icon"><i class="fas fa-home"></i></span>
+            <span class="qt-label">Restablecer vista</span>
+          </button>
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-section-label">Más opciones</div>
         <button class="dropdown-item menu-action" id="geocodeBtn" aria-label="Obtener direcciones de los clientes visibles">
           <span class="dropdown-item-label"><i class="fas fa-address-card"></i> Obtener direcciones</span>
         </button>
         <button class="dropdown-item menu-action" id="exportCsvBtn" title="Descargar todos los clientes como CSV">
           <span class="dropdown-item-label"><i class="fas fa-file-csv"></i> Exportar CSV</span>
         </button>
-        <div class="menu-divider"></div>
-        <div class="menu-section-label">Marcadores</div>
-        <button class="dropdown-item menu-action" id="addPinBtn" title="Dejar un pin de recordatorio en el mapa">
-          <span class="dropdown-item-label"><i class="fas fa-map-pin"></i> Poner marcador</span>
-        </button>
         <button class="dropdown-item menu-action" id="toggleMarcadoresBtn" title="Mostrar u ocultar todos los marcadores">
           <span class="dropdown-item-label"><i class="fas fa-eye"></i> Ocultar marcadores</span>
         </button>
-        <div class="menu-divider"></div>
-        <div class="menu-section-label">Filtrar</div>
         <button class="dropdown-item menu-action" id="noAddressBtn" aria-label="Filtrar clientes sin dirección">
           <span class="dropdown-item-label"><i class="fas fa-envelope"></i> Solo sin dirección</span>
         </button>
-        <div class="menu-divider"></div>
-        <div class="menu-section-label">Navegación</div>
-        <button class="dropdown-item menu-action" id="gotoClosestBtn" title="Centrar en el cliente más cercano">
-          <span class="dropdown-item-label"><i class="fas fa-bullseye"></i> Cliente más cercano</span>
-        </button>
         <button class="dropdown-item menu-action" id="clearRouteBtn" aria-label="Limpiar ruta">
           <span class="dropdown-item-label"><i class="fas fa-route"></i> Limpiar ruta</span>
-        </button>
-        <button class="dropdown-item menu-action" id="resetBtn" aria-label="Restablecer vista">
-          <span class="dropdown-item-label"><i class="fas fa-home"></i> Restablecer vista</span>
         </button>
       </div>
     </div>
@@ -1816,12 +1848,14 @@ document.addEventListener('DOMContentLoaded', function(){
   moreToggleBtn.addEventListener('click', function(e) {
     e.stopPropagation();
     const abierto = masMenu.classList.toggle('open');
+    this.classList.toggle('open', abierto);
     this.setAttribute('aria-expanded', abierto ? 'true' : 'false');
   });
   // Al elegir una acción del menú, ciérralo (su propio handler ya se ejecuta).
   masMenu.addEventListener('click', function(e) {
     if (e.target.closest('.menu-action')) {
       masMenu.classList.remove('open');
+      moreToggleBtn.classList.remove('open');
       moreToggleBtn.setAttribute('aria-expanded', 'false');
     }
   });
@@ -1876,6 +1910,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
     if (!e.target.closest('#masDropdown')) {
       masMenu.classList.remove('open');
+      moreToggleBtn.classList.remove('open');
       moreToggleBtn.setAttribute('aria-expanded', 'false');
     }
   });
@@ -1884,6 +1919,7 @@ document.addEventListener('DOMContentLoaded', function(){
       circulosMenu.classList.remove('open');
       circulosToggleBtn.setAttribute('aria-expanded', 'false');
       masMenu.classList.remove('open');
+      moreToggleBtn.classList.remove('open');
       moreToggleBtn.setAttribute('aria-expanded', 'false');
     }
   });
