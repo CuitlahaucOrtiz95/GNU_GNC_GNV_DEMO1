@@ -344,9 +344,17 @@
       font-size: 11px; line-height: 1.5; min-width: 150px;
       border: 1px solid rgba(255,255,255,0.5); cursor: default;
     }
-    .price-legend .title { font-weight: 700; margin-bottom: 6px; font-size: 12px; color: var(--text-main); border-bottom: 1px solid var(--border); padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+    .price-legend .title { font-weight: 700; margin-bottom: 6px; font-size: 12px; color: var(--text-main); border-bottom: 1px solid var(--border); padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .price-legend .legend-btns { display: inline-flex; gap: 2px; flex-shrink: 0; }
     .price-legend .title .clear-btn { background: none; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: var(--transition); }
     .price-legend .title .clear-btn:hover { background: var(--bg-main); color: #ef4444; }
+    .price-legend .title .minimize-btn { background: none; border: none; color: var(--text-muted); font-size: 14px; line-height: 1; cursor: pointer; padding: 0 6px; border-radius: 4px; transition: var(--transition); font-weight: 700; }
+    .price-legend .title .minimize-btn:hover { background: var(--bg-main); color: var(--text-main); }
+    /* Minimizada: se oculta el listado y el botón de limpiar; queda solo la barra de título. */
+    .price-legend.minimized { min-width: 0; padding: 6px 10px; }
+    .price-legend.minimized .row { display: none; }
+    .price-legend.minimized .title { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+    .price-legend.minimized .clear-btn { display: none; }
     .price-legend .row { display: flex; align-items: center; gap: 6px; margin: 3px 0; padding: 3px 6px; border-radius: 6px; cursor: pointer; transition: var(--transition); }
     .price-legend .row:hover { background: var(--bg-main); }
     .price-legend .row.active { background: rgba(56, 189, 248, 0.15); box-shadow: inset 0 0 0 1px var(--secondary); }
@@ -1053,21 +1061,44 @@ document.addEventListener('DOMContentLoaded', function(){
     );
   }
 
-  // Alterna el círculo de 1 km: si estaba activo, lo apaga y muestra TODOS los
-  // clientes (activa ambos círculos de 190 km); si no, lo activa en exclusiva.
-  // Se usa al hacer clic en el pin de "Mi ubicación".
+  // Alterna el círculo de 1 km al hacer clic en el pin de "Mi ubicación".
+  // Si estaba activo, lo apaga y en su lugar activa el círculo del ANCLA que te
+  // corresponde: la más cercana dentro de cuyo rango estás, usando 150 km si
+  // estás dentro de esos 150 km, o 190 km si no. Si quedas fuera del alcance de
+  // ambas anclas, muestra ambos círculos de 190 km como vista general.
   function toggleCercaDeMi() {
     if (!miUbicacionCoords) return;
-    if (activeCircleFilters.has('cercaDeMi')) {
-      desactivarCirculoId('cercaDeMi');
+    if (!activeCircleFilters.has('cercaDeMi')) { activarCercaDeMi(); return; }
+
+    desactivarCirculoId('cercaDeMi');
+
+    const dM = distanciaKm(miUbicacionCoords.lat, miUbicacionCoords.lon, ANCLA_MORELIA.lat,  ANCLA_MORELIA.lon);
+    const dT = distanciaKm(miUbicacionCoords.lat, miUbicacionCoords.lon, ANCLA_TOTOTLAN.lat, ANCLA_TOTOTLAN.lon);
+
+    // Anclas dentro de cuyo rango (190 km) está tu ubicación, de la más cercana
+    // a la más lejana.
+    const enRango = [];
+    if (dM <= 190) enRango.push({ ancla: 'Morelia',  dist: dM });
+    if (dT <= 190) enRango.push({ ancla: 'Tototlan', dist: dT });
+    enRango.sort((a, b) => a.dist - b.dist);
+
+    if (enRango.length) {
+      const elegido = enRango[0];
+      const radio = elegido.dist <= 150 ? '150' : '190';
+      activarCirculoId(radio + elegido.ancla);
+      actualizarEtiquetaCirculos();
+      const visibles = applyFilters();
+      encuadrarClientes(visibles);
+      const nombre = elegido.ancla === 'Morelia' ? 'Morelia' : 'Tototlán';
+      toast(`Dentro del rango de ${radio} km · ${nombre}: ${visibles.length.toLocaleString()} cliente(s).`, 'info');
+    } else {
+      // Fuera del alcance de ambas anclas: vista general con los dos círculos.
       activarCirculoId('190Morelia');
       activarCirculoId('190Tototlan');
       actualizarEtiquetaCirculos();
       const visibles = applyFilters();
       if (activeCircleFilters.size) encuadrarClientes(visibles); else verAmbasAnclas();
-      toast(`Mostrando todos los clientes (${visibles.length.toLocaleString()}).`, 'info');
-    } else {
-      activarCercaDeMi();
+      toast(`Estás fuera del alcance de ambas anclas. Mostrando todos (${visibles.length.toLocaleString()}).`, 'info');
     }
   }
 
@@ -1375,7 +1406,9 @@ document.addEventListener('DOMContentLoaded', function(){
   const legendControl = L.control({ position: 'bottomright' });
   legendControl.onAdd = function() {
     const div = L.DomUtil.create('div', 'price-legend');
-    div.innerHTML = `<div class="title">Distancia al círculo activo <button class="clear-btn" id="legendClearBtn">✕</button></div>`;
+    div.innerHTML = `<div class="title"><span class="legend-title-text">Distancia al círculo activo</span><span class="legend-btns"><button class="clear-btn" id="legendClearBtn" title="Quitar resaltado">✕</button><button class="minimize-btn" id="legendMinBtn" title="Minimizar">–</button></span></div>`;
+    // Restaura el estado minimizado guardado.
+    if (localStorage.getItem('leyendaMin') === '1') div.classList.add('minimized');
     const ranges = [
       { label: '0 – 50 km',   key: 'very-low', color: '#10b981' },
       { label: '50 – 100 km', key: 'low',     color: '#34d399' },
@@ -1517,7 +1550,22 @@ document.addEventListener('DOMContentLoaded', function(){
   setTimeout(() => {
     const legend = document.querySelector('.price-legend');
     if (legend) {
+      // Ajusta el glifo del botón según el estado minimizado inicial (restaurado
+      // de localStorage al crear la leyenda).
+      const minBtnInit = legend.querySelector('#legendMinBtn');
+      if (minBtnInit) {
+        const min = legend.classList.contains('minimized');
+        minBtnInit.textContent = min ? '+' : '–';
+        minBtnInit.title = min ? 'Expandir' : 'Minimizar';
+      }
       legend.addEventListener('click', e => {
+        if (e.target.closest('#legendMinBtn')) {
+          const min = legend.classList.toggle('minimized');
+          const b = legend.querySelector('#legendMinBtn');
+          if (b) { b.textContent = min ? '+' : '–'; b.title = min ? 'Expandir' : 'Minimizar'; }
+          try { localStorage.setItem('leyendaMin', min ? '1' : '0'); } catch (err) {}
+          return;
+        }
         if (e.target.closest('#legendClearBtn')) {
           activePrice = null;
           const visibles = applyFilters();
