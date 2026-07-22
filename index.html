@@ -570,7 +570,15 @@
     </div>
     <label>Nombre <input type="text" id="addNombre" placeholder="Nombre comercial"></label>
     <label>Estado <input type="text" id="addEstado" placeholder="Estado o provincia"></label>
-    <label>Tamaño / Categoría <input type="text" id="addTamano" placeholder="Micro, Pequeña, Base de Combis…"></label>
+    <label>Tamaño / Categoría <input type="text" id="addTamano" list="tamanoOpciones" placeholder="Pequeña, Base de combis, Central de taxis…"></label>
+    <datalist id="tamanoOpciones">
+      <option value="Pequeña"></option>
+      <option value="Mediana"></option>
+      <option value="Grande"></option>
+      <option value="Base de combis"></option>
+      <option value="Central de taxis"></option>
+      <option value="Parque industrial"></option>
+    </datalist>
     <label>Dirección <input type="text" id="addDireccion" placeholder="Opcional"></label>
     <label>Teléfono <input type="text" id="addTelefono" placeholder="Opcional"></label>
     <div class="actions">
@@ -1257,13 +1265,24 @@ document.addEventListener('DOMContentLoaded', function(){
     </svg>`;
   }
   function obtenerIconoEspecial(s) {
+    // Detecta la categoría por el campo "tamano" O por el nombre del cliente,
+    // porque en los datos las bases de combis y de taxis vienen identificadas en
+    // el NOMBRE (p. ej. "BASE DE COMBIS AZUL", "TAXIS EJECUTIVOS") y su "tamano"
+    // es genérico (Pequeña/Grande). Así el pin personalizado sí aparece.
     const t = normalizarTexto(s.tamano || '');
-    if (t === 'base de combis') {
-      return L.divIcon({ className: '', html: iconoCombiSVG(), iconSize: [28,40], iconAnchor: [14,40], popupAnchor: [0,-37] });
-    } else if (t === 'estaciones de taxis' || t === 'estacion de taxis' || t === 'estaciones de taxi' || t === 'estacion de taxi') {
-      return L.divIcon({ className: '', html: iconoTaxiSVG(), iconSize: [28,40], iconAnchor: [14,40], popupAnchor: [0,-37] });
-    } else if (t === 'parque industrial') {
-      return L.divIcon({ className: '', html: iconoParqueIndustrialSVG(), iconSize: [28,40], iconAnchor: [14,40], popupAnchor: [0,-37] });
+    const n = normalizarTexto(s.nombre || '');
+    const divIcon = html => L.divIcon({ className: '', html, iconSize: [28,40], iconAnchor: [14,40], popupAnchor: [0,-37] });
+
+    if (t === 'base de combis' || n.includes('combis')) {
+      return divIcon(iconoCombiSVG());
+    }
+    // Taxis: cubre "central de taxis", "estación de taxis", "base de taxis" y
+    // nombres con taxi/taxis/taxistas/mototaxis.
+    if (t.includes('taxi') || n.includes('taxi')) {
+      return divIcon(iconoTaxiSVG());
+    }
+    if (t === 'parque industrial' || n.includes('parque industrial')) {
+      return divIcon(iconoParqueIndustrialSVG());
     }
     return null;
   }
