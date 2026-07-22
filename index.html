@@ -1264,27 +1264,37 @@ document.addEventListener('DOMContentLoaded', function(){
       <rect x="11" y="24" width="6" height="4" fill="#1e40af" stroke="#1e40af" stroke-width="0.5"/>
     </svg>`;
   }
-  function obtenerIconoEspecial(s) {
-    // Detecta la categoría por el campo "tamano" O por el nombre del cliente,
-    // porque en los datos las bases de combis y de taxis vienen identificadas en
-    // el NOMBRE (p. ej. "BASE DE COMBIS AZUL", "TAXIS EJECUTIVOS") y su "tamano"
-    // es genérico (Pequeña/Grande). Así el pin personalizado sí aparece.
+  // Etiquetas de las categorías especiales que también sirven como opción en el
+  // filtro "Todos los tamaños".
+  const CAT_COMBI = 'Base de Combis';
+  const CAT_TAXI  = 'Estaciones de Taxis';
+  const CAT_INDUSTRIAL = 'Parque Industrial';
+
+  // Clasifica un cliente en una categoría especial por su campo "tamano" O por su
+  // NOMBRE, porque en los datos las bases de combis y de taxis vienen
+  // identificadas en el nombre (p. ej. "BASE DE COMBIS AZUL", "TAXIS EJECUTIVOS")
+  // con un "tamano" genérico (Pequeña/Grande). Devuelve 'combi' | 'taxi' |
+  // 'industrial' | null. Es la única fuente de verdad: la usan el pin del mapa y
+  // el filtro del desplegable, para que siempre coincidan.
+  function categoriaEspecial(s) {
     const t = normalizarTexto(s.tamano || '');
     const n = normalizarTexto(s.nombre || '');
-    const divIcon = html => L.divIcon({ className: '', html, iconSize: [28,40], iconAnchor: [14,40], popupAnchor: [0,-37] });
-
-    if (t === 'base de combis' || n.includes('combis')) {
-      return divIcon(iconoCombiSVG());
-    }
-    // Taxis: cubre "central de taxis", "estación de taxis", "base de taxis" y
+    if (t === 'base de combis' || n.includes('combis')) return 'combi';
+    // Taxis: cubre "estaciones de taxis", "central de taxis", "base de taxis" y
     // nombres con taxi/taxis/taxistas/mototaxis.
-    if (t.includes('taxi') || n.includes('taxi')) {
-      return divIcon(iconoTaxiSVG());
-    }
-    if (t === 'parque industrial' || n.includes('parque industrial')) {
-      return divIcon(iconoParqueIndustrialSVG());
-    }
+    if (t.includes('taxi') || n.includes('taxi')) return 'taxi';
+    if (t === 'parque industrial' || n.includes('parque industrial')) return 'industrial';
     return null;
+  }
+
+  function obtenerIconoEspecial(s) {
+    const divIcon = html => L.divIcon({ className: '', html, iconSize: [28,40], iconAnchor: [14,40], popupAnchor: [0,-37] });
+    switch (categoriaEspecial(s)) {
+      case 'combi':      return divIcon(iconoCombiSVG());
+      case 'taxi':       return divIcon(iconoTaxiSVG());
+      case 'industrial': return divIcon(iconoParqueIndustrialSVG());
+      default:           return null;
+    }
   }
 
   // Construye los marcadores en memoria (markerMap) pero NO los agrega al mapa:
@@ -1533,7 +1543,13 @@ document.addEventListener('DOMContentLoaded', function(){
     for (const s of stations) {
       if (!activeCircleFilters.size) break;
       if (term !== '' && !normalizarTexto(s.nombre).includes(term)) continue;
-      if (selectedTam !== 'all' && s.tamano !== selectedTam) continue;
+      if (selectedTam !== 'all') {
+        // Las categorías especiales (combis/taxis) se filtran por categoriaEspecial()
+        // —que mira tamano y nombre—; el resto por el valor exacto de "tamano".
+        if (selectedTam === CAT_COMBI)      { if (categoriaEspecial(s) !== 'combi') continue; }
+        else if (selectedTam === CAT_TAXI)  { if (categoriaEspecial(s) !== 'taxi')  continue; }
+        else if (s.tamano !== selectedTam) continue;
+      }
       const match = mejorCoincidenciaCirculo(s);
       if (!match) continue;
       const rango = getDistRange(match.dist);
@@ -2532,8 +2548,25 @@ document.addEventListener('DOMContentLoaded', function(){
     const select = document.getElementById('tamanoFilter');
     const currentVal = select.value;
     while (select.options.length > 1) select.remove(1);
+
+    // Categorías por "tamano" reales del archivo de datos.
     const tamanos = [...new Set(stations.map(s => s.tamano).filter(Boolean))].sort();
-    tamanos.forEach(t => {
+
+    // Categorías especiales (combis/taxis): se agregan como opción del filtro
+    // aunque no existan en el campo "tamano", porque se detectan por el nombre.
+    // Solo se muestran si hay al menos un cliente de esa categoría.
+    let hayCombi = false, hayTaxi = false;
+    for (const s of stations) {
+      const c = categoriaEspecial(s);
+      if (c === 'combi') hayCombi = true;
+      else if (c === 'taxi') hayTaxi = true;
+      if (hayCombi && hayTaxi) break;
+    }
+    const opciones = [...tamanos];
+    if (hayCombi && !opciones.includes(CAT_COMBI)) opciones.push(CAT_COMBI);
+    if (hayTaxi && !opciones.includes(CAT_TAXI)) opciones.push(CAT_TAXI);
+
+    opciones.forEach(t => {
       const opt = document.createElement('option');
       opt.value = t;
       opt.textContent = t;
@@ -2541,7 +2574,7 @@ document.addEventListener('DOMContentLoaded', function(){
     });
     if ([...select.options].some(o => o.value === currentVal)) select.value = currentVal;
     else select.value = 'all';
-    log(`Tamaños actualizados: ${tamanos.length}`);
+    log(`Tamaños actualizados: ${opciones.length}`);
   }
 
   // ============================================================
