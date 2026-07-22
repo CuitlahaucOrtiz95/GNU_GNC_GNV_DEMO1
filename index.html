@@ -14,7 +14,7 @@
       } catch (e) {}
     })();
   </script>
-  <meta name="description" content="Mapa de clientes potenciales en Morelia y Tototlán con filtros por distancia, tamaño y estado, cálculo de rutas y geocodificación." />
+  <meta name="description" content="Mapa de clientes potenciales en Morelia y Tototlán con filtros por distancia, tamaño y estado, cálculo de rutas y geocodificación. Permite importar CSV directamente." />
   <meta name="robots" content="noindex, nofollow" />
   <meta name="theme-color" content="#1F5CA9" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231F5CA9'/%3E%3Ctext x='50' y='68' font-size='60' text-anchor='middle' fill='white' font-family='Arial'%3E%F0%9F%93%8D%3C/text%3E%3C/svg%3E" />
@@ -448,7 +448,7 @@
     }
     .loading-overlay p { color: var(--text-muted); font-size: 0.9rem; }
 
-    /* Toast mejorado con transición de entrada/salida */
+    /* Toast */
     .toast-container {
       position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 100000;
       display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none;
@@ -572,6 +572,10 @@
   <p>Cargando clientes…</p>
 </div>
 <div class="toast-container" id="toastContainer"></div>
+
+<!-- Input de archivo oculto para importar CSV -->
+<input type="file" id="csvFileInput" accept=".csv" style="display:none">
+
 <div class="modal-overlay" id="addClientModalOverlay">
   <div class="modal">
     <h3>➕ Nuevo cliente</h3>
@@ -759,6 +763,10 @@
         <button class="dropdown-item menu-action" id="exportCsvBtn" title="Descargar todos los clientes como CSV">
           <span class="dropdown-item-label"><i class="fas fa-file-csv"></i> Exportar CSV</span>
         </button>
+        <!-- NUEVO: Importar CSV -->
+        <button class="dropdown-item menu-action" id="importCsvBtn" title="Cargar clientes desde un archivo CSV">
+          <span class="dropdown-item-label"><i class="fas fa-upload"></i> Importar CSV</span>
+        </button>
         <button class="dropdown-item menu-action" id="toggleMarcadoresBtn" title="Mostrar u ocultar todos los marcadores">
           <span class="dropdown-item-label"><i class="fas fa-eye"></i> Ocultar marcadores</span>
         </button>
@@ -806,7 +814,7 @@ document.addEventListener('DOMContentLoaded', function(){
   const log  = (...a) => { if (DEBUG) console.log(...a); };
   const warn = (...a) => { if (DEBUG) console.warn(...a); };
 
-  // Toast mejorado con transiciones de salida
+  // Toast mejorado
   function toast(msg, tipo, duracionMs) {
     tipo = tipo || 'info';
     duracionMs = duracionMs || 3500;
@@ -825,7 +833,6 @@ document.addEventListener('DOMContentLoaded', function(){
       el.addEventListener('transitionend', () => el.remove(), { once: true });
     }, duracionMs);
 
-    // Permitir cerrar al tocar
     el.addEventListener('click', () => {
       clearTimeout(hideTimer);
       el.classList.add('hide');
@@ -1491,7 +1498,6 @@ document.addEventListener('DOMContentLoaded', function(){
     const markersToAdd = visible.map(s => markerMap.get(s).marker);
     cluster.addLayers(markersToAdd);
 
-    // Animación de entrada para los nuevos marcadores
     markersToAdd.forEach(m => {
       const icon = m.getElement();
       if (icon) {
@@ -1855,6 +1861,96 @@ document.addEventListener('DOMContentLoaded', function(){
     this.classList.toggle('active');
     applyFilters();
   });
+
+  // ========== IMPORTAR CSV ==========
+  document.getElementById('importCsvBtn').addEventListener('click', () => {
+    document.getElementById('csvFileInput').click();
+  });
+
+  document.getElementById('csvFileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const csv = ev.target.result;
+        const nuevos = parsearCSV(csv);
+        if (!nuevos || nuevos.length === 0) {
+          toast('El archivo CSV no contiene datos válidos.', 'error');
+          return;
+        }
+        // Fusionar con datos existentes (eliminando duplicados)
+        const antes = stations.length;
+        stations = deduplicate([...stations, ...nuevos]);
+        stations = filtrarPorRadio190(enriquecer(stations));
+        reconstruirMarcadoresClientes();
+        actualizarSelectTamano();
+        applyFilters();
+        actualizarEstadoCarga(stations.length, contarPorAncla(stations));
+        // Guardar en localStorage
+        try {
+          localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
+          localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
+        } catch (e) {}
+        const agregados = stations.length - antes;
+        toast(`Importación exitosa. ${agregados > 0 ? agregados + ' nuevos clientes agregados.' : 'No se agregaron nuevos clientes (ya existían).'}`, 'success');
+      } catch (err) {
+        console.error(err);
+        toast('Error al procesar el archivo CSV. Verifica el formato.', 'error');
+      }
+    };
+    reader.onerror = () => toast('Error al leer el archivo.', 'error');
+    reader.readAsText(file, 'UTF-8');
+    // Limpiar input para permitir recargar el mismo archivo
+    this.value = '';
+  });
+
+  function parsearCSV(csvText) {
+    const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
+    if (lines.length < 2) return [];
+
+    const header = lines[0];
+    const columnas = header.split(',').map(c => normalizarTexto(c.trim()));
+
+    const idxNombre = columnas.indexOf('nombre');
+    const idxLat = columnas.indexOf('lat');
+    const idxLon = columnas.indexOf('lon');
+    const idxEstado = columnas.indexOf('estado');
+    const idxTamano = columnas.indexOf('tamano');
+    const idxDireccion = columnas.indexOf('direccion');
+    const idxTelefono = columnas.indexOf('telefono');
+
+    if (idxNombre === -1 || idxLat === -1 || idxLon === -1) {
+      toast('El CSV debe tener columnas: nombre, lat, lon (mínimo).', 'error');
+      return null;
+    }
+
+    const clientes = [];
+    for (let i = 1; i < lines.length; i++) {
+      const valores = lines[i].split(',').map(v => v.trim());
+      if (valores.length < columnas.length) continue;
+
+      const nombre = valores[idxNombre];
+      const lat = parseFloat(valores[idxLat]);
+      const lon = parseFloat(valores[idxLon]);
+
+      if (!nombre || isNaN(lat) || isNaN(lon)) continue;
+
+      const cliente = {
+        nombre: nombre,
+        lat: lat,
+        lon: lon,
+        estado: idxEstado !== -1 ? valores[idxEstado] : '',
+        tamano: idxTamano !== -1 ? valores[idxTamano] : '',
+        direccion: idxDireccion !== -1 ? valores[idxDireccion] : '',
+        telefono: idxTelefono !== -1 ? valores[idxTelefono] : ''
+      };
+      clientes.push(cliente);
+    }
+    return clientes;
+  }
+  // ========== FIN IMPORTAR CSV ==========
 
   let addingClientMode = false;
   const addClientBtn = document.getElementById('addClientBtn');
