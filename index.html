@@ -465,6 +465,19 @@
     }
     .modal .warning-text { font-size: 0.85rem; color: var(--text-main); line-height: 1.5; }
 
+    /* Selector de tipo de marcador (chips) */
+    .tipo-chips { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 4px 0 2px; }
+    .tipo-chip {
+      display: inline-flex; align-items: center; gap: 6px; padding: 0.5rem 0.6rem;
+      border: 1.5px solid var(--border); border-radius: 10px; background: var(--bg-main);
+      color: var(--text-main); font-size: 0.75rem; font-weight: 600; cursor: pointer;
+      transition: var(--transition); text-align: left;
+    }
+    .tipo-chip:hover { border-color: var(--border-hover); }
+    .tipo-chip.selected { border-color: var(--primary); background: rgba(31,92,169,0.08); box-shadow: 0 0 0 2px rgba(31,92,169,0.15); }
+    .tipo-chip .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .popup-actions .btn-delete-marcador { background: #64748b; }
+
     @media (max-width: 768px) {
       .topbar { flex-direction: column; align-items: flex-start; gap: 0.3rem; padding: 0.4rem 0.8rem; }
       .topbar .readouts { width: 100%; justify-content: space-between; }
@@ -546,6 +559,25 @@
         <button class="btn-cancel" id="deleteConfirmCancelBtn">Cancelar</button>
         <button class="btn-danger" id="deleteConfirmOkBtn">Eliminar definitivamente</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addPinModalOverlay">
+  <div class="modal">
+    <h3>📍 Nuevo marcador</h3>
+    <p class="warning-text" style="margin-bottom:2px;">Un marcador es solo un recordatorio en el mapa. No crea un cliente ni guarda sus datos.</p>
+    <label>Tipo de marcador</label>
+    <div class="tipo-chips" id="pinTipoChips">
+      <button type="button" class="tipo-chip" data-tipo="interes"><span class="dot" style="background:#8b5cf6;"></span> ⭐ Punto de interés</button>
+      <button type="button" class="tipo-chip" data-tipo="posible"><span class="dot" style="background:#f59e0b;"></span> ❓ Posible cliente</button>
+      <button type="button" class="tipo-chip" data-tipo="llegada"><span class="dot" style="background:#059669;"></span> 🏁 Punto de llegada</button>
+      <button type="button" class="tipo-chip" data-tipo="nota"><span class="dot" style="background:#0ea5e9;"></span> 📌 Nota</button>
+    </div>
+    <label>Nota (opcional) <input type="text" id="pinNota" placeholder="Ej. Preguntar por el encargado" maxlength="120"></label>
+    <div class="actions">
+      <button class="btn-cancel" id="pinCancelBtn">Cancelar</button>
+      <button class="btn-save" id="pinSaveBtn">Guardar marcador</button>
     </div>
   </div>
 </div>
@@ -656,6 +688,14 @@
         </button>
         <button class="dropdown-item menu-action" id="exportCsvBtn" title="Descargar todos los clientes como CSV">
           <span class="dropdown-item-label"><i class="fas fa-file-csv"></i> Exportar CSV</span>
+        </button>
+        <div class="menu-divider"></div>
+        <div class="menu-section-label">Marcadores</div>
+        <button class="dropdown-item menu-action" id="addPinBtn" title="Dejar un pin de recordatorio en el mapa">
+          <span class="dropdown-item-label"><i class="fas fa-map-pin"></i> Poner marcador</span>
+        </button>
+        <button class="dropdown-item menu-action" id="toggleMarcadoresBtn" title="Mostrar u ocultar todos los marcadores">
+          <span class="dropdown-item-label"><i class="fas fa-eye"></i> Ocultar marcadores</span>
         </button>
         <div class="menu-divider"></div>
         <div class="menu-section-label">Filtrar</div>
@@ -1825,6 +1865,8 @@ document.addEventListener('DOMContentLoaded', function(){
     addingClientMode = !addingClientMode;
     addClientBtn.classList.toggle('active', addingClientMode);
     if (addingClientMode) {
+      // No pueden estar activos "agregar cliente" y "poner marcador" a la vez.
+      addingPinMode = false;
       map.getContainer().style.cursor = 'crosshair';
       toast('Haz clic en el mapa para colocar el nuevo cliente.', 'info');
     } else {
@@ -1956,6 +1998,169 @@ document.addEventListener('DOMContentLoaded', function(){
     const cliente = stations.find(s => s.lat === lat && s.lon === lon && s.nombre === nombre);
     if (!cliente) return;
     abrirModalEliminar(cliente);
+  });
+
+  // ============================================================
+  //  10d. PONER MARCADORES (pines de recordatorio, tipo Google Maps)
+  //  Son pines LIGEROS para recordar un lugar —punto de interés, posible
+  //  cliente sin datos, punto de llegada o una nota— SIN crear un cliente.
+  //  Siempre visibles (no dependen de los círculos de radio) y guardados en
+  //  localStorage para que sigan ahí al recargar.
+  // ============================================================
+  const MARCADOR_TIPOS = {
+    interes: { label: 'Punto de interés',    color: '#8b5cf6', emoji: '⭐' },
+    posible: { label: 'Posible cliente',     color: '#f59e0b', emoji: '❓' },
+    llegada: { label: 'Punto de llegada',    color: '#059669', emoji: '🏁' },
+    nota:    { label: 'Nota / recordatorio', color: '#0ea5e9', emoji: '📌' }
+  };
+
+  let marcadores = [];
+  const marcadorMarkers = new Map(); // id -> L.marker
+  const marcadoresLayer = L.layerGroup().addTo(map);
+  let marcadoresVisibles = true;
+
+  try {
+    const guardados = JSON.parse(localStorage.getItem('MARCADORES_USUARIO') || '[]');
+    if (Array.isArray(guardados)) marcadores = guardados;
+  } catch (e) { marcadores = []; }
+
+  function guardarMarcadores() {
+    try { localStorage.setItem('MARCADORES_USUARIO', JSON.stringify(marcadores)); } catch (e) {}
+  }
+
+  function marcadorIcon(tipo) {
+    const t = MARCADOR_TIPOS[tipo] || MARCADOR_TIPOS.nota;
+    const svg = `<svg width="34" height="46" viewBox="0 0 34 46" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.28));">
+      <path d="M17 0 C7.6 0 0 7.6 0 17 C0 29.75 17 46 17 46 S34 29.75 34 17 C34 7.6 26.4 0 17 0 Z" fill="${t.color}" stroke="#ffffff" stroke-width="2"/>
+      <circle cx="17" cy="16.5" r="10" fill="#ffffff"/>
+      <text x="17" y="16.5" font-size="12" text-anchor="middle" dominant-baseline="central">${t.emoji}</text>
+    </svg>`;
+    return L.divIcon({ className: '', html: svg, iconSize: [34, 46], iconAnchor: [17, 46], popupAnchor: [0, -42] });
+  }
+
+  function popupMarcador(m) {
+    const t = MARCADOR_TIPOS[m.tipo] || MARCADOR_TIPOS.nota;
+    const fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+    const nota = m.nota ? `<div style="font-size:0.82rem;margin-top:4px;color:var(--text-main);">${String(m.nota).replace(/</g, '&lt;')}</div>` : '';
+    return `<div style="padding:0.2rem;min-width:170px;">
+      <strong style="font-size:1rem;color:${t.color};">${t.emoji} ${t.label}</strong>
+      ${nota}
+      ${fecha ? `<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">Guardado el ${fecha}</div>` : ''}
+      <div class="popup-actions">
+        <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${m.lat},${m.lon}" target="_blank">🗺️ Maps</a>
+        <button class="popup-btn btn-route-prospeccion" data-lat="${m.lat}" data-lon="${m.lon}">🧭 Cómo llegar</button>
+        <button class="popup-btn btn-delete-marcador" data-id="${m.id}">🗑️ Quitar</button>
+      </div>
+    </div>`;
+  }
+
+  function crearMarcadorEnMapa(m) {
+    const t = MARCADOR_TIPOS[m.tipo] || MARCADOR_TIPOS.nota;
+    const marker = L.marker([m.lat, m.lon], { icon: marcadorIcon(m.tipo), title: t.label });
+    marker.bindPopup(() => popupMarcador(m), { maxWidth: 280 });
+    marcadoresLayer.addLayer(marker);
+    marcadorMarkers.set(m.id, marker);
+  }
+
+  function reconstruirMarcadores() {
+    marcadoresLayer.clearLayers();
+    marcadorMarkers.clear();
+    if (marcadoresVisibles) marcadores.forEach(crearMarcadorEnMapa);
+  }
+
+  reconstruirMarcadores();
+
+  // --- Modo "poner marcador": el siguiente clic en el mapa deja caer el pin ---
+  let addingPinMode = false;
+  let tempPinCoords = null;
+  let pinTipoSel = 'interes';
+  const pinModalOverlay = document.getElementById('addPinModalOverlay');
+  const pinNota = document.getElementById('pinNota');
+  const pinTipoChips = document.getElementById('pinTipoChips');
+
+  function setPinMode(on) {
+    addingPinMode = on;
+    if (on) {
+      // No pueden estar activos "poner marcador" y "agregar cliente" a la vez.
+      if (addingClientMode) { addingClientMode = false; addClientBtn.classList.remove('active'); }
+      map.getContainer().style.cursor = 'crosshair';
+      toast('Toca el mapa donde quieras dejar el marcador.', 'info');
+    } else {
+      map.getContainer().style.cursor = '';
+    }
+  }
+
+  document.getElementById('addPinBtn').addEventListener('click', () => setPinMode(true));
+
+  map.on('click', function(e) {
+    if (!addingPinMode) return;
+    setPinMode(false);
+    tempPinCoords = { lat: e.latlng.lat, lon: e.latlng.lng };
+    pinTipoSel = 'interes';
+    pinNota.value = '';
+    pinTipoChips.querySelectorAll('.tipo-chip').forEach(ch => ch.classList.toggle('selected', ch.dataset.tipo === pinTipoSel));
+    pinModalOverlay.classList.add('open');
+    setTimeout(() => pinNota.focus(), 50);
+  });
+
+  pinTipoChips.addEventListener('click', function(e) {
+    const chip = e.target.closest('.tipo-chip');
+    if (!chip) return;
+    pinTipoSel = chip.dataset.tipo;
+    pinTipoChips.querySelectorAll('.tipo-chip').forEach(ch => ch.classList.toggle('selected', ch === chip));
+  });
+
+  document.getElementById('pinCancelBtn').addEventListener('click', () => {
+    pinModalOverlay.classList.remove('open');
+    tempPinCoords = null;
+  });
+
+  document.getElementById('pinSaveBtn').addEventListener('click', () => {
+    if (!tempPinCoords) return;
+    const nuevo = {
+      id: 'm' + Date.now() + Math.floor(Math.random() * 1000),
+      lat: Math.round(tempPinCoords.lat * 1e6) / 1e6,
+      lon: Math.round(tempPinCoords.lon * 1e6) / 1e6,
+      tipo: pinTipoSel,
+      nota: pinNota.value.trim(),
+      fecha: Date.now()
+    };
+    marcadores.push(nuevo);
+    guardarMarcadores();
+    if (!marcadoresVisibles) { marcadoresVisibles = true; reconstruirMarcadores(); }
+    else crearMarcadorEnMapa(nuevo);
+    pinModalOverlay.classList.remove('open');
+    tempPinCoords = null;
+    toast(`Marcador "${MARCADOR_TIPOS[nuevo.tipo].label}" guardado.`, 'success');
+  });
+
+  // Quitar un marcador desde su popup
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn-delete-marcador');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const idx = marcadores.findIndex(m => m.id === id);
+    if (idx === -1) return;
+    marcadores.splice(idx, 1);
+    guardarMarcadores();
+    const marker = marcadorMarkers.get(id);
+    if (marker) { marcadoresLayer.removeLayer(marker); marcadorMarkers.delete(id); }
+    map.closePopup();
+    toast('Marcador eliminado.', 'success');
+  });
+
+  // Mostrar / ocultar todos los marcadores
+  document.getElementById('toggleMarcadoresBtn').addEventListener('click', function() {
+    marcadoresVisibles = !marcadoresVisibles;
+    reconstruirMarcadores();
+    const label = this.querySelector('.dropdown-item-label');
+    if (marcadoresVisibles) {
+      label.innerHTML = '<i class="fas fa-eye"></i> Ocultar marcadores';
+      toast('Marcadores visibles.', 'info');
+    } else {
+      label.innerHTML = '<i class="fas fa-eye-slash"></i> Mostrar marcadores';
+      toast('Marcadores ocultos.', 'info');
+    }
   });
 
   // ============================================================
