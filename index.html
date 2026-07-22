@@ -643,6 +643,17 @@
   </div>
 </div>
 
+<!-- MODAL PARA MOSTRAR RESULTADOS DE IMPORTACIÓN CSV -->
+<div class="modal-overlay" id="importResultModalOverlay">
+  <div class="modal" style="max-width:500px; max-height:80vh; overflow-y:auto;">
+    <h3 id="importResultTitle">📥 Clientes importados</h3>
+    <div id="importResultList" style="max-height:300px; overflow-y:auto; margin-bottom:10px; font-size:0.8rem;"></div>
+    <div class="actions">
+      <button class="btn-cancel" id="importResultCloseBtn">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <div class="shell">
   <div class="topbar">
     <div class="brand"><i class="fas fa-users"></i> Clientes Potenciales · Morelia y Tototlán</div>
@@ -1880,9 +1891,33 @@ document.addEventListener('DOMContentLoaded', function(){
           toast('El archivo CSV no contiene datos válidos.', 'error');
           return;
         }
-        // Fusionar con datos existentes (eliminando duplicados)
+        // Crear conjunto de claves existentes para detectar duplicados
+        const claveExistente = new Set();
+        stations.forEach(s => {
+          const latRound = Math.round(s.lat * 1e5) / 1e5;
+          const lonRound = Math.round(s.lon * 1e5) / 1e5;
+          claveExistente.add(`${latRound}|${lonRound}|${s.nombre.trim()}`);
+        });
+        const nuevosReales = [];
+        const todosCsv = [];
+        nuevos.forEach(c => {
+          const latRound = Math.round(c.lat * 1e5) / 1e5;
+          const lonRound = Math.round(c.lon * 1e5) / 1e5;
+          const key = `${latRound}|${lonRound}|${c.nombre.trim()}`;
+          todosCsv.push(c);
+          if (!claveExistente.has(key)) {
+            nuevosReales.push(c);
+            claveExistente.add(key); // para no contar duplicados dentro del propio CSV
+          }
+        });
+
+        if (nuevosReales.length === 0) {
+          toast('Todos los clientes del CSV ya existen en el mapa.', 'info');
+          return;
+        }
+
         const antes = stations.length;
-        stations = deduplicate([...stations, ...nuevos]);
+        stations = deduplicate([...stations, ...nuevosReales]);
         stations = filtrarPorRadio190(enriquecer(stations));
         reconstruirMarcadoresClientes();
         actualizarSelectTamano();
@@ -1894,7 +1929,9 @@ document.addEventListener('DOMContentLoaded', function(){
           localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
         } catch (e) {}
         const agregados = stations.length - antes;
-        toast(`Importación exitosa. ${agregados > 0 ? agregados + ' nuevos clientes agregados.' : 'No se agregaron nuevos clientes (ya existían).'}`, 'success');
+        toast(`${agregados} nuevos clientes agregados.`, 'success');
+        // Mostrar lista temporal de nuevos clientes
+        mostrarListaImportados(nuevosReales);
       } catch (err) {
         console.error(err);
         toast('Error al procesar el archivo CSV. Verifica el formato.', 'error');
@@ -1902,8 +1939,29 @@ document.addEventListener('DOMContentLoaded', function(){
     };
     reader.onerror = () => toast('Error al leer el archivo.', 'error');
     reader.readAsText(file, 'UTF-8');
-    // Limpiar input para permitir recargar el mismo archivo
     this.value = '';
+  });
+
+  function mostrarListaImportados(clientes) {
+    const overlay = document.getElementById('importResultModalOverlay');
+    const title = document.getElementById('importResultTitle');
+    const listContainer = document.getElementById('importResultList');
+    title.textContent = `📥 ${clientes.length} clientes importados`;
+    listContainer.innerHTML = '';
+
+    clientes.forEach(c => {
+      const item = document.createElement('div');
+      item.style.padding = '4px 0';
+      item.style.borderBottom = '1px solid var(--border)';
+      item.innerHTML = `<strong>${c.nombre}</strong> <span style="color:var(--text-muted);font-size:0.7rem;">(${c.lat.toFixed(5)}, ${c.lon.toFixed(5)})</span>`;
+      listContainer.appendChild(item);
+    });
+
+    overlay.classList.add('open');
+  }
+
+  document.getElementById('importResultCloseBtn').addEventListener('click', () => {
+    document.getElementById('importResultModalOverlay').classList.remove('open');
   });
 
   function parsearCSV(csvText) {
