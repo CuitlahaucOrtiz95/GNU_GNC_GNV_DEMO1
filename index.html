@@ -8,6 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="format-detection" content="telephone=no" />
   <script>
+    // Aplica el tema guardado ANTES de pintar, para evitar parpadeo claro→oscuro.
     (function(){
       try {
         if (localStorage.getItem('tema') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
@@ -19,6 +20,7 @@
   <meta name="theme-color" content="#1F5CA9" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231F5CA9'/%3E%3Ctext x='50' y='68' font-size='60' text-anchor='middle' fill='white' font-family='Arial'%3E%F0%9F%93%8D%3C/text%3E%3C/svg%3E" />
   <title>Clientes Potenciales · Morelia y Tototlán</title>
+  <!-- Resource hints -->
   <link rel="preconnect" href="https://unpkg.com" crossorigin />
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -27,9 +29,11 @@
   <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org" />
   <link rel="dns-prefetch" href="https://router.project-osrm.org" />
 
+  <!-- CSS crítico -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
 
+  <!-- CSS no crítico -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         media="print" onload="this.media='all';this.onload=null" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
@@ -39,10 +43,13 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
   </noscript>
 
+  <!-- JS con defer -->
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <!-- ductos.js ELIMINADO -->
   <script defer src="ClientesPotenciales.js"></script>
   <style>
+    /* ===== ESTILOS OPTIMIZADOS (sin ductos) ===== */
     :root {
       --primary: #1F5CA9;
       --primary-hover: #004a8f;
@@ -82,8 +89,8 @@
 
     .shell {
       display: flex; flex-direction: column; max-width: 100%; background: var(--bg-panel); box-shadow: var(--shadow-lg);
-      height: 100vh;
-      height: 100dvh;
+      height: 100vh; /* respaldo para navegadores sin soporte de dvh */
+      height: 100dvh; /* evita el salto de la barra de direcciones en Safari/Chrome móvil */
       padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
     }
     .topbar {
@@ -180,10 +187,6 @@
     .toolbar .btn-clear-all { background: #fee2e2; color: #ef4444; }
     .toolbar .btn-clear-all:hover { background: #fecaca; }
     .toolbar .btn-clear-all.hidden { display: none; }
-    .toolbar .btn-success { background: #10b981; color: #fff; }
-    .toolbar .btn-success:hover { background: #059669; }
-    .toolbar .btn-warning { background: #f59e0b; color: #fff; }
-    .toolbar .btn-warning:hover { background: #d97706; }
     .toolbar .btn-outline { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
     .toolbar .btn-outline:hover { background: var(--primary); color: #fff; transform: translateY(-1px); }
     .toolbar .btn-outline.active { background: var(--primary); color: #fff; }
@@ -192,9 +195,10 @@
     .toolbar .btn-loc.loading .loc-icon { display: none; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
     .toolbar .separator { width: 1px; height: 24px; background: var(--border); margin: 0 0.2rem; }
-    .toolbar .btn-add.active { background: #f59e0b; color: #fff; border-color: #f59e0b; }
-    .toolbar .more-toggle { display: none; }
 
+    /* Botones de anclas: agrupados para que Morelia y Tototlán queden siempre
+       juntos (nunca se separan al saltar de línea) y con el color de cada
+       ancla para distinguirlos de los demás botones azules de la barra. */
     .toolbar .anchor-group {
       display: inline-flex; border-radius: 2rem; overflow: hidden;
       box-shadow: var(--shadow-sm); flex-shrink: 0;
@@ -205,6 +209,55 @@
     .toolbar .anchor-btn-morelia:hover { background: #003b77; }
     .toolbar .anchor-btn-tototlan { background: #FF6B35; }
     .toolbar .anchor-btn-tototlan:hover { background: #e25b26; }
+
+    /* ===== Barra agrupada por función + jerarquía de color =====
+       Los botones se organizan en grupos (Filtrar / Ir a / Vista) separados por
+       líneas, y el color deja de ser decorativo: solo la acción principal
+       (Círculos de radio) usa un color fuerte; lo secundario es neutro; y las
+       acciones poco frecuentes viven en el menú "Más". */
+    .toolbar .tb-group { display: inline-flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+    .toolbar .tb-spacer { flex: 1 1 0; min-width: 0; }
+
+    /* Acción principal: Círculos de radio (sin ella el mapa está vacío) */
+    .toolbar .btn-circulos {
+      background: var(--primary); color: #fff; font-weight: 600;
+      padding: 0.35rem 0.9rem; box-shadow: var(--shadow-sm);
+    }
+    .toolbar .btn-circulos:hover { background: var(--primary-hover); }
+    .toolbar .btn-circulos .chevron { font-size: 0.6rem; opacity: 0.85; }
+    .toolbar .btn-circulos .badge {
+      background: #fff; color: var(--primary); font-weight: 700; font-size: 0.65rem;
+      min-width: 1.15rem; height: 1.15rem; border-radius: 1rem; padding: 0 0.35rem;
+      display: inline-flex; align-items: center; justify-content: center; line-height: 1;
+    }
+    .toolbar .btn-circulos .badge[hidden] { display: none; }
+    /* Late la atención mientras no haya ningún círculo activo: "empieza aquí". */
+    .toolbar .btn-circulos.is-empty { animation: pulse-primary 2.2s ease-in-out infinite; }
+    @keyframes pulse-primary {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(31,92,169,0.5); }
+      50% { box-shadow: 0 0 0 6px rgba(31,92,169,0); }
+    }
+
+    /* Mi ubicación: identidad propia (geolocalización), distinta de las anclas */
+    .toolbar .btn-loc { background: #0891b2; color: #fff; }
+    .toolbar .btn-loc:hover { background: #0e7490; }
+
+    /* Botón "Más": abre el menú de acciones secundarias (en escritorio y móvil) */
+    .toolbar .btn-mas { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+    .toolbar .btn-mas:hover { background: var(--bg-panel); color: var(--text-main); border-color: var(--border-hover); }
+    .toolbar .btn-mas .chevron { font-size: 0.6rem; opacity: 0.85; }
+
+    /* Menú de "Más": alineado a la derecha, con secciones etiquetadas */
+    .dropdown-menu-right { left: auto; right: 0; }
+    .menu-section-label {
+      font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.04em;
+      color: var(--text-muted); padding: 0.45rem 0.7rem 0.15rem; font-weight: 700;
+    }
+    .menu-divider { height: 1px; background: var(--border); margin: 4px 6px; }
+    .dropdown-item:disabled { opacity: 0.5; cursor: not-allowed; }
+    .dropdown-item.menu-action .dropdown-item-label i { width: 1.1rem; text-align: center; color: var(--text-muted); }
+    .dropdown-item.menu-action:hover .dropdown-item-label i,
+    .dropdown-item.menu-action.active .dropdown-item-label i { color: inherit; }
 
     .stage { display: flex; flex: 1; overflow: hidden; position: relative; }
     #map { flex: 1; height: 100%; min-height: 300px; z-index: 1; transition: width 0.3s ease; }
@@ -250,6 +303,7 @@
     .rail-list li .group-header { background: var(--bg-main); font-weight: 600; padding: 0.4rem 1rem; color: var(--text-muted); font-size: 0.75rem; border-bottom: 1px solid var(--border); }
     .empty { padding: 2rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
 
+    /* CLÚSTERES MEJORADOS */
     .my-cluster { background: transparent !important; }
     .cluster-bubble {
       background: rgba(31, 92, 169, 0.88);
@@ -283,26 +337,16 @@
       display: flex; justify-content: space-between;
     }
 
+    /* LEYENDA MEJORADA (sin ductos) */
     .price-legend {
       background: var(--glass-bg); backdrop-filter: blur(8px);
       padding: 10px 14px; border-radius: 12px; box-shadow: var(--shadow-lg);
       font-size: 11px; line-height: 1.5; min-width: 150px;
       border: 1px solid rgba(255,255,255,0.5); cursor: default;
-      transition: all 0.25s ease;
     }
-    .price-legend .title {
-      font-weight: 700; margin-bottom: 6px; font-size: 12px; color: var(--text-main);
-      border-bottom: 1px solid var(--border); padding-bottom: 4px;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .price-legend .title .clear-btn {
-      background: none; border: none; color: var(--text-muted); font-size: 10px;
-      cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: var(--transition);
-      font-weight: 700; font-size: 14px; line-height: 1;
-    }
+    .price-legend .title { font-weight: 700; margin-bottom: 6px; font-size: 12px; color: var(--text-main); border-bottom: 1px solid var(--border); padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+    .price-legend .title .clear-btn { background: none; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: var(--transition); }
     .price-legend .title .clear-btn:hover { background: var(--bg-main); color: #ef4444; }
-    .price-legend.collapsed .row { display: none; }
-    .price-legend.collapsed .title { border-bottom: none; margin-bottom: 0; }
     .price-legend .row { display: flex; align-items: center; gap: 6px; margin: 3px 0; padding: 3px 6px; border-radius: 6px; cursor: pointer; transition: var(--transition); }
     .price-legend .row:hover { background: var(--bg-main); }
     .price-legend .row.active { background: rgba(56, 189, 248, 0.15); box-shadow: inset 0 0 0 1px var(--secondary); }
@@ -312,12 +356,8 @@
 
     .leaflet-popup-content { font-size: 0.8rem; font-family: 'Inter', sans-serif; margin: 10px; }
 
-    .popup-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      margin-top: 8px;
-    }
+    /* Acciones del popup de cliente: cuadrícula compacta en vez de botones apilados */
+    .popup-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
     .popup-actions .popup-btn {
       text-align: center; white-space: nowrap; text-decoration: none;
       border: none; border-radius: 2rem; padding: 0.4rem 0.5rem;
@@ -331,7 +371,6 @@
     .btn-route { background: var(--primary); }
     .btn-route-prospeccion { background: #059669; }
     .btn-geocode { background: #10b981; }
-    .btn-edit-client { background: #f59e0b; }
     .btn-delete-client { background: #dc2626; }
 
     .geocode-progress {
@@ -356,8 +395,10 @@
     }
     .btn-cancel-geo:hover { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
 
+    /* FILTRO SIN DIRECCIÓN */
     .btn-no-address.active { background: #f59e0b; color: #fff; border-color: #f59e0b; }
 
+    /* OVERLAY DE CARGA INICIAL */
     .loading-overlay {
       position: fixed; inset: 0; background: var(--bg-main); z-index: 99999;
       display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
@@ -370,6 +411,7 @@
     }
     .loading-overlay p { color: var(--text-muted); font-size: 0.9rem; }
 
+    /* NOTIFICACIONES (toast) */
     .toast-container {
       position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 100000;
       display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none;
@@ -385,6 +427,7 @@
     .toast-success { background: #059669; }
     .toast-info { background: #1F5CA9; }
 
+    /* MODAL: agregar cliente nuevo desde el mapa */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999;
       display: none; align-items: center; justify-content: center;
@@ -400,30 +443,46 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      max-height: 90vh;
-      overflow-y: auto;
     }
     .modal h3 { font-size: 1.1rem; color: var(--primary); margin-bottom: 4px; }
-    .modal label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); display: block; }
+    .modal label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
     .modal input, .modal select {
       width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
       font-size: 0.85rem; background: var(--bg-main); color: var(--text-main);
     }
     .modal .coords-row { display: flex; gap: 8px; }
-    .modal .coords-row label { flex: 1; }
-    .modal .coords-row input { width: 100%; }
-    .modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; flex-wrap: wrap; }
+    .modal .coords-row input { flex: 1; }
+    .modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
     .modal .actions button { padding: 8px 16px; border-radius: 2rem; border: none; cursor: pointer; font-weight: 500; font-size: 0.8rem; }
     .modal .btn-cancel { background: var(--border); color: var(--text-main); }
     .modal .btn-save { background: var(--primary); color: #fff; }
     .modal .btn-danger { background: #dc2626; color: #fff; }
     .modal .btn-danger:hover { background: #b91c1c; }
+    .modal .pin-input {
+      width: 100%; text-align: center; letter-spacing: 0.5em; font-size: 1.3rem; font-weight: 700;
+      padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg-main); color: var(--text-main);
+    }
     .modal .warning-text { font-size: 0.85rem; color: var(--text-main); line-height: 1.5; }
-    .modal .hint-text { font-size: 0.7rem; color: var(--text-muted); margin-top: -6px; font-style: italic; }
+
+    /* Selector de tipo de marcador (chips) */
+    .tipo-chips { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 4px 0 2px; }
+    .tipo-chip {
+      display: inline-flex; align-items: center; gap: 6px; padding: 0.5rem 0.6rem;
+      border: 1.5px solid var(--border); border-radius: 10px; background: var(--bg-main);
+      color: var(--text-main); font-size: 0.75rem; font-weight: 600; cursor: pointer;
+      transition: var(--transition); text-align: left;
+    }
+    .tipo-chip:hover { border-color: var(--border-hover); }
+    .tipo-chip.selected { border-color: var(--primary); background: rgba(31,92,169,0.08); box-shadow: 0 0 0 2px rgba(31,92,169,0.15); }
+    .tipo-chip .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .popup-actions .btn-delete-marcador { background: #64748b; }
 
     @media (max-width: 768px) {
       .topbar { flex-direction: column; align-items: flex-start; gap: 0.3rem; padding: 0.4rem 0.8rem; }
       .topbar .readouts { width: 100%; justify-content: space-between; }
+      /* El texto de estado y las estadísticas ocupan mucho ancho y no caben en
+         una pantalla angosta; los números clave (clientes / en vista) bastan. */
       .topbar .status-badge, .topbar .stats { display: none; }
       .rail { width: 100%; max-height: 45vh; border-left: none; border-top: 1px solid var(--border); position: absolute; bottom: 0; z-index: 1000; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); }
       .rail.hidden { transform: translateY(100%); }
@@ -431,23 +490,30 @@
       .toolbar { gap: 0.4rem; justify-content: space-between; }
       .toolbar .filters select, .toolbar .btn { flex: 1; text-align: center; justify-content: center; font-size: 0.7rem; min-height: 40px; }
       .toolbar .dropdown, .toolbar .dropdown .btn { flex: 1; }
+      /* Cada grupo ocupa su propio renglón para que la barra se lea de arriba
+         hacia abajo: Filtrar, luego Ir a, luego Vista. */
+      .toolbar .tb-group { flex: 1 1 100%; gap: 0.4rem; }
+      .toolbar .tb-group > * { flex: 1; }
       .toolbar .anchor-group { flex: 1 1 100%; }
       .toolbar .dist-slider { flex: 1 1 100%; justify-content: center; }
       .toolbar .dist-slider input[type="range"] { flex: 1; min-width: 0; }
-      .toolbar .separator { display: none; }
+      .toolbar .separator, .toolbar .tb-spacer { display: none; }
       .rail-head .sort-options { font-size: 0.6rem; }
-      .toolbar .mobile-extra { display: none; }
-      .toolbar.mobile-more-open .mobile-extra { display: inline-flex; }
-      .toolbar .more-toggle { display: inline-flex; }
+      /* En móvil el menú "Más" y su botón ocupan el ancho completo, como el
+         resto de controles apilados. */
+      .dropdown-menu-right { left: 0; right: 0; }
+      #masDropdown { flex: 1 1 100%; }
+      #masDropdown .btn-mas { width: 100%; }
+
+      /* Objetivos táctiles más grandes */
       .dropdown-item, .rail-list li, .search-suggestions .item, .price-legend .row { min-height: 40px; }
       .theme-toggle { width: 36px; height: 36px; }
+
       .map-hint { font-size: 0.72rem; padding: 0.45rem 0.8rem; top: 8px; }
       .price-legend { font-size: 10px; padding: 8px 10px; min-width: 130px; }
       .geocode-progress { left: 12px; right: 12px; bottom: 12px; max-width: none; }
       .modal { padding: 18px 20px; }
       .dropdown-menu, .search-suggestions { max-width: calc(100vw - 2rem); }
-      .modal .coords-row { flex-direction: column; gap: 4px; }
-      .popup-actions { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
@@ -457,35 +523,31 @@
   <p>Cargando clientes…</p>
 </div>
 <div class="toast-container" id="toastContainer"></div>
-
-<!-- MODAL AGREGAR/EDITAR CLIENTE (reutilizable) -->
-<div class="modal-overlay" id="clientModalOverlay">
+<div class="modal-overlay" id="addClientModalOverlay">
   <div class="modal">
-    <h3 id="clientModalTitle">➕ Nuevo cliente</h3>
+    <h3>➕ Nuevo cliente</h3>
     <div class="coords-row">
-      <label>Latitud <input type="text" id="editLat" placeholder="19.704805" step="any" /></label>
-      <label>Longitud <input type="text" id="editLon" placeholder="-101.244791" step="any" /></label>
+      <label style="flex:1">Latitud <input type="text" id="addLat" readonly placeholder="Click en mapa"></label>
+      <label style="flex:1">Longitud <input type="text" id="addLon" readonly placeholder="Click en mapa"></label>
     </div>
-    <p class="hint-text">💡 Puedes escribir las coordenadas o hacer clic en el mapa para rellenarlas.</p>
-    <label>Nombre comercial <input type="text" id="editNombre" placeholder="Ej. Tienda Don Juan" /></label>
-    <label>Estado / Provincia <input type="text" id="editEstado" placeholder="Ej. Michoacán" /></label>
-    <label>Tamaño / Categoría <input type="text" id="editTamano" placeholder="Micro, Pequeña, Base de Combis…" /></label>
-    <label>Dirección <input type="text" id="editDireccion" placeholder="Opcional" /></label>
-    <label>Teléfono <input type="text" id="editTelefono" placeholder="Opcional" /></label>
+    <label>Nombre <input type="text" id="addNombre" placeholder="Nombre comercial"></label>
+    <label>Estado <input type="text" id="addEstado" placeholder="Estado o provincia"></label>
+    <label>Tamaño / Categoría <input type="text" id="addTamano" placeholder="Micro, Pequeña, Base de Combis…"></label>
+    <label>Dirección <input type="text" id="addDireccion" placeholder="Opcional"></label>
+    <label>Teléfono <input type="text" id="addTelefono" placeholder="Opcional"></label>
     <div class="actions">
-      <button class="btn-cancel" id="clientModalCancelBtn">Cancelar</button>
-      <button class="btn-save" id="clientModalSaveBtn">Guardar cliente</button>
+      <button class="btn-cancel" id="addCancelBtn">Cancelar</button>
+      <button class="btn-save" id="addSaveBtn">Guardar cliente</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL ELIMINAR CLIENTE (con NIP) -->
 <div class="modal-overlay" id="deleteClientModalOverlay">
   <div class="modal">
     <h3>🗑️ Eliminar cliente</h3>
     <div id="deleteStepPin">
       <p class="warning-text">Para eliminar a <strong id="deleteClientName"></strong> introduce el NIP de seguridad.</p>
-      <label>NIP <input type="password" class="pin-input" id="deletePinInput" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" style="width:100%;text-align:center;letter-spacing:0.5em;font-size:1.3rem;font-weight:700;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-main);color:var(--text-main);" /></label>
+      <label>NIP <input type="password" class="pin-input" id="deletePinInput" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off"></label>
       <div class="actions">
         <button class="btn-cancel" id="deletePinCancelBtn">Cancelar</button>
         <button class="btn-save" id="deletePinConfirmBtn">Continuar</button>
@@ -497,6 +559,25 @@
         <button class="btn-cancel" id="deleteConfirmCancelBtn">Cancelar</button>
         <button class="btn-danger" id="deleteConfirmOkBtn">Eliminar definitivamente</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addPinModalOverlay">
+  <div class="modal">
+    <h3>📍 Nuevo marcador</h3>
+    <p class="warning-text" style="margin-bottom:2px;">Un marcador es solo un recordatorio en el mapa. No crea un cliente ni guarda sus datos.</p>
+    <label>Tipo de marcador</label>
+    <div class="tipo-chips" id="pinTipoChips">
+      <button type="button" class="tipo-chip" data-tipo="interes"><span class="dot" style="background:#8b5cf6;"></span> ⭐ Punto de interés</button>
+      <button type="button" class="tipo-chip" data-tipo="posible"><span class="dot" style="background:#f59e0b;"></span> ❓ Posible cliente</button>
+      <button type="button" class="tipo-chip" data-tipo="llegada"><span class="dot" style="background:#059669;"></span> 🏁 Punto de llegada</button>
+      <button type="button" class="tipo-chip" data-tipo="nota"><span class="dot" style="background:#0ea5e9;"></span> 📌 Nota</button>
+    </div>
+    <label>Nota (opcional) <input type="text" id="pinNota" placeholder="Ej. Preguntar por el encargado" maxlength="120"></label>
+    <div class="actions">
+      <button class="btn-cancel" id="pinCancelBtn">Cancelar</button>
+      <button class="btn-save" id="pinSaveBtn">Guardar marcador</button>
     </div>
   </div>
 </div>
@@ -520,92 +601,120 @@
       <input type="text" id="searchInput" placeholder="Buscar cliente…" autocomplete="off" />
       <div class="search-suggestions" id="searchSuggestions"></div>
     </div>
-    <div class="filters mobile-extra">
-      <select id="tamanoFilter" aria-label="Filtrar por tamaño de empresa">
-        <option value="all">Todos los tamaños</option>
-      </select>
-    </div>
-    <div class="dist-slider mobile-extra">
-      <label for="distSlider">Max dist.</label>
-      <input type="range" id="distSlider" min="60" max="190" value="190" step="5" />
-      <span id="distLabel">190 km</span>
+    <!-- ==================== GRUPO: FILTRAR ==================== -->
+    <div class="tb-group" role="group" aria-label="Filtrar clientes">
+      <div class="dropdown" id="circulosDropdown">
+        <button class="btn btn-circulos is-empty" id="circulosToggleBtn" aria-haspopup="true" aria-expanded="false">
+          <i class="fas fa-bullseye"></i> <span id="circulosLabel">Círculos de radio</span>
+          <span class="badge" id="circulosBadge" hidden>0</span>
+          <i class="fas fa-chevron-down chevron"></i>
+        </button>
+        <div class="dropdown-menu" id="circulosMenu">
+          <button class="dropdown-item" id="btnCirculo150Morelia">
+            <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#10b981;"></i> 150 km · Morelia</span>
+            <i class="fas fa-check check-icon" aria-hidden="true"></i>
+          </button>
+          <button class="dropdown-item" id="btnCirculo190Morelia">
+            <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#ef4444;"></i> 190 km · Morelia</span>
+            <i class="fas fa-check check-icon" aria-hidden="true"></i>
+          </button>
+          <button class="dropdown-item" id="btnCirculo150Tototlan">
+            <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#10b981;"></i> 150 km · Tototlán</span>
+            <i class="fas fa-check check-icon" aria-hidden="true"></i>
+          </button>
+          <button class="dropdown-item" id="btnCirculo190Tototlan">
+            <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#ef4444;"></i> 190 km · Tototlán</span>
+            <i class="fas fa-check check-icon" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+      <div class="filters">
+        <select id="tamanoFilter" aria-label="Filtrar por tamaño de empresa">
+          <option value="all">Todos los tamaños</option>
+        </select>
+      </div>
+      <div class="dist-slider">
+        <label for="distSlider">Distancia</label>
+        <input type="range" id="distSlider" min="60" max="190" value="190" step="5" />
+        <span id="distLabel">190 km</span>
+      </div>
     </div>
 
     <span class="separator"></span>
 
-    <div class="dropdown" id="circulosDropdown">
-      <button class="btn btn-outline" id="circulosToggleBtn" aria-haspopup="true" aria-expanded="false">
-        <i class="fas fa-bullseye"></i> <span id="circulosLabel">Círculos de radio</span> <i class="fas fa-chevron-down" style="font-size:0.6rem;"></i>
+    <!-- ==================== GRUPO: IR A ==================== -->
+    <div class="tb-group" role="group" aria-label="Ir a">
+      <button class="btn btn-loc" id="locBtn" title="Centrar en mi ubicación">
+        <span class="loc-icon"><i class="fas fa-location-crosshairs"></i></span>
+        <span class="spinner"><i class="fas fa-circle-notch"></i></span>
+        <span>Mi ubicación</span>
       </button>
-      <div class="dropdown-menu" id="circulosMenu">
-        <button class="dropdown-item" id="btnCirculo150Morelia">
-          <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#10b981;"></i> 150 km · Morelia</span>
-          <i class="fas fa-check check-icon" aria-hidden="true"></i>
+      <div class="anchor-group">
+        <button class="btn anchor-btn anchor-btn-morelia" id="centerMoreliaBtn" aria-label="Centrar en Morelia">
+          <i class="fas fa-star"></i> Morelia
         </button>
-        <button class="dropdown-item" id="btnCirculo190Morelia">
-          <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#ef4444;"></i> 190 km · Morelia</span>
-          <i class="fas fa-check check-icon" aria-hidden="true"></i>
-        </button>
-        <button class="dropdown-item" id="btnCirculo150Tototlan">
-          <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#10b981;"></i> 150 km · Tototlán</span>
-          <i class="fas fa-check check-icon" aria-hidden="true"></i>
-        </button>
-        <button class="dropdown-item" id="btnCirculo190Tototlan">
-          <span class="dropdown-item-label"><i class="fas fa-circle" style="color:#ef4444;"></i> 190 km · Tototlán</span>
-          <i class="fas fa-check check-icon" aria-hidden="true"></i>
+        <button class="btn anchor-btn anchor-btn-tototlan" id="centerTototlanBtn" aria-label="Centrar en Tototlán">
+          <i class="fas fa-star"></i> Tototlán
         </button>
       </div>
     </div>
 
     <span class="separator"></span>
 
-    <button class="btn btn-success mobile-extra" id="geocodeBtn" aria-label="Obtener direcciones de los clientes visibles">
-      <i class="fas fa-address-card"></i> Obtener direcciones
-    </button>
-    <button class="btn btn-outline mobile-extra" id="noAddressBtn" aria-label="Filtrar clientes sin dirección">
-      <i class="fas fa-envelope"></i> Sin dirección
-    </button>
-
-    <span class="separator"></span>
-
-    <button class="btn btn-add mobile-extra" id="addClientBtn" title="Agregar un cliente nuevo">
-      <i class="fas fa-plus-circle"></i> Agregar cliente
-    </button>
-    <button class="btn btn-primary mobile-extra" id="exportCsvBtn" title="Descargar todos los clientes como CSV">
-      <i class="fas fa-file-csv"></i> Exportar CSV
-    </button>
-
-    <span class="separator"></span>
-
-    <button class="btn btn-loc" id="locBtn" title="Centrar en mi ubicación">
-      <span class="loc-icon"><i class="fas fa-location-crosshairs"></i></span>
-      <span class="spinner"><i class="fas fa-circle-notch"></i></span>
-      <span>Mi ubicación</span>
-    </button>
-    <div class="anchor-group">
-      <button class="btn anchor-btn anchor-btn-morelia" id="centerMoreliaBtn" aria-label="Centrar en Morelia">
-        <i class="fas fa-star"></i> Morelia
+    <!-- ==================== GRUPO: VISTA ==================== -->
+    <div class="tb-group" role="group" aria-label="Vista">
+      <button class="btn btn-toggle-rail" id="toggleRailBtn" title="Mostrar/ocultar directorio">
+        <i class="fas fa-chevron-right" id="railToggleIcon"></i> <span id="railToggleLabel">Directorio</span>
       </button>
-      <button class="btn anchor-btn anchor-btn-tototlan" id="centerTototlanBtn" aria-label="Centrar en Tototlán">
-        <i class="fas fa-star"></i> Tototlán
+      <button class="btn btn-clear-all hidden" id="clearAllBtn" title="Limpiar todos los filtros">
+        <i class="fas fa-times"></i> Limpiar filtros
       </button>
     </div>
-    <button class="btn btn-primary mobile-extra" id="gotoClosestBtn" title="Centrar en el cliente más cercano">
-      <i class="fas fa-bullseye"></i> Más cercano
-    </button>
-    <button class="btn btn-warning mobile-extra" id="clearRouteBtn" aria-label="Limpiar ruta">
-      <i class="fas fa-route"></i> Limpiar ruta
-    </button>
-    <button class="btn btn-outline more-toggle" id="moreToggleBtn" title="Más opciones" aria-haspopup="true" aria-expanded="false">
-      <i class="fas fa-ellipsis-vertical"></i> Más
-    </button>
-    <button class="btn btn-toggle-rail" id="toggleRailBtn" title="Mostrar/ocultar directorio">
-      <i class="fas fa-chevron-right" id="railToggleIcon"></i> <span id="railToggleLabel">Directorio</span>
-    </button>
-    <button class="btn btn-clear-all hidden" id="clearAllBtn" title="Limpiar todos los filtros">
-      <i class="fas fa-times"></i> Limpiar filtros
-    </button>
-    <button class="btn btn-primary mobile-extra" id="resetBtn" aria-label="Restablecer vista"><i class="fas fa-home"></i> Restablecer</button>
+
+    <span class="tb-spacer"></span>
+
+    <!-- ==================== MENÚ: MÁS ACCIONES ==================== -->
+    <div class="dropdown" id="masDropdown">
+      <button class="btn btn-mas" id="moreToggleBtn" title="Más acciones" aria-haspopup="true" aria-expanded="false">
+        <i class="fas fa-ellipsis-vertical"></i> Más <i class="fas fa-chevron-down chevron"></i>
+      </button>
+      <div class="dropdown-menu dropdown-menu-right" id="masMenu">
+        <div class="menu-section-label">Datos</div>
+        <button class="dropdown-item menu-action" id="addClientBtn" title="Agregar un cliente nuevo en el mapa">
+          <span class="dropdown-item-label"><i class="fas fa-plus-circle"></i> Agregar cliente</span>
+        </button>
+        <button class="dropdown-item menu-action" id="geocodeBtn" aria-label="Obtener direcciones de los clientes visibles">
+          <span class="dropdown-item-label"><i class="fas fa-address-card"></i> Obtener direcciones</span>
+        </button>
+        <button class="dropdown-item menu-action" id="exportCsvBtn" title="Descargar todos los clientes como CSV">
+          <span class="dropdown-item-label"><i class="fas fa-file-csv"></i> Exportar CSV</span>
+        </button>
+        <div class="menu-divider"></div>
+        <div class="menu-section-label">Marcadores</div>
+        <button class="dropdown-item menu-action" id="addPinBtn" title="Dejar un pin de recordatorio en el mapa">
+          <span class="dropdown-item-label"><i class="fas fa-map-pin"></i> Poner marcador</span>
+        </button>
+        <button class="dropdown-item menu-action" id="toggleMarcadoresBtn" title="Mostrar u ocultar todos los marcadores">
+          <span class="dropdown-item-label"><i class="fas fa-eye"></i> Ocultar marcadores</span>
+        </button>
+        <div class="menu-divider"></div>
+        <div class="menu-section-label">Filtrar</div>
+        <button class="dropdown-item menu-action" id="noAddressBtn" aria-label="Filtrar clientes sin dirección">
+          <span class="dropdown-item-label"><i class="fas fa-envelope"></i> Solo sin dirección</span>
+        </button>
+        <div class="menu-divider"></div>
+        <div class="menu-section-label">Navegación</div>
+        <button class="dropdown-item menu-action" id="gotoClosestBtn" title="Centrar en el cliente más cercano">
+          <span class="dropdown-item-label"><i class="fas fa-bullseye"></i> Cliente más cercano</span>
+        </button>
+        <button class="dropdown-item menu-action" id="clearRouteBtn" aria-label="Limpiar ruta">
+          <span class="dropdown-item-label"><i class="fas fa-route"></i> Limpiar ruta</span>
+        </button>
+        <button class="dropdown-item menu-action" id="resetBtn" aria-label="Restablecer vista">
+          <span class="dropdown-item-label"><i class="fas fa-home"></i> Restablecer vista</span>
+        </button>
+      </div>
+    </div>
   </div>
   <div class="stage">
     <div id="map"></div>
@@ -643,6 +752,7 @@ document.addEventListener('DOMContentLoaded', function(){
   const log  = (...a) => { if (DEBUG) console.log(...a); };
   const warn = (...a) => { if (DEBUG) console.warn(...a); };
 
+  // Notificación flotante no bloqueante, en vez de alert().
   function toast(msg, tipo, duracionMs) {
     tipo = tipo || 'info';
     duracionMs = duracionMs || 3500;
@@ -670,15 +780,22 @@ document.addEventListener('DOMContentLoaded', function(){
     try { return JSON.parse(json); } catch (e) { return null; }
   }
 
+  // Compara texto ignorando mayúsculas/acentos (para que "Morelia" y "morelía" coincidan).
   function normalizarTexto(str) {
     return String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   }
 
+  // ============================================================
+  //  0. COORDENADAS ANCLA
+  // ============================================================
   const ANCLA_MORELIA  = { nombre: "Morelia",  lat: 19.70480534245386, lon: -101.24479193126763, color: '#004D99' };
   const ANCLA_TOTOTLAN = { nombre: "Tototlán", lat: 20.534806, lon: -102.782470, color: '#FF6B35' };
   const ANCLAS = [ANCLA_MORELIA, ANCLA_TOTOTLAN];
   const ANCLA = ANCLA_MORELIA;
 
+  // ============================================================
+  //  1. FUNCIONES AUXILIARES
+  // ============================================================
   function distanciaKm(lat1, lon1, lat2, lon2) {
     const R = 6371, rad = Math.PI/180;
     const dLat = (lat2-lat1)*rad, dLon = (lon2-lon1)*rad;
@@ -704,6 +821,10 @@ document.addEventListener('DOMContentLoaded', function(){
     if (km <= 190) return { label: '150 – 190 km', key: 'high',   color: '#fb923c' };
     return { label: '> 190 km', key: 'no-price', color: '#94a3b8' };
   }
+
+  // ============================================================
+  //  2. CARGA DE CLIENTES (sin ductos)
+  // ============================================================
 
   let rawClientes = Array.isArray(window.CLIENTES_POTENCIALES) ? window.CLIENTES_POTENCIALES : [];
 
@@ -749,6 +870,8 @@ document.addEventListener('DOMContentLoaded', function(){
     return lista;
   }
 
+  // Filtro geográfico: solo clientes dentro de 190 km de Morelia O Tototlán
+  // Requiere que `lista` ya haya pasado por enriquecer() (usa distMorelia/distTototlan).
   function filtrarPorRadio190(lista) {
     return lista.filter(s => s.distMorelia <= 190 || s.distTototlan <= 190);
   }
@@ -763,8 +886,13 @@ document.addEventListener('DOMContentLoaded', function(){
   actualizarEstadoCarga(stations.length, contarPorAncla(stations));
   log(`Clientes tras filtro geográfico: ${stations.length}`);
 
+  // ============================================================
+  //  3. MAPA Y CAPAS BASE
+  // ============================================================
   const map = L.map('map', { zoomControl: true });
 
+  // Vista "de reposo": encuadra solo las dos anclas (Morelia y Tototlán).
+  // Los clientes solo aparecen al activar uno o más círculos de radio.
   const ANCLAS_BOUNDS = L.latLngBounds(ANCLAS.map(a => [a.lat, a.lon]));
   function verAmbasAnclas(animar) {
     map.flyToBounds(ANCLAS_BOUNDS, { padding: [80, 80], maxZoom: 9, duration: animar === false ? 0 : 1 });
@@ -786,6 +914,9 @@ document.addEventListener('DOMContentLoaded', function(){
   L.control.layers(baseLayers).addTo(map);
   L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
 
+  // ============================================================
+  //  4. CÍRCULOS DE RADIO (150 y 190 km) con FILTRO
+  // ============================================================
   const circulosLayer = L.layerGroup().addTo(map);
   const circulos = {};
   function crearCirculo(ancla, radioKm, color) {
@@ -799,8 +930,11 @@ document.addEventListener('DOMContentLoaded', function(){
     circulos['190' + suf] = { capa: crearCirculo(a, 190, '#ef4444'), visible: false };
   });
 
-  let activeCircleFilters = new Set();
-  let miUbicacionCoords = null;
+  // Círculos de radio: selección MÚLTIPLE (se puede activar más de uno a la vez).
+  // Mientras no haya ninguno activo, no se muestra ningún cliente en el mapa —
+  // solo las dos anclas (Morelia y Tototlán).
+  let activeCircleFilters = new Set(); // ids como '150Morelia', '190Tototlan', 'cercaDeMi', ...
+  let miUbicacionCoords = null; // {lat, lon} de la última geolocalización obtenida
 
   function datosCirculo(id) {
     if (id === 'cercaDeMi') {
@@ -811,6 +945,8 @@ document.addEventListener('DOMContentLoaded', function(){
     return { centro, radio };
   }
 
+  // Crea (o reposiciona) el círculo de 1 km alrededor de la ubicación real del
+  // usuario. Se usa el mismo sistema de círculos de radio que Morelia/Tototlán.
   function actualizarCirculoCercaDeMi(lat, lon) {
     const yaVisible = circulos.cercaDeMi ? circulos.cercaDeMi.visible : false;
     if (circulos.cercaDeMi && yaVisible) circulosLayer.removeLayer(circulos.cercaDeMi.capa);
@@ -824,8 +960,22 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function actualizarEtiquetaCirculos() {
     const label = document.getElementById('circulosLabel');
-    if (!label) return;
+    const btn = document.getElementById('circulosToggleBtn');
+    const badge = document.getElementById('circulosBadge');
     const n = activeCircleFilters.size;
+    // Estado visual del botón principal: "vacío" (late para invitar a empezar)
+    // vs "activo" (muestra un badge con cuántos círculos hay encendidos).
+    if (btn) {
+      btn.classList.toggle('is-empty', n === 0);
+      btn.classList.toggle('is-active', n > 0);
+    }
+    // El badge solo aparece con 2+ círculos: con uno solo la etiqueta ya dice
+    // cuál es ("190 km · Morelia"), así que el número sería redundante.
+    if (badge) {
+      if (n > 1) { badge.hidden = false; badge.textContent = n; }
+      else { badge.hidden = true; }
+    }
+    if (!label) return;
     if (n === 0) { label.textContent = 'Círculos de radio'; return; }
     if (n === 1) {
       const id = [...activeCircleFilters][0];
@@ -833,9 +983,11 @@ document.addEventListener('DOMContentLoaded', function(){
       label.textContent = `${radio} km · ${centro.nombre}`;
       return;
     }
-    label.textContent = `${n} círculos activos`;
+    label.textContent = 'Círculos activos';
   }
 
+  // Activa/desactiva UN círculo puntual, sin tocar los demás ni refrescar
+  // filtros/vista todavía (eso lo hace quien llama a estas dos funciones).
   function activarCirculoId(id) {
     const c = circulos[id];
     if (!c || activeCircleFilters.has(id)) return;
@@ -875,11 +1027,17 @@ document.addEventListener('DOMContentLoaded', function(){
     encuadrarClientes(visibles);
   }
 
+  // Alterna (activa/desactiva) el círculo de 190 km de una ancla para
+  // mostrar u ocultar sus clientes. Se usa al hacer clic en el pin de
+  // Morelia/Tototlán en el mapa y en los botones "Morelia"/"Tototlán" de la
+  // barra de herramientas: el primer clic los muestra, el siguiente los oculta.
   function activarAncla(centro) {
     const id = '190' + (centro === 'morelia' ? 'Morelia' : 'Tototlan');
     toggleCirculo(id);
   }
 
+  // Activa EN EXCLUSIVA el círculo de 1 km alrededor de tu ubicación real
+  // (apaga cualquier otro círculo activo), y encuadra el mapa ahí cerca.
   function activarCercaDeMi() {
     if (!miUbicacionCoords) return;
     [...activeCircleFilters].forEach(id => desactivarCirculoId(id));
@@ -895,6 +1053,9 @@ document.addEventListener('DOMContentLoaded', function(){
     );
   }
 
+  // Alterna el círculo de 1 km: si estaba activo, lo apaga y muestra TODOS los
+  // clientes (activa ambos círculos de 190 km); si no, lo activa en exclusiva.
+  // Se usa al hacer clic en el pin de "Mi ubicación".
   function toggleCercaDeMi() {
     if (!miUbicacionCoords) return;
     if (activeCircleFilters.has('cercaDeMi')) {
@@ -910,6 +1071,9 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
+  // ============================================================
+  //  5. CLÚSTER Y MARCADORES DE CLIENTES
+  // ============================================================
   const cluster = L.markerClusterGroup({
     chunkedLoading: true,
     removeOutsideVisibleBounds: true,
@@ -930,6 +1094,9 @@ document.addEventListener('DOMContentLoaded', function(){
   map.addLayer(cluster);
   const markerMap = new Map();
 
+  // === ANCLAS CON ICONOS MEJORADOS ===
+  // Estrella con destellos (tipo ⭐/🌟), coloreada según cada ancla para
+  // distinguir Morelia de Tototlán de un vistazo.
   function anclaIcon(ancla) {
     const color = ancla.color;
     const filtroId = 'anclaShadow-' + (ancla.nombre === 'Morelia' ? 'morelia' : 'tototlan');
@@ -991,6 +1158,8 @@ document.addEventListener('DOMContentLoaded', function(){
     </svg>`;
   }
 
+  // Íconos especiales por categoría (combis, taxis, parques industriales), en vez
+  // del pin de color genérico. Se activan según el texto de "tamano".
   function iconoCombiSVG() {
     return `<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.2));">
       <rect x="4" y="12" width="20" height="12" rx="2" fill="#f59e0b" stroke="#92400e" stroke-width="1"/>
@@ -1036,6 +1205,8 @@ document.addEventListener('DOMContentLoaded', function(){
     return null;
   }
 
+  // Construye los marcadores en memoria (markerMap) pero NO los agrega al mapa:
+  // applyFilters() decide cuáles mostrar según los círculos de radio activos.
   function reconstruirMarcadoresClientes() {
     cluster.clearLayers();
     markerMap.clear();
@@ -1046,6 +1217,8 @@ document.addEventListener('DOMContentLoaded', function(){
         title: s.nombre
       });
       marker.bindPopup(() => {
+        // El cliente solo puede tener su popup abierto si está visible, así que
+        // _matchDist/_matchColor/_matchAncla ya los puso applyFilters().
         const d = s._matchDist < 10 ? s._matchDist.toFixed(1) : Math.round(s._matchDist);
         const direccion = s.direccion ? `<br><span style="font-size:0.8rem;">📍 ${s.direccion}</span>` : '';
         const tamano = s.tamano ? `<br><span style="font-size:0.8rem;">🏢 ${s.tamano}</span>` : '';
@@ -1067,7 +1240,6 @@ document.addEventListener('DOMContentLoaded', function(){
             <button class="popup-btn btn-route" data-lat="${s.lat}" data-lon="${s.lon}">🚗 Ruta</button>
             <button class="popup-btn btn-route-prospeccion" data-lat="${s.lat}" data-lon="${s.lon}">🧭 Prospección</button>
             ${!s.direccion ? `<button class="popup-btn btn-geocode" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">📍 Dirección</button>` : ''}
-            <button class="popup-btn btn-edit-client" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">✏️ Editar</button>
             <button class="popup-btn btn-delete-client" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">🗑️ Eliminar</button>
           </div>
         </div>`;
@@ -1079,6 +1251,9 @@ document.addEventListener('DOMContentLoaded', function(){
     log(`Marcadores reconstruidos: ${stations.length}`);
   }
 
+  // ============================================================
+  //  6. RUTAS (OSRM) - oculta marcadores al trazar ruta
+  // ============================================================
   let rutaLayer = null;
   let rutaMarcador = null;
   let rutaActiva = false;
@@ -1100,11 +1275,14 @@ document.addEventListener('DOMContentLoaded', function(){
     if (rutaMarcador) { map.removeLayer(rutaMarcador); rutaMarcador = null; }
     if (rutaActiva) {
       rutaActiva = false;
+      // Restaurar el clúster
       if (!map.hasLayer(cluster)) map.addLayer(cluster);
+      // Restaurar círculos activos
       activeCircleFilters.forEach(id => {
         const c = circulos[id];
         if (c && c.visible && !map.hasLayer(c.capa)) map.addLayer(c.capa);
       });
+      // Reaplicar filtros para mostrar los marcadores correctos
       applyFilters();
     }
   }
@@ -1121,6 +1299,9 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
+  // Dibuja la ruta (oculta clúster/círculos, traza la línea, coloca la bandera
+  // de llegada). Lo usan tanto "Calcular ruta" (desde el ancla) como
+  // "Ruta de prospección" (desde tu ubicación real), cambiando solo el origen.
   async function dibujarRuta(origen, destLat, destLon, color) {
     if (rutaActiva) limpiarRuta();
     color = color || '#1F5CA9';
@@ -1129,7 +1310,9 @@ document.addEventListener('DOMContentLoaded', function(){
     if (!resultado) { toast('No se pudo calcular la ruta.', 'error'); return; }
     const coords = resultado.geometria.map(c => [c[1], c[0]]);
 
+    // Ocultar el clúster
     if (map.hasLayer(cluster)) map.removeLayer(cluster);
+    // Ocultar círculos activos
     activeCircleFilters.forEach(id => {
       const c = circulos[id];
       if (c && c.visible && map.hasLayer(c.capa)) map.removeLayer(c.capa);
@@ -1151,6 +1334,8 @@ document.addEventListener('DOMContentLoaded', function(){
     await dibujarRuta(origen, destLat, destLon);
   }
 
+  // Ruta desde tu ubicación real (obtenida con el botón "Mi ubicación") hasta
+  // el cliente elegido, para planear una visita de prospección.
   async function mostrarRutaProspeccion(destLat, destLon) {
     if (!miUbicacionCoords) {
       toast('Primero obtén tu ubicación con el botón "Mi ubicación".', 'info');
@@ -1160,6 +1345,7 @@ document.addEventListener('DOMContentLoaded', function(){
     await dibujarRuta(origen, destLat, destLon, '#059669');
   }
 
+  // Mejora del popup de clúster con distancia promedio
   cluster.on('clustermouseover', function(e) {
     if (clusterTimer) clearTimeout(clusterTimer);
     const layer = e.layer;
@@ -1183,14 +1369,13 @@ document.addEventListener('DOMContentLoaded', function(){
     clusterTimer = setTimeout(() => e.layer.closePopup(), 1500);
   });
 
-  // LEYENDA CON MINIMIZAR
+  // ============================================================
+  //  7. LEYENDA DE DISTANCIAS
+  // ============================================================
   const legendControl = L.control({ position: 'bottomright' });
   legendControl.onAdd = function() {
     const div = L.DomUtil.create('div', 'price-legend');
-    div.innerHTML = `<div class="title">
-      Distancia al círculo activo
-      <button class="clear-btn" id="legendToggleBtn" aria-label="Minimizar leyenda">−</button>
-    </div>`;
+    div.innerHTML = `<div class="title">Distancia al círculo activo <button class="clear-btn" id="legendClearBtn">✕</button></div>`;
     const ranges = [
       { label: '0 – 50 km',   key: 'very-low', color: '#10b981' },
       { label: '50 – 100 km', key: 'low',     color: '#34d399' },
@@ -1198,6 +1383,8 @@ document.addEventListener('DOMContentLoaded', function(){
       { label: '150 – 190 km', key: 'high',   color: '#fb923c' },
       { label: '> 190 km',    key: 'no-price', color: '#94a3b8' }
     ];
+    // Cuenta por color entre los clientes VISIBLES (según su círculo activo más cercano),
+    // no entre todos los clientes cargados, para que coincida con lo que se ve en el mapa.
     function actualizarConteos(visibles) {
       const conteo = new Map();
       (visibles || []).forEach(s => conteo.set(s._matchKey, (conteo.get(s._matchKey) || 0) + 1));
@@ -1215,26 +1402,28 @@ document.addEventListener('DOMContentLoaded', function(){
       </div>`).join('');
     setTimeout(actualizarConteos, 100);
     div._actualizarConteos = actualizarConteos;
-
-    div.querySelector('#legendToggleBtn').addEventListener('click', function(e) {
-      e.stopPropagation();
-      div.classList.toggle('collapsed');
-      this.textContent = div.classList.contains('collapsed') ? '+' : '−';
-    });
-
     return div;
   };
   legendControl.addTo(map);
 
+  // Aviso flotante sobre el mapa: visible mientras no haya ningún círculo de
+  // radio activo, para que quede claro que hay que elegir uno para ver clientes.
   function actualizarPistaMapa() {
     const hint = document.getElementById('mapHint');
     if (!hint) return;
     hint.classList.toggle('hidden', activeCircleFilters.size > 0);
   }
 
+  // ============================================================
+  //  8. FILTROS Y EVENTOS
+  // ============================================================
   let activePrice = null, activeTamano = 'all', searchTerm = '', maxDist = 190;
   let activeNoAddress = false;
 
+  // Para un cliente, busca el círculo activo más cercano que lo alcance (si hay varios,
+  // gana el de menor distancia). "Max dist." recorta el radio de CADA círculo activo,
+  // en vez de compararse contra el ancla más cercana en general — así nunca contradice
+  // al círculo que el usuario seleccionó.
   function mejorCoincidenciaCirculo(s) {
     let mejor = null;
     for (const id of activeCircleFilters) {
@@ -1251,9 +1440,11 @@ document.addEventListener('DOMContentLoaded', function(){
   function applyFilters() {
     if (rutaActiva) return [];
 
-    const term = searchTerm;
+    const term = searchTerm; // ya viene normalizado (sin acentos/mayúsculas) desde el input
     const selectedTam = document.getElementById('tamanoFilter').value;
 
+    // Sin ningún círculo de radio activo no se muestra ningún cliente:
+    // solo quedan visibles las dos anclas (Morelia y Tototlán).
     let visible = [];
     for (const s of stations) {
       if (!activeCircleFilters.size) break;
@@ -1263,6 +1454,8 @@ document.addEventListener('DOMContentLoaded', function(){
       if (!match) continue;
       const rango = getDistRange(match.dist);
       if (activePrice !== null && rango.key !== activePrice) continue;
+      // El color del pin y la banda de la leyenda reflejan el círculo activo que
+      // reveló a este cliente, no el ancla más cercana en términos absolutos.
       s._matchDist = match.dist;
       s._matchAncla = match.anclaNombre;
       s._matchColor = rango.color;
@@ -1325,7 +1518,6 @@ document.addEventListener('DOMContentLoaded', function(){
     const legend = document.querySelector('.price-legend');
     if (legend) {
       legend.addEventListener('click', e => {
-        if (e.target.closest('#legendToggleBtn')) return;
         if (e.target.closest('#legendClearBtn')) {
           activePrice = null;
           const visibles = applyFilters();
@@ -1365,6 +1557,7 @@ document.addEventListener('DOMContentLoaded', function(){
     actualizarSugerenciasBusqueda(valorActual);
   });
 
+  // Autocompletar: sugerencias de nombre mientras se escribe en el buscador
   function actualizarSugerenciasBusqueda(texto) {
     const box = document.getElementById('searchSuggestions');
     const term = normalizarTexto(texto.trim());
@@ -1388,6 +1581,8 @@ document.addEventListener('DOMContentLoaded', function(){
       item.addEventListener('click', () => {
         document.getElementById('searchInput').value = s.nombre;
         box.classList.remove('show');
+        // Si ningún círculo activo alcanza a este cliente, activa el de su ancla
+        // más cercana para que sí se vea (si no, el marcador no estaría en el mapa).
         const idCirculo = '190' + (s.origen === 'morelia' ? 'Morelia' : 'Tototlan');
         if (!activeCircleFilters.has(idCirculo)) {
           activarCirculoId(idCirculo);
@@ -1409,6 +1604,9 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
+  // "Limpiar filtros" solo limpia búsqueda/tamaño/distancia/leyenda/sin-dirección.
+  // Los círculos de radio NO se tocan aquí: se activan/desactivan solo desde su
+  // propio botón, el pin del ancla o el botón "Morelia"/"Tototlán".
   document.getElementById('clearAllBtn').addEventListener('click', () => {
     activePrice = null; searchTerm = '';
     document.getElementById('tamanoFilter').value = 'all';
@@ -1422,8 +1620,13 @@ document.addEventListener('DOMContentLoaded', function(){
     if (activeCircleFilters.size) encuadrarClientes(visibles); else verAmbasAnclas();
   });
 
+  // ============================================================
+  //  9. RENDERIZAR LISTA (directorio) CON ORDEN
+  // ============================================================
   let sortMode = 'dist';
 
+  // Un solo <li> reutilizado por los tres modos de orden: clic o teclado
+  // (Enter/Espacio) centran el mapa en ese cliente y abren su popup.
   function crearItemLista(s) {
     const li = document.createElement('li');
     li.tabIndex = 0;
@@ -1456,6 +1659,7 @@ document.addEventListener('DOMContentLoaded', function(){
     return li;
   }
 
+  // Sugiere qué filtro relajar cuando no hay resultados, en vez de un mensaje genérico.
   function mensajeSinResultados() {
     const li = document.createElement('li');
     li.className = 'empty';
@@ -1538,6 +1742,11 @@ document.addEventListener('DOMContentLoaded', function(){
     applyFilters();
   });
 
+  // ============================================================
+  //  10. CONTROLES ADICIONALES
+  // ============================================================
+
+  // Tema claro/oscuro (persistente en localStorage; el <head> ya evita el parpadeo)
   function aplicarTema(tema) {
     document.documentElement.setAttribute('data-theme', tema);
     const icon = document.getElementById('themeIcon');
@@ -1550,11 +1759,23 @@ document.addEventListener('DOMContentLoaded', function(){
     aplicarTema(actual === 'dark' ? 'light' : 'dark');
   });
 
-  document.getElementById('moreToggleBtn').addEventListener('click', function() {
-    const toolbar = document.querySelector('.toolbar');
-    const abierto = toolbar.classList.toggle('mobile-more-open');
+  // Menú "Más" (escritorio y móvil): agrupa las acciones poco frecuentes
+  // (Agregar cliente, Obtener direcciones, Exportar CSV, Sin dirección, Más
+  // cercano, Limpiar ruta, Restablecer) en un desplegable, para dejar la barra
+  // principal limpia con solo lo de uso diario.
+  const masMenu = document.getElementById('masMenu');
+  const moreToggleBtn = document.getElementById('moreToggleBtn');
+  moreToggleBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const abierto = masMenu.classList.toggle('open');
     this.setAttribute('aria-expanded', abierto ? 'true' : 'false');
-    this.querySelector('i').className = abierto ? 'fas fa-chevron-up' : 'fas fa-ellipsis-vertical';
+  });
+  // Al elegir una acción del menú, ciérralo (su propio handler ya se ejecuta).
+  masMenu.addEventListener('click', function(e) {
+    if (e.target.closest('.menu-action')) {
+      masMenu.classList.remove('open');
+      moreToggleBtn.setAttribute('aria-expanded', 'false');
+    }
   });
 
   document.getElementById('resetBtn').addEventListener('click', () => verAmbasAnclas());
@@ -1591,6 +1812,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if (b) b.addEventListener('click', () => toggleCirculo(id));
   });
 
+  // Menú desplegable de círculos de radio (agrupa los 4 botones anteriores)
   const circulosToggleBtn = document.getElementById('circulosToggleBtn');
   const circulosMenu = document.getElementById('circulosMenu');
   circulosToggleBtn.addEventListener('click', function(e) {
@@ -1598,16 +1820,23 @@ document.addEventListener('DOMContentLoaded', function(){
     const abierto = circulosMenu.classList.toggle('open');
     circulosToggleBtn.setAttribute('aria-expanded', abierto ? 'true' : 'false');
   });
+  // El menú NO se cierra al elegir un círculo: se puede marcar más de uno seguido.
   document.addEventListener('click', function(e) {
     if (!e.target.closest('#circulosDropdown')) {
       circulosMenu.classList.remove('open');
       circulosToggleBtn.setAttribute('aria-expanded', 'false');
+    }
+    if (!e.target.closest('#masDropdown')) {
+      masMenu.classList.remove('open');
+      moreToggleBtn.setAttribute('aria-expanded', 'false');
     }
   });
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
       circulosMenu.classList.remove('open');
       circulosToggleBtn.setAttribute('aria-expanded', 'false');
+      masMenu.classList.remove('open');
+      moreToggleBtn.setAttribute('aria-expanded', 'false');
     }
   });
 
@@ -1618,195 +1847,89 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ============================================================
-  //  MODAL REUTILIZABLE PARA AGREGAR Y EDITAR
+  //  10a. AGREGAR CLIENTE DESDE EL MAPA
   // ============================================================
-  const modalOverlay = document.getElementById('clientModalOverlay');
-  const modalTitle = document.getElementById('clientModalTitle');
-  const editLat = document.getElementById('editLat');
-  const editLon = document.getElementById('editLon');
-  const editNombre = document.getElementById('editNombre');
-  const editEstado = document.getElementById('editEstado');
-  const editTamano = document.getElementById('editTamano');
-  const editDireccion = document.getElementById('editDireccion');
-  const editTelefono = document.getElementById('editTelefono');
-  const saveBtn = document.getElementById('clientModalSaveBtn');
-  const cancelBtn = document.getElementById('clientModalCancelBtn');
+  let addingClientMode = false;
+  const addClientBtn = document.getElementById('addClientBtn');
+  const modalOverlay = document.getElementById('addClientModalOverlay');
+  const addLat = document.getElementById('addLat');
+  const addLon = document.getElementById('addLon');
+  const addNombre = document.getElementById('addNombre');
+  const addEstado = document.getElementById('addEstado');
+  const addTamano = document.getElementById('addTamano');
+  const addDireccion = document.getElementById('addDireccion');
+  const addTelefono = document.getElementById('addTelefono');
+  let tempCoords = null;
 
-  let clienteEnEdicion = null; // null = modo agregar, objeto = modo editar
-
-  function abrirModalAgregar() {
-    clienteEnEdicion = null;
-    modalTitle.textContent = '➕ Nuevo cliente';
-    saveBtn.textContent = 'Guardar cliente';
-    editLat.value = '';
-    editLon.value = '';
-    editNombre.value = '';
-    editEstado.value = '';
-    editTamano.value = '';
-    editDireccion.value = '';
-    editTelefono.value = '';
-    modalOverlay.classList.add('open');
-    setTimeout(() => editLat.focus(), 100);
-  }
-
-  function abrirModalEdicion(cliente) {
-    clienteEnEdicion = cliente;
-    modalTitle.textContent = '✏️ Editar cliente';
-    saveBtn.textContent = 'Guardar cambios';
-    editLat.value = cliente.lat.toFixed(6);
-    editLon.value = cliente.lon.toFixed(6);
-    editNombre.value = cliente.nombre;
-    editEstado.value = cliente.estado || '';
-    editTamano.value = cliente.tamano || '';
-    editDireccion.value = cliente.direccion || '';
-    editTelefono.value = cliente.telefono || '';
-    modalOverlay.classList.add('open');
-    setTimeout(() => editLat.focus(), 100);
-  }
-
-  function cerrarModalCliente() {
-    modalOverlay.classList.remove('open');
-    clienteEnEdicion = null;
-  }
-
-  // Botón "Agregar cliente"
-  document.getElementById('addClientBtn').addEventListener('click', abrirModalAgregar);
-
-  // Botón "Cancelar" del modal
-  cancelBtn.addEventListener('click', cerrarModalCliente);
-
-  // Clic en el mapa mientras el modal está abierto → rellena coordenadas
-  map.on('click', function(e) {
-    if (modalOverlay.classList.contains('open')) {
-      editLat.value = e.latlng.lat.toFixed(6);
-      editLon.value = e.latlng.lng.toFixed(6);
-      toast('Coordenadas copiadas del mapa.', 'info', 1500);
-    }
-  });
-
-  // Cerrar modal con Escape
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && modalOverlay.classList.contains('open')) {
-      cerrarModalCliente();
-    }
-  });
-
-  // Guardar (agregar o editar)
-  saveBtn.addEventListener('click', function() {
-    const nombre = editNombre.value.trim();
-    if (!nombre) { toast('El nombre comercial es obligatorio.', 'error'); return; }
-
-    const lat = parseFloat(editLat.value);
-    const lon = parseFloat(editLon.value);
-    if (isNaN(lat) || isNaN(lon)) { toast('Introduce latitud y longitud válidas.', 'error'); return; }
-    if (lat < -90 || lat > 90) { toast('Latitud fuera de rango (-90 a 90).', 'error'); return; }
-    if (lon < -180 || lon > 180) { toast('Longitud fuera de rango (-180 a 180).', 'error'); return; }
-
-    const estado = editEstado.value.trim();
-    const tamano = editTamano.value.trim();
-    const direccion = editDireccion.value.trim();
-    const telefono = editTelefono.value.trim();
-
-    const latRed = Math.round(lat * 1e6) / 1e6;
-    const lonRed = Math.round(lon * 1e6) / 1e6;
-
-    if (clienteEnEdicion) {
-      // === MODO EDICIÓN ===
-      // Verificar duplicado (mismo nombre y coordenadas, pero distinto cliente)
-      const duplicado = stations.some(s =>
-        s !== clienteEnEdicion &&
-        s.lat === latRed &&
-        s.lon === lonRed &&
-        s.nombre === nombre
-      );
-      if (duplicado) {
-        toast('Ya existe otro cliente con ese nombre y coordenadas.', 'error');
-        return;
-      }
-
-      // Actualizar los datos del cliente existente
-      clienteEnEdicion.nombre = nombre;
-      clienteEnEdicion.lat = latRed;
-      clienteEnEdicion.lon = lonRed;
-      clienteEnEdicion.estado = estado;
-      clienteEnEdicion.tamano = tamano;
-      clienteEnEdicion.direccion = direccion;
-      clienteEnEdicion.telefono = telefono;
-
-      // Recalcular distancias y metadata
-      enriquecer([clienteEnEdicion]);
-
-      // Actualizar marcador y popup
-      const entry = markerMap.get(clienteEnEdicion);
-      if (entry) {
-        const iconoEspecial = obtenerIconoEspecial(clienteEnEdicion);
-        entry.marker.setIcon(iconoEspecial || iconoPin(clienteEnEdicion.priceColor));
-        entry.marker.setTitle(clienteEnEdicion.nombre);
-        // Forzar actualización del popup (se regenera al abrirlo)
-        entry.marker.closePopup();
-      }
-
-      actualizarSelectTamano();
-      applyFilters();
-      try {
-        localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
-        localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
-      } catch (e) {}
-      cerrarModalCliente();
-      toast(`Cliente "${nombre}" actualizado correctamente.`, 'success');
+  function toggleAddMode() {
+    addingClientMode = !addingClientMode;
+    addClientBtn.classList.toggle('active', addingClientMode);
+    if (addingClientMode) {
+      // No pueden estar activos "agregar cliente" y "poner marcador" a la vez.
+      addingPinMode = false;
+      map.getContainer().style.cursor = 'crosshair';
+      toast('Haz clic en el mapa para colocar el nuevo cliente.', 'info');
     } else {
-      // === MODO AGREGAR ===
-      // Verificar duplicado exacto
-      const duplicado = stations.some(s => s.lat === latRed && s.lon === lonRed && s.nombre === nombre);
-      if (duplicado) {
-        toast('Ya existe un cliente con ese nombre y coordenadas.', 'error');
-        return;
-      }
-
-      const nuevo = {
-        nombre: nombre,
-        lat: latRed,
-        lon: lonRed,
-        estado: estado,
-        tamano: tamano,
-        direccion: direccion,
-        telefono: telefono
-      };
-
-      enriquecer([nuevo]);
-      stations.push(nuevo);
-      reconstruirMarcadoresClientes();
-      actualizarSelectTamano();
-      applyFilters();
-      try {
-        localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
-        localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
-      } catch (e) {}
-      cerrarModalCliente();
-      toast(`Cliente "${nombre}" agregado correctamente.`, 'success');
+      map.getContainer().style.cursor = '';
     }
+  }
+
+  addClientBtn.addEventListener('click', toggleAddMode);
+
+  map.on('click', function(e) {
+    if (!addingClientMode) return;
+    addingClientMode = false;
+    addClientBtn.classList.remove('active');
+    map.getContainer().style.cursor = '';
+    tempCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
+    addLat.value = tempCoords.lat.toFixed(6);
+    addLon.value = tempCoords.lng.toFixed(6);
+    addNombre.value = '';
+    addEstado.value = '';
+    addTamano.value = '';
+    addDireccion.value = '';
+    addTelefono.value = '';
+    modalOverlay.classList.add('open');
+  });
+
+  document.getElementById('addCancelBtn').addEventListener('click', () => {
+    modalOverlay.classList.remove('open');
+    tempCoords = null;
+  });
+
+  document.getElementById('addSaveBtn').addEventListener('click', () => {
+    const nombre = addNombre.value.trim();
+    if (!nombre) { toast('El nombre es obligatorio.', 'error'); return; }
+    const estado = addEstado.value.trim();
+    const tamano = addTamano.value.trim();
+    const direccion = addDireccion.value.trim();
+    const telefono = addTelefono.value.trim();
+
+    const nuevo = {
+      nombre: nombre,
+      lat: Math.round(tempCoords.lat * 1e6) / 1e6,
+      lon: Math.round(tempCoords.lng * 1e6) / 1e6,
+      estado: estado || '',
+      tamano: tamano || '',
+      direccion: direccion || '',
+      telefono: telefono || ''
+    };
+    enriquecer([nuevo]);
+    stations.push(nuevo);
+    reconstruirMarcadoresClientes();
+    actualizarSelectTamano();
+    applyFilters();
+    try {
+      localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
+      localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
+    } catch (e) {}
+    modalOverlay.classList.remove('open');
+    tempCoords = null;
+    toast(`Cliente "${nombre}" agregado correctamente.`, 'success');
   });
 
   // ============================================================
-  //  MANEJADOR PARA BOTÓN EDITAR EN EL POPUP
-  // ============================================================
-  document.addEventListener('click', function(e) {
-    const btn = e.target.closest('.btn-edit-client');
-    if (btn) {
-      const lat = parseFloat(btn.dataset.lat);
-      const lon = parseFloat(btn.dataset.lon);
-      const nombre = btn.dataset.nombre;
-      const cliente = stations.find(s => s.lat === lat && s.lon === lon && s.nombre === nombre);
-      if (cliente) {
-        abrirModalEdicion(cliente);
-      } else {
-        toast('Cliente no encontrado.', 'error');
-      }
-    }
-  });
-
-  // ============================================================
-  //  ELIMINAR CLIENTE (con NIP) - ya existente
+  //  10c. ELIMINAR CLIENTE (con NIP de seguridad)
   // ============================================================
   const NIP_ELIMINAR = '1723';
   let clienteAEliminar = null;
@@ -1878,7 +2001,170 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ============================================================
-  //  EXPORTAR CSV
+  //  10d. PONER MARCADORES (pines de recordatorio, tipo Google Maps)
+  //  Son pines LIGEROS para recordar un lugar —punto de interés, posible
+  //  cliente sin datos, punto de llegada o una nota— SIN crear un cliente.
+  //  Siempre visibles (no dependen de los círculos de radio) y guardados en
+  //  localStorage para que sigan ahí al recargar.
+  // ============================================================
+  const MARCADOR_TIPOS = {
+    interes: { label: 'Punto de interés',    color: '#8b5cf6', emoji: '⭐' },
+    posible: { label: 'Posible cliente',     color: '#f59e0b', emoji: '❓' },
+    llegada: { label: 'Punto de llegada',    color: '#059669', emoji: '🏁' },
+    nota:    { label: 'Nota / recordatorio', color: '#0ea5e9', emoji: '📌' }
+  };
+
+  let marcadores = [];
+  const marcadorMarkers = new Map(); // id -> L.marker
+  const marcadoresLayer = L.layerGroup().addTo(map);
+  let marcadoresVisibles = true;
+
+  try {
+    const guardados = JSON.parse(localStorage.getItem('MARCADORES_USUARIO') || '[]');
+    if (Array.isArray(guardados)) marcadores = guardados;
+  } catch (e) { marcadores = []; }
+
+  function guardarMarcadores() {
+    try { localStorage.setItem('MARCADORES_USUARIO', JSON.stringify(marcadores)); } catch (e) {}
+  }
+
+  function marcadorIcon(tipo) {
+    const t = MARCADOR_TIPOS[tipo] || MARCADOR_TIPOS.nota;
+    const svg = `<svg width="34" height="46" viewBox="0 0 34 46" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.28));">
+      <path d="M17 0 C7.6 0 0 7.6 0 17 C0 29.75 17 46 17 46 S34 29.75 34 17 C34 7.6 26.4 0 17 0 Z" fill="${t.color}" stroke="#ffffff" stroke-width="2"/>
+      <circle cx="17" cy="16.5" r="10" fill="#ffffff"/>
+      <text x="17" y="16.5" font-size="12" text-anchor="middle" dominant-baseline="central">${t.emoji}</text>
+    </svg>`;
+    return L.divIcon({ className: '', html: svg, iconSize: [34, 46], iconAnchor: [17, 46], popupAnchor: [0, -42] });
+  }
+
+  function popupMarcador(m) {
+    const t = MARCADOR_TIPOS[m.tipo] || MARCADOR_TIPOS.nota;
+    const fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+    const nota = m.nota ? `<div style="font-size:0.82rem;margin-top:4px;color:var(--text-main);">${String(m.nota).replace(/</g, '&lt;')}</div>` : '';
+    return `<div style="padding:0.2rem;min-width:170px;">
+      <strong style="font-size:1rem;color:${t.color};">${t.emoji} ${t.label}</strong>
+      ${nota}
+      ${fecha ? `<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">Guardado el ${fecha}</div>` : ''}
+      <div class="popup-actions">
+        <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${m.lat},${m.lon}" target="_blank">🗺️ Maps</a>
+        <button class="popup-btn btn-route-prospeccion" data-lat="${m.lat}" data-lon="${m.lon}">🧭 Cómo llegar</button>
+        <button class="popup-btn btn-delete-marcador" data-id="${m.id}">🗑️ Quitar</button>
+      </div>
+    </div>`;
+  }
+
+  function crearMarcadorEnMapa(m) {
+    const t = MARCADOR_TIPOS[m.tipo] || MARCADOR_TIPOS.nota;
+    const marker = L.marker([m.lat, m.lon], { icon: marcadorIcon(m.tipo), title: t.label });
+    marker.bindPopup(() => popupMarcador(m), { maxWidth: 280 });
+    marcadoresLayer.addLayer(marker);
+    marcadorMarkers.set(m.id, marker);
+  }
+
+  function reconstruirMarcadores() {
+    marcadoresLayer.clearLayers();
+    marcadorMarkers.clear();
+    if (marcadoresVisibles) marcadores.forEach(crearMarcadorEnMapa);
+  }
+
+  reconstruirMarcadores();
+
+  // --- Modo "poner marcador": el siguiente clic en el mapa deja caer el pin ---
+  let addingPinMode = false;
+  let tempPinCoords = null;
+  let pinTipoSel = 'interes';
+  const pinModalOverlay = document.getElementById('addPinModalOverlay');
+  const pinNota = document.getElementById('pinNota');
+  const pinTipoChips = document.getElementById('pinTipoChips');
+
+  function setPinMode(on) {
+    addingPinMode = on;
+    if (on) {
+      // No pueden estar activos "poner marcador" y "agregar cliente" a la vez.
+      if (addingClientMode) { addingClientMode = false; addClientBtn.classList.remove('active'); }
+      map.getContainer().style.cursor = 'crosshair';
+      toast('Toca el mapa donde quieras dejar el marcador.', 'info');
+    } else {
+      map.getContainer().style.cursor = '';
+    }
+  }
+
+  document.getElementById('addPinBtn').addEventListener('click', () => setPinMode(true));
+
+  map.on('click', function(e) {
+    if (!addingPinMode) return;
+    setPinMode(false);
+    tempPinCoords = { lat: e.latlng.lat, lon: e.latlng.lng };
+    pinTipoSel = 'interes';
+    pinNota.value = '';
+    pinTipoChips.querySelectorAll('.tipo-chip').forEach(ch => ch.classList.toggle('selected', ch.dataset.tipo === pinTipoSel));
+    pinModalOverlay.classList.add('open');
+    setTimeout(() => pinNota.focus(), 50);
+  });
+
+  pinTipoChips.addEventListener('click', function(e) {
+    const chip = e.target.closest('.tipo-chip');
+    if (!chip) return;
+    pinTipoSel = chip.dataset.tipo;
+    pinTipoChips.querySelectorAll('.tipo-chip').forEach(ch => ch.classList.toggle('selected', ch === chip));
+  });
+
+  document.getElementById('pinCancelBtn').addEventListener('click', () => {
+    pinModalOverlay.classList.remove('open');
+    tempPinCoords = null;
+  });
+
+  document.getElementById('pinSaveBtn').addEventListener('click', () => {
+    if (!tempPinCoords) return;
+    const nuevo = {
+      id: 'm' + Date.now() + Math.floor(Math.random() * 1000),
+      lat: Math.round(tempPinCoords.lat * 1e6) / 1e6,
+      lon: Math.round(tempPinCoords.lon * 1e6) / 1e6,
+      tipo: pinTipoSel,
+      nota: pinNota.value.trim(),
+      fecha: Date.now()
+    };
+    marcadores.push(nuevo);
+    guardarMarcadores();
+    if (!marcadoresVisibles) { marcadoresVisibles = true; reconstruirMarcadores(); }
+    else crearMarcadorEnMapa(nuevo);
+    pinModalOverlay.classList.remove('open');
+    tempPinCoords = null;
+    toast(`Marcador "${MARCADOR_TIPOS[nuevo.tipo].label}" guardado.`, 'success');
+  });
+
+  // Quitar un marcador desde su popup
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn-delete-marcador');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const idx = marcadores.findIndex(m => m.id === id);
+    if (idx === -1) return;
+    marcadores.splice(idx, 1);
+    guardarMarcadores();
+    const marker = marcadorMarkers.get(id);
+    if (marker) { marcadoresLayer.removeLayer(marker); marcadorMarkers.delete(id); }
+    map.closePopup();
+    toast('Marcador eliminado.', 'success');
+  });
+
+  // Mostrar / ocultar todos los marcadores
+  document.getElementById('toggleMarcadoresBtn').addEventListener('click', function() {
+    marcadoresVisibles = !marcadoresVisibles;
+    reconstruirMarcadores();
+    const label = this.querySelector('.dropdown-item-label');
+    if (marcadoresVisibles) {
+      label.innerHTML = '<i class="fas fa-eye"></i> Ocultar marcadores';
+      toast('Marcadores visibles.', 'info');
+    } else {
+      label.innerHTML = '<i class="fas fa-eye-slash"></i> Mostrar marcadores';
+      toast('Marcadores ocultos.', 'info');
+    }
+  });
+
+  // ============================================================
+  //  10b2. EXPORTAR CSV
   // ============================================================
   document.getElementById('exportCsvBtn').addEventListener('click', function() {
     if (stations.length === 0) { toast('No hay clientes para exportar.', 'info'); return; }
@@ -1912,10 +2198,12 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ============================================================
-  //  MI UBICACIÓN
+  //  10b. MI UBICACIÓN (Geolocalización del navegador)
   // ============================================================
   let miUbicacionMarker = null;
 
+  // Pin de gota (como los del mapa) en el naranja del Pegman de Street View,
+  // con una siluetita de persona adentro para diferenciarlo de los demás pines.
   function miUbicacionIcon() {
     const svg = `
       <svg width="32" height="44" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.35));">
@@ -1962,6 +2250,7 @@ document.addEventListener('DOMContentLoaded', function(){
           .on('click', toggleCercaDeMi)
           .openPopup();
 
+        // Muestra solo los clientes a 1 km a la redonda (apaga cualquier otro círculo activo).
         activarCercaDeMi();
       },
       function(err) {
@@ -1981,7 +2270,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ============================================================
-  //  GEOCODIFICACIÓN INVERSA
+  //  11. GEOCODIFICACIÓN INVERSA (Nominatim)
   // ============================================================
   async function geocodeCliente(cliente) {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${cliente.lat}&lon=${cliente.lon}&format=json&zoom=16&addressdetails=1`;
@@ -2028,7 +2317,29 @@ document.addEventListener('DOMContentLoaded', function(){
         const entry = markerMap.get(s);
         if (entry) {
           entry.marker.closePopup();
-          // Se regenerará automáticamente al abrir
+          entry.marker.bindPopup(() => {
+            const d = s._matchDist < 10 ? s._matchDist.toFixed(1) : Math.round(s._matchDist);
+            const direccion = s.direccion ? `<br><span style="font-size:0.8rem;">📍 ${s.direccion}</span>` : '';
+            const tamano = s.tamano ? `<br><span style="font-size:0.8rem;">🏢 ${s.tamano}</span>` : '';
+            return `<div style="padding:0.2rem;">
+              <strong style="font-size:1.05rem;color:var(--primary);">${s.nombre}</strong><br>
+              <span style="color:var(--text-muted);font-size:0.8rem;">${s.estado || '...'}</span>
+              ${direccion}
+              ${tamano}
+              ${s.telefono ? `<br><span style="font-size:0.8rem;">📞 ${s.telefono}</span>` : ''}
+              <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
+                <span style="display:block;width:10px;height:10px;border-radius:50%;background:${s._matchColor};"></span>
+                <span style="color:#0f172a;font-weight:600;">${d} km de ${s._matchAncla}</span>
+              </div>
+              <div class="popup-actions">
+                <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${s.lat},${s.lon}" target="_blank">🗺️ Maps</a>
+                <button class="popup-btn btn-route" data-lat="${s.lat}" data-lon="${s.lon}">🚗 Ruta</button>
+                <button class="popup-btn btn-route-prospeccion" data-lat="${s.lat}" data-lon="${s.lon}">🧭 Prospección</button>
+                ${!s.direccion ? `<button class="popup-btn btn-geocode" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">📍 Dirección</button>` : ''}
+                <button class="popup-btn btn-delete-client" data-lat="${s.lat}" data-lon="${s.lon}" data-nombre="${s.nombre}">🗑️ Eliminar</button>
+              </div>
+            </div>`;
+          });
         }
       }
       procesados++;
@@ -2075,14 +2386,36 @@ document.addEventListener('DOMContentLoaded', function(){
         const entry = markerMap.get(cliente);
         if (entry) {
           entry.marker.closePopup();
-          // Actualización visual al abrir popup
+          entry.marker.bindPopup(() => {
+            const d = cliente._matchDist < 10 ? cliente._matchDist.toFixed(1) : Math.round(cliente._matchDist);
+            const direccion = cliente.direccion ? `<br><span style="font-size:0.8rem;">📍 ${cliente.direccion}</span>` : '';
+            const tamano = cliente.tamano ? `<br><span style="font-size:0.8rem;">🏢 ${cliente.tamano}</span>` : '';
+            return `<div style="padding:0.2rem;">
+              <strong style="font-size:1.05rem;color:var(--primary);">${cliente.nombre}</strong><br>
+              <span style="color:var(--text-muted);font-size:0.8rem;">${cliente.estado || '...'}</span>
+              ${direccion}
+              ${tamano}
+              ${cliente.telefono ? `<br><span style="font-size:0.8rem;">📞 ${cliente.telefono}</span>` : ''}
+              <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
+                <span style="display:block;width:10px;height:10px;border-radius:50%;background:${cliente._matchColor};"></span>
+                <span style="color:#0f172a;font-weight:600;">${d} km de ${cliente._matchAncla}</span>
+              </div>
+              <div class="popup-actions">
+                <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${cliente.lat},${cliente.lon}" target="_blank">🗺️ Maps</a>
+                <button class="popup-btn btn-route" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🚗 Ruta</button>
+                <button class="popup-btn btn-route-prospeccion" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🧭 Prospección</button>
+                ${!cliente.direccion ? `<button class="popup-btn btn-geocode" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">📍 Dirección</button>` : ''}
+                <button class="popup-btn btn-delete-client" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">🗑️ Eliminar</button>
+              </div>
+            </div>`;
+          });
+          entry.marker.openPopup();
         }
         try {
           localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
           localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
         } catch (e) {}
         applyFilters();
-        toast(`Dirección obtenida para "${cliente.nombre}".`, 'success');
       } else {
         toast('No se pudo obtener la dirección para este cliente.', 'error');
       }
@@ -2090,7 +2423,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ============================================================
-  //  ACTUALIZAR SELECT DE TAMAÑOS
+  //  12. ACTUALIZAR SELECT DE TAMAÑOS
   // ============================================================
   function actualizarSelectTamano() {
     const select = document.getElementById('tamanoFilter');
@@ -2109,7 +2442,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   // ============================================================
-  //  RECARGA DESDE LOCALSTORAGE
+  //  13. RECARGA DE CLIENTES DESDE LOCALSTORAGE
   // ============================================================
   function recargarClientes() {
     const nuevoJS = localStorage.getItem('CLIENTES_JS');
@@ -2133,7 +2466,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ============================================================
-  //  INICIALIZACIÓN FINAL
+  //  14. INICIALIZACIÓN FINAL
   // ============================================================
   reconstruirMarcadoresClientes();
   actualizarSelectTamano();
@@ -2141,6 +2474,8 @@ document.addEventListener('DOMContentLoaded', function(){
   document.getElementById('rTotal').textContent = stations.length;
   setTimeout(() => map.invalidateSize(), 100);
 
+  // En pantallas angostas el directorio es un panel que se desliza desde abajo
+  // sobre el mapa: debe empezar oculto, o el mapa quedaría casi sin espacio.
   if (window.matchMedia('(max-width: 768px)').matches) {
     document.getElementById('railPanel').classList.add('hidden');
     document.getElementById('railToggleIcon').className = 'fas fa-chevron-left';
