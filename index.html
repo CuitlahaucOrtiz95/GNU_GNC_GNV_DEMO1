@@ -502,6 +502,11 @@
       background: var(--bg-main); color: var(--text-main);
     }
     .modal .warning-text { font-size: 0.85rem; color: var(--text-main); line-height: 1.5; }
+    /* Método para agregar cliente: en el mapa o manual */
+    .modal .radio-group { display: flex; gap: 16px; margin: 6px 0; flex-wrap: wrap; }
+    .modal .radio-group label { display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 0.82rem; color: var(--text-main); cursor: pointer; margin-bottom: 0; }
+    .modal .radio-group input[type="radio"] { width: auto; accent-color: var(--primary); }
+    .modal .map-pick-btn { margin-top: 2px; }
 
     /* Selector de tipo de marcador (chips) */
     .tipo-chips { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 4px 0 2px; }
@@ -561,13 +566,32 @@
   <p>Cargando clientes…</p>
 </div>
 <div class="toast-container" id="toastContainer"></div>
+
+<input type="file" id="csvFileInput" accept=".csv" style="display:none">
+
+<div class="modal-overlay" id="importResultModalOverlay">
+  <div class="modal" style="max-width:500px; max-height:80vh; overflow-y:auto;">
+    <h3 id="importResultTitle">📥 Clientes importados</h3>
+    <div id="importResultList" style="max-height:300px; overflow-y:auto; margin-bottom:10px; font-size:0.8rem;"></div>
+    <div class="actions">
+      <button class="btn-cancel" id="importResultCloseBtn">Cerrar</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="addClientModalOverlay">
   <div class="modal">
     <h3>➕ Nuevo cliente</h3>
-    <div class="coords-row">
-      <label style="flex:1">Latitud <input type="text" id="addLat" readonly placeholder="Click en mapa"></label>
-      <label style="flex:1">Longitud <input type="text" id="addLon" readonly placeholder="Click en mapa"></label>
+    <div class="radio-group">
+      <label><input type="radio" name="addMethod" value="map" checked> <i class="fas fa-map-pin"></i> Seleccionar en el mapa</label>
+      <label><input type="radio" name="addMethod" value="manual"> <i class="fas fa-keyboard"></i> Ingresar manualmente</label>
     </div>
+    <div class="coords-row">
+      <label style="flex:1">Latitud <input type="text" id="addLat" readonly placeholder="Ej. 19.7048"></label>
+      <label style="flex:1">Longitud <input type="text" id="addLon" readonly placeholder="Ej. -101.2448"></label>
+    </div>
+    <button class="btn btn-outline map-pick-btn" id="pickOnMapBtn" style="align-self:flex-start;">
+      <i class="fas fa-crosshairs"></i> Elegir ubicación en el mapa
+    </button>
     <label>Nombre <input type="text" id="addNombre" placeholder="Nombre comercial"></label>
     <label>Estado <input type="text" id="addEstado" placeholder="Estado o provincia"></label>
     <label>Tamaño / Categoría <input type="text" id="addTamano" list="tamanoOpciones" placeholder="Pequeña, Base de combis, Central de taxis…"></label>
@@ -751,6 +775,9 @@
         </button>
         <button class="dropdown-item menu-action" id="exportCsvBtn" title="Descargar todos los clientes como CSV">
           <span class="dropdown-item-label"><i class="fas fa-file-csv"></i> Exportar CSV</span>
+        </button>
+        <button class="dropdown-item menu-action" id="importCsvBtn" title="Importar clientes desde un archivo CSV">
+          <span class="dropdown-item-label"><i class="fas fa-upload"></i> Importar CSV</span>
         </button>
         <button class="dropdown-item menu-action" id="toggleMarcadoresBtn" title="Mostrar u ocultar todos los marcadores">
           <span class="dropdown-item-label"><i class="fas fa-eye"></i> Ocultar marcadores</span>
@@ -1980,58 +2007,76 @@ document.addEventListener('DOMContentLoaded', function(){
   const addTelefono = document.getElementById('addTelefono');
   let tempCoords = null;
 
-  function toggleAddMode() {
-    addingClientMode = !addingClientMode;
-    addClientBtn.classList.toggle('active', addingClientMode);
-    if (addingClientMode) {
-      // No pueden estar activos "agregar cliente" y "poner marcador" a la vez.
-      addingPinMode = false;
-      map.getContainer().style.cursor = 'crosshair';
-      toast('Haz clic en el mapa para colocar el nuevo cliente.', 'info');
-    } else {
-      map.getContainer().style.cursor = '';
-    }
+  // Método de captura: en el mapa (clic) o manual (escribir coordenadas).
+  function updateAddMethodUI() {
+    const sel = document.querySelector('input[name="addMethod"]:checked');
+    const isManual = sel && sel.value === 'manual';
+    addLat.readOnly = !isManual;
+    addLon.readOnly = !isManual;
+    document.getElementById('pickOnMapBtn').style.display = isManual ? 'none' : 'inline-flex';
   }
+  document.getElementsByName('addMethod').forEach(r => r.addEventListener('change', updateAddMethodUI));
 
-  addClientBtn.addEventListener('click', toggleAddMode);
-
-  map.on('click', function(e) {
-    if (!addingClientMode) return;
+  function abrirModalAgregar() {
     addingClientMode = false;
-    addClientBtn.classList.remove('active');
+    addingPinMode = false;
     map.getContainer().style.cursor = '';
-    tempCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
-    addLat.value = tempCoords.lat.toFixed(6);
-    addLon.value = tempCoords.lng.toFixed(6);
+    tempCoords = null;
+    addLat.value = '';
+    addLon.value = '';
     addNombre.value = '';
     addEstado.value = '';
     addTamano.value = '';
     addDireccion.value = '';
     addTelefono.value = '';
+    const mapRadio = document.querySelector('input[name="addMethod"][value="map"]');
+    if (mapRadio) mapRadio.checked = true;
+    updateAddMethodUI();
+    modalOverlay.classList.add('open');
+  }
+
+  addClientBtn.addEventListener('click', abrirModalAgregar);
+
+  // "Elegir ubicación en el mapa": cierra el modal y activa el modo clic.
+  document.getElementById('pickOnMapBtn').addEventListener('click', () => {
+    modalOverlay.classList.remove('open');
+    addingClientMode = true;
+    addingPinMode = false;
+    map.getContainer().style.cursor = 'crosshair';
+    toast('Haz clic en el mapa para colocar el cliente.', 'info');
+  });
+
+  map.on('click', function(e) {
+    if (!addingClientMode) return;
+    addingClientMode = false;
+    map.getContainer().style.cursor = '';
+    tempCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
+    addLat.value = tempCoords.lat.toFixed(6);
+    addLon.value = tempCoords.lng.toFixed(6);
     modalOverlay.classList.add('open');
   });
 
   document.getElementById('addCancelBtn').addEventListener('click', () => {
     modalOverlay.classList.remove('open');
+    if (addingClientMode) { addingClientMode = false; map.getContainer().style.cursor = ''; }
     tempCoords = null;
   });
 
   document.getElementById('addSaveBtn').addEventListener('click', () => {
     const nombre = addNombre.value.trim();
     if (!nombre) { toast('El nombre es obligatorio.', 'error'); return; }
-    const estado = addEstado.value.trim();
-    const tamano = addTamano.value.trim();
-    const direccion = addDireccion.value.trim();
-    const telefono = addTelefono.value.trim();
+    const lat = parseFloat(addLat.value.trim());
+    const lon = parseFloat(addLon.value.trim());
+    if (isNaN(lat) || isNaN(lon)) { toast('Coordenadas inválidas. Elige un punto en el mapa o escríbelas.', 'error'); return; }
 
     const nuevo = {
       nombre: nombre,
-      lat: Math.round(tempCoords.lat * 1e6) / 1e6,
-      lon: Math.round(tempCoords.lng * 1e6) / 1e6,
-      estado: estado || '',
-      tamano: tamano || '',
-      direccion: direccion || '',
-      telefono: telefono || ''
+      lat: Math.round(lat * 1e6) / 1e6,
+      lon: Math.round(lon * 1e6) / 1e6,
+      estado: addEstado.value.trim(),
+      tamano: addTamano.value.trim(),
+      direccion: addDireccion.value.trim(),
+      telefono: addTelefono.value.trim()
     };
     enriquecer([nuevo]);
     stations.push(nuevo);
@@ -2314,6 +2359,93 @@ document.addEventListener('DOMContentLoaded', function(){
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     toast(`CSV exportado con ${stations.length.toLocaleString()} clientes.`, 'success');
+  });
+
+  // ============================================================
+  //  10b3. IMPORTAR CSV
+  //  Lee un archivo CSV (mínimo columnas: nombre, lat, lon) y agrega los
+  //  clientes nuevos (omitiendo duplicados por lat/lon/nombre).
+  // ============================================================
+  function parsearCSV(csvText) {
+    const lines = csvText.split(/\r?\n/).filter(l => l.trim() !== '');
+    if (lines.length < 2) return [];
+    const header = lines[0].split(',').map(c => normalizarTexto(c.trim()));
+    const iNombre = header.indexOf('nombre'), iLat = header.indexOf('lat'), iLon = header.indexOf('lon');
+    if (iNombre === -1 || iLat === -1 || iLon === -1) { toast('El CSV debe tener columnas: nombre, lat, lon (mínimo).', 'error'); return null; }
+    const iEstado = header.indexOf('estado'), iTamano = header.indexOf('tamano'), iDir = header.indexOf('direccion'), iTel = header.indexOf('telefono');
+    const clientes = [];
+    for (let i = 1; i < lines.length; i++) {
+      // Separa respetando comillas dobles (para nombres con comas).
+      const vals = (lines[i].match(/("([^"]|"")*"|[^,]*)(,|$)/g) || [])
+        .map(v => v.replace(/,$/, '').trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+      const nombre = (vals[iNombre] || '').trim();
+      const lat = parseFloat(vals[iLat]), lon = parseFloat(vals[iLon]);
+      if (!nombre || isNaN(lat) || isNaN(lon)) continue;
+      clientes.push({
+        nombre, lat, lon,
+        estado: iEstado !== -1 ? (vals[iEstado] || '') : '',
+        tamano: iTamano !== -1 ? (vals[iTamano] || '') : '',
+        direccion: iDir !== -1 ? (vals[iDir] || '') : '',
+        telefono: iTel !== -1 ? (vals[iTel] || '') : ''
+      });
+    }
+    return clientes;
+  }
+
+  document.getElementById('importCsvBtn').addEventListener('click', () => document.getElementById('csvFileInput').click());
+
+  document.getElementById('csvFileInput').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        let nuevos = parsearCSV(ev.target.result);
+        if (nuevos === null) return; // faltan columnas (ya avisó)
+        if (!nuevos.length) { toast('El archivo CSV no contiene datos válidos.', 'error'); return; }
+        nuevos = deduplicate(nuevos);
+        const claves = new Set(stations.map(s => `${Math.round(s.lat*1e5)/1e5}|${Math.round(s.lon*1e5)/1e5}|${s.nombre.trim()}`));
+        const nuevosReales = nuevos.filter(c => !claves.has(`${Math.round(c.lat*1e5)/1e5}|${Math.round(c.lon*1e5)/1e5}|${c.nombre.trim()}`));
+        if (!nuevosReales.length) { toast('Todos los clientes del CSV ya existen en el mapa.', 'info'); return; }
+        enriquecer(nuevosReales);
+        const agregados = filtrarPorRadio190(nuevosReales);
+        const fuera = nuevosReales.length - agregados.length;
+        stations.push(...agregados);
+        reconstruirMarcadoresClientes();
+        actualizarSelectTamano();
+        applyFilters();
+        actualizarEstadoCarga(stations.length, contarPorAncla(stations));
+        document.getElementById('rTotal').textContent = stations.length;
+        try {
+          localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
+          localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
+        } catch (e) {}
+        toast(`${agregados.length} cliente(s) importado(s)${fuera ? ` · ${fuera} fuera de rango omitidos` : ''}.`, 'success');
+        mostrarListaImportados(agregados);
+      } catch (err) { console.error(err); toast('Error al procesar el archivo CSV.', 'error'); }
+    };
+    reader.onerror = () => toast('Error al leer el archivo.', 'error');
+    reader.readAsText(file, 'UTF-8');
+    this.value = '';
+  });
+
+  function mostrarListaImportados(clientes) {
+    document.getElementById('importResultTitle').textContent = `📥 ${clientes.length} cliente(s) importado(s)`;
+    const list = document.getElementById('importResultList');
+    list.innerHTML = '';
+    if (!clientes.length) { list.innerHTML = '<div style="color:var(--text-muted);">Sin clientes nuevos dentro del rango.</div>'; }
+    clientes.forEach(c => {
+      const item = document.createElement('div');
+      item.style.padding = '4px 0';
+      item.style.borderBottom = '1px solid var(--border)';
+      item.innerHTML = `<strong></strong> <span style="color:var(--text-muted);font-size:0.7rem;">(${c.lat.toFixed(5)}, ${c.lon.toFixed(5)})</span>`;
+      item.querySelector('strong').textContent = c.nombre;
+      list.appendChild(item);
+    });
+    document.getElementById('importResultModalOverlay').classList.add('open');
+  }
+  document.getElementById('importResultCloseBtn').addEventListener('click', () => {
+    document.getElementById('importResultModalOverlay').classList.remove('open');
   });
 
   // ============================================================
