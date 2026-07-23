@@ -782,6 +782,9 @@
         <button class="dropdown-item menu-action" id="toggleMarcadoresBtn" title="Mostrar u ocultar todos los marcadores">
           <span class="dropdown-item-label"><i class="fas fa-eye"></i> Ocultar marcadores</span>
         </button>
+        <button class="dropdown-item menu-action" id="toggleRutasBtn" title="Mostrar u ocultar las rutas de transporte de Morelia">
+          <span class="dropdown-item-label"><i class="fas fa-bus"></i> Rutas de transporte</span>
+        </button>
         <button class="dropdown-item menu-action" id="noAddressBtn" aria-label="Filtrar clientes sin dirección">
           <span class="dropdown-item-label"><i class="fas fa-envelope"></i> Solo sin dirección</span>
         </button>
@@ -2326,6 +2329,64 @@ document.addEventListener('DOMContentLoaded', function(){
       toast('Marcadores ocultos.', 'info');
     }
   });
+
+  // ============================================================
+  //  10e. RUTAS DE TRANSPORTE (capa GeoJSON de Morelia)
+  //  Se carga bajo demanda (el archivo pesa ~1.3 MB) la primera vez que se
+  //  activa. Siempre visible por encima del mapa; no depende de los círculos.
+  // ============================================================
+  const rutasLayer = L.layerGroup().addTo(map);
+  let rutasVisibles = false;
+  let rutasCargadas = false;
+  let rutasCargando = false;
+
+  function pintarRutas(fc) {
+    (fc.features || []).forEach(f => {
+      if (!f.geometry || f.geometry.type !== 'LineString') return;
+      const latlngs = f.geometry.coordinates.map(c => [c[1], c[0]]); // [lon,lat] -> [lat,lng]
+      const color = (f.properties && f.properties.color) || '#e11d48';
+      const nombre = (f.properties && f.properties.nombre) || 'Ruta';
+      const linea = L.polyline(latlngs, { color, weight: 3, opacity: 0.85 });
+      linea.bindPopup(`<strong style="color:${color};">🚌 ${nombre}</strong><br><span style="font-size:0.75rem;color:#64748b;">Transporte público · Morelia</span>`);
+      linea.on('mouseover', () => linea.setStyle({ weight: 6, opacity: 1 }));
+      linea.on('mouseout', () => linea.setStyle({ weight: 3, opacity: 0.85 }));
+      rutasLayer.addLayer(linea);
+    });
+  }
+
+  function toggleRutas() {
+    const btn = document.getElementById('toggleRutasBtn');
+    const label = btn.querySelector('.dropdown-item-label');
+    // Aún cargando: no hacer nada
+    if (rutasCargando) return;
+
+    // Ya cargadas: solo alternar visibilidad
+    if (rutasCargadas) {
+      rutasVisibles = !rutasVisibles;
+      if (rutasVisibles) { rutasLayer.addTo(map); label.innerHTML = '<i class="fas fa-bus"></i> Ocultar rutas'; toast('Rutas de transporte visibles.', 'info'); }
+      else { map.removeLayer(rutasLayer); label.innerHTML = '<i class="fas fa-bus"></i> Rutas de transporte'; toast('Rutas ocultas.', 'info'); }
+      return;
+    }
+
+    // Primera vez: cargar el GeoJSON
+    rutasCargando = true;
+    label.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Cargando rutas…';
+    fetch('rutas_morelia.geojson')
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(fc => {
+        pintarRutas(fc);
+        rutasCargadas = true; rutasVisibles = true; rutasCargando = false;
+        rutasLayer.addTo(map);
+        label.innerHTML = '<i class="fas fa-bus"></i> Ocultar rutas';
+        toast(`${(fc.features || []).length} rutas de transporte cargadas.`, 'success');
+      })
+      .catch(err => {
+        console.error(err); rutasCargando = false;
+        label.innerHTML = '<i class="fas fa-bus"></i> Rutas de transporte';
+        toast('No se pudo cargar el archivo de rutas (rutas_morelia.geojson).', 'error');
+      });
+  }
+  document.getElementById('toggleRutasBtn').addEventListener('click', toggleRutas);
 
   // ============================================================
   //  10b2. EXPORTAR CSV
