@@ -274,8 +274,6 @@
     .rutas-bases-toggle { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; color: var(--text-main); padding: 0.35rem 0.4rem; margin-bottom: 6px; cursor: pointer; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-main); }
     .rutas-bases-toggle input { accent-color: var(--primary); }
     .rutas-bases-toggle i { color: var(--text-muted); }
-    /* Pin de base/terminal en el mapa: círculo con el número de rutas */
-    .base-pin { border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 11px; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.35); }
 
     /* Botón "Más": destacado (degradado índigo) para que resalte de la barra,
        porque abre las acciones que más se usan. */
@@ -2516,17 +2514,30 @@ document.addEventListener('DOMContentLoaded', function(){
   const basesLayer = L.layerGroup().addTo(map);
   let basesCargadas = false, basesCargando = false;
 
-  function baseIcon(count) {
-    const size = count >= 5 ? 34 : count >= 3 ? 28 : count >= 2 ? 24 : 16;
-    const color = count >= 5 ? '#7c2d12' : count >= 3 ? '#b45309' : count >= 2 ? '#0e7490' : '#475569';
-    const txt = count > 1 ? count : '';
-    return L.divIcon({ className: '', html: `<div class="base-pin" style="width:${size}px;height:${size}px;background:${color};">${txt}</div>`, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
+  // Pin de base/terminal: gota de mapa con degradado verde→azul (paleta del mapa)
+  // y una camioneta blanca adentro. El tamaño y el badge indican cuántas rutas
+  // convergen ahí. El id del gradiente debe ser único por pin (uid).
+  function baseIcon(count, uid) {
+    const size = count >= 5 ? 46 : count >= 3 ? 42 : count >= 2 ? 38 : 32;
+    const h = Math.round(size * 1.3);
+    const badge = count > 1
+      ? `<circle cx="31" cy="9" r="7.5" fill="#fff"/><text x="31" y="12.3" font-size="9" font-weight="700" text-anchor="middle" fill="#0f5aa0" font-family="Inter,sans-serif">${count}</text>`
+      : '';
+    const svg = `<svg width="${size}" height="${h}" viewBox="0 0 40 52" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.35));">
+      <defs><linearGradient id="bg${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#10b981"/><stop offset="0.55" stop-color="#0e9aa7"/><stop offset="1" stop-color="#1F5CA9"/></linearGradient></defs>
+      <path d="M20 0 C9 0 0 9 0 20 C0 33 20 52 20 52 S40 33 40 20 C40 9 31 0 20 0 Z" fill="url(#bg${uid})" stroke="#ffffff" stroke-width="1.5"/>
+      <circle cx="20" cy="19" r="13.5" fill="rgba(255,255,255,0.14)"/>
+      <g fill="#ffffff"><rect x="7.5" y="12.5" width="12" height="8.5" rx="1"/><path d="M19.5 14.5 L25.5 14.5 L28.5 18 L28.5 21 L19.5 21 Z"/><rect x="7.5" y="20.3" width="21" height="1.6"/></g>
+      <g><circle cx="13" cy="22.2" r="2.9" fill="#fff"/><circle cx="13" cy="22.2" r="1.2" fill="#1F5CA9"/><circle cx="24" cy="22.2" r="2.9" fill="#fff"/><circle cx="24" cy="22.2" r="1.2" fill="#1F5CA9"/></g>
+      ${badge}
+    </svg>`;
+    return L.divIcon({ className: '', html: svg, iconSize: [size, h], iconAnchor: [size / 2, h], popupAnchor: [0, -h + 8] });
   }
 
   function pintarBases(fc) {
     (fc.features || []).forEach(f => {
       const c = f.geometry.coordinates, p = f.properties;
-      const m = L.marker([c[1], c[0]], { icon: baseIcon(p.count), zIndexOffset: 500, title: `Terminal · ${p.count} ruta(s)` });
+      const m = L.marker([c[1], c[0]], { icon: baseIcon(p.count, p.id), zIndexOffset: 500, title: `Terminal · ${p.count} ruta(s)` });
       const lista = (p.rutas || []).map(r => `<li>${String(r).replace(/</g, '&lt;')}</li>`).join('');
       m.bindPopup(`<strong>🚏 ${p.count > 1 ? 'Terminal · ' + p.count + ' rutas' : 'Base de 1 ruta'}</strong>` +
         `<div style="font-size:0.72rem;color:#64748b;margin:2px 0 4px;">Punto estimado donde inician/terminan:</div>` +
