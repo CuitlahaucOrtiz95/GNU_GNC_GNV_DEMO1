@@ -1,7 +1,7 @@
 // ============================================================
 // ARCHIVO GENERADO desde: clientes_exportados (1).csv
 // Directorio único: lo usan Morelia y Tototlán a la vez.
-// Fecha: 23/7/2026, 11:50:56 a.m.
+// Fecha: 23/7/2026, 11:53:52 a.m.
 // Registros: 18113
 // NO editar a mano.
 // ============================================================
@@ -1770,7 +1770,7 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"BASE DE CENTROS COMERCIALES DE LEANDRO VALLE","lat":19.725195,"lon":-101.232773,"estado":"Michoacán de Ocampo","tamano":"Mediana"},
   {"nombre":"BASE DE COMBI CAFE 1","lat":19.73409,"lon":-101.2286,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"BASE DE COMBI ROJA 3","lat":19.716216,"lon":-101.218778,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
-  {"nombre":"BASE DE COMBI RUTA 2B ROSA","lat":19.694448,"lon":-101.203667,"estado":"Michoacán de Ocampo","tamano":"Base de combis"},
+  {"nombre":"BASE DE COMBI RUTA 2B ROSA","lat":19.694448,"lon":-101.203667,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"BETOS TRUCKING","lat":20.015815,"lon":-102.284493,"estado":"Michoacán de Ocampo","tamano":"Grande"},
   {"nombre":"BLUE PLANET TOURS","lat":19.691415,"lon":-100.542625,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
   {"nombre":"BUSCEFALOS TURISMOS EJECUTIVOS","lat":19.699451,"lon":-101.212688,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
@@ -1978,7 +1978,7 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"AUXILIAR DE LABORATORIO CLINICO","lat":20.057241,"lon":-102.717754,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
   {"nombre":"BANCO DE SANGRE Y LABORATORIO NOVA","lat":19.716514,"lon":-101.229578,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
   {"nombre":"BASE DE COMBIS LOMBARDIA","lat":19.162424,"lon":-102.055584,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
-  {"nombre":"BASE DE COMBIS ROSA RUTA 2","lat":19.677884,"lon":-101.23162,"estado":"Michoacán de Ocampo","tamano":"Base de combis"},
+  {"nombre":"BASE DE COMBIS ROSA RUTA 2","lat":19.677884,"lon":-101.23162,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"CASA VIVANTE RESIDENCIA Y CLUB GERIATRICO","lat":19.675285,"lon":-101.195524,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
   {"nombre":"CENTRO DE DESARROLLO CON SERVICIO MEDICO VALLE DE LOS MANANTIALES SECTOR SALUD","lat":19.735902,"lon":-101.212224,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
   {"nombre":"CENTRO DE SALUD RURAL","lat":19.821616,"lon":-101.042833,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
@@ -5994,7 +5994,7 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"BAJIO MOBILE SERVICES","lat":20.52032,"lon":-100.832506,"estado":"Guanajuato","tamano":"Pequeña"},
   {"nombre":"BAJIO RENT CAR","lat":21.132421,"lon":-101.712332,"estado":"Guanajuato","tamano":"Pequeña"},
   {"nombre":"BASCULA LA FLOR","lat":20.517159,"lon":-100.889137,"estado":"Guanajuato","tamano":"Pequeña"},
-  {"nombre":"BASE DE COMBIS RUTA 2 ROSA","lat":19.692266,"lon":-101.201725,"estado":"Michoacán de Ocampo","tamano":"Base de combis"},
+  {"nombre":"BASE DE COMBIS RUTA 2 ROSA","lat":19.692266,"lon":-101.201725,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"BM GROUP AUXILIAR","lat":20.780242,"lon":-101.337342,"estado":"Guanajuato","tamano":"Pequeña"},
   {"nombre":"BODEGA FERROCARRIL MEXICANO","lat":20.687736,"lon":-101.345926,"estado":"Guanajuato","tamano":"Pequeña"},
   {"nombre":"BODEGA FERROCARRIL MEXICANO","lat":20.689795,"lon":-101.346841,"estado":"Guanajuato","tamano":"Pequeña"},
@@ -6091,7 +6091,7 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"GRUPO FLECHA AMARILLA","lat":21.121064,"lon":-101.655338,"estado":"Guanajuato","tamano":"Grande"},
   {"nombre":"GRUPO INTRA","lat":20.912996,"lon":-101.3834,"estado":"Guanajuato","tamano":"Grande"},
   {"nombre":"GRUPO JASSO MAQUINARIA","lat":20.973918,"lon":-101.286814,"estado":"Guanajuato","tamano":"Pequeña"},
-  {"nombre":"BASE DE COMBIS RUTA AMARILLA 2","lat":19.707337,"lon":-101.164055,"estado":"Michoacán de Ocampo","tamano":"Base de combis"},
+  {"nombre":"BASE DE COMBIS RUTA AMARILLA 2","lat":19.707337,"lon":-101.164055,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"GRUPO MEGA REY","lat":21.084847,"lon":-101.679649,"estado":"Guanajuato","tamano":"Grande"},
   {"nombre":"GRUPO PORTEOLOGISTICO","lat":21.012573,"lon":-101.487201,"estado":"Guanajuato","tamano":"Pequeña"},
   {"nombre":"GRUPO RADO","lat":20.686103,"lon":-101.354923,"estado":"Guanajuato","tamano":"Pequeña"},
@@ -6171,7 +6171,7 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"REGIOMONTANOS INTERNACIONALES JJ","lat":20.514671,"lon":-100.804332,"estado":"Guanajuato","tamano":"Mediana"},
   {"nombre":"RITREMA","lat":20.711201,"lon":-101.365431,"estado":"Guanajuato","tamano":"Grande"},
   {"nombre":"BASE DE COMBIS RUTA CORAL","lat":19.720263,"lon":-101.168934,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
-  {"nombre":"BASE DE COMBIS RUTA MORADA 2 SATELITAL","lat":19.734192,"lon":-101.166361,"estado":"Michoacán de Ocampo","tamano":"Base de combis"},
+  {"nombre":"BASE DE COMBIS RUTA MORADA 2 SATELITAL","lat":19.734192,"lon":-101.166361,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"ROYALE INTERNACIONAL","lat":21.01182,"lon":-101.485988,"estado":"Guanajuato","tamano":"Grande"},
   {"nombre":"SAETAS DE GUANAJUATO","lat":20.509192,"lon":-100.994084,"estado":"Guanajuato","tamano":"Mediana"},
   {"nombre":"SAFEG TRANSPORTATION","lat":21.074258,"lon":-101.637462,"estado":"Guanajuato","tamano":"Grande"},
@@ -18118,5 +18118,5 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"UNIDAD ESTATAL DE PROTECCION CIVIL Y BOMBEROS BASE REGIONAL EL GRULLO","lat":19.803303,"lon":-104.205688,"estado":"Jalisco","tamano":"Pequeña"},
   {"nombre":"CENTRAL CICLO COMBINADO EL SAUZ","lat":20.459724,"lon":-100.118281,"estado":"Querétaro","tamano":"Pequeña"},
   {"nombre":"RENTA DE COMBIS","lat":19.075681,"lon":-102.351102,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
-  {"nombre":"MORADA 2A","lat":19.706524,"lon":-101.190678,"estado":"Michoacán de Ocampo","tamano":"Base de combis"}
+  {"nombre":"MORADA 2A","lat":19.706524,"lon":-101.190678,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"}
 ];
