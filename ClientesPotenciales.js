@@ -1,8 +1,8 @@
 // ============================================================
-// ARCHIVO GENERADO desde: clientes_exportados (1).csv
+// ARCHIVO GENERADO desde: clientes (1).csv
 // Directorio único: lo usan Morelia y Tototlán a la vez.
-// Fecha: 23/7/2026, 12:47:56 p.m.
-// Registros: 18110
+// Fecha: 23/7/2026, 12:57:26 p.m.
+// Registros: 18111
 // NO editar a mano.
 // ============================================================
 window.CLIENTES_POTENCIALES = [
@@ -18115,5 +18115,6 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"UNIDAD ESTATAL DE PROTECCION CIVIL Y BOMBEROS BASE REGIONAL EL GRULLO","lat":19.803303,"lon":-104.205688,"estado":"Jalisco","tamano":"Pequeña"},
   {"nombre":"CENTRAL CICLO COMBINADO EL SAUZ","lat":20.459724,"lon":-100.118281,"estado":"Querétaro","tamano":"Pequeña"},
   {"nombre":"RENTA DE COMBIS","lat":19.075681,"lon":-102.351102,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
-  {"nombre":"TRANSPORTES RUTA NARANA Y GUINDA BASE ERANDENI","lat":19.751463,"lon":-101.177954,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"}
+  {"nombre":"TRANSPORTES RUTA NARANA Y GUINDA BASE ERANDENI","lat":19.751463,"lon":-101.177954,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
+  {"nombre":"BAS DE COMBIEZ RUTA CORAL 1","lat":19.711753,"lon":-101.210011,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"}
 ];
