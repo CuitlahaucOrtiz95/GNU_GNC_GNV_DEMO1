@@ -271,6 +271,11 @@
     .ruta-item .ruta-tipo { font-size: 0.62rem; color: var(--text-muted); background: var(--bg-main); border: 1px solid var(--border); padding: 1px 6px; border-radius: 10px; flex-shrink: 0; }
     .ruta-item .ruta-check { font-size: 0.72rem; color: var(--primary); opacity: 0; flex-shrink: 0; }
     .ruta-item.active .ruta-check { opacity: 1; }
+    .rutas-bases-toggle { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; color: var(--text-main); padding: 0.35rem 0.4rem; margin-bottom: 6px; cursor: pointer; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-main); }
+    .rutas-bases-toggle input { accent-color: var(--primary); }
+    .rutas-bases-toggle i { color: var(--text-muted); }
+    /* Pin de base/terminal en el mapa: círculo con el número de rutas */
+    .base-pin { border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 11px; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.35); }
 
     /* Botón "Más": destacado (degradado índigo) para que resalte de la barra,
        porque abre las acciones que más se usan. */
@@ -747,6 +752,7 @@
         </button>
         <div class="dropdown-menu rutas-menu" id="rutasMenu">
           <div class="rutas-search"><i class="fas fa-search"></i><input type="text" id="rutasSearch" placeholder="Buscar ruta…" autocomplete="off"></div>
+          <label class="rutas-bases-toggle"><input type="checkbox" id="basesToggle"> <i class="fas fa-warehouse"></i> Mostrar bases / terminales</label>
           <div class="rutas-quick">
             <button type="button" id="rutasNinguna">Ninguna</button>
             <button type="button" id="rutasTodas">Todas</button>
@@ -2500,6 +2506,50 @@ document.addEventListener('DOMContentLoaded', function(){
     rutasListEl.querySelectorAll('.ruta-item').forEach(r => r.classList.add('active'));
     actualizarBadgeRutas();
     toast(`${rutasSeleccionadas.size} rutas mostradas.`, 'info');
+  });
+
+  // ============================================================
+  //  10f. BASES / TERMINALES (estimadas de las rutas)
+  //  Se agrupan los extremos (inicio/fin) de las rutas; donde coinciden varias
+  //  hay una terminal grande. El GeoJSON se carga bajo demanda al activar.
+  // ============================================================
+  const basesLayer = L.layerGroup().addTo(map);
+  let basesCargadas = false, basesCargando = false;
+
+  function baseIcon(count) {
+    const size = count >= 5 ? 34 : count >= 3 ? 28 : count >= 2 ? 24 : 16;
+    const color = count >= 5 ? '#7c2d12' : count >= 3 ? '#b45309' : count >= 2 ? '#0e7490' : '#475569';
+    const txt = count > 1 ? count : '';
+    return L.divIcon({ className: '', html: `<div class="base-pin" style="width:${size}px;height:${size}px;background:${color};">${txt}</div>`, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
+  }
+
+  function pintarBases(fc) {
+    (fc.features || []).forEach(f => {
+      const c = f.geometry.coordinates, p = f.properties;
+      const m = L.marker([c[1], c[0]], { icon: baseIcon(p.count), zIndexOffset: 500, title: `Terminal · ${p.count} ruta(s)` });
+      const lista = (p.rutas || []).map(r => `<li>${String(r).replace(/</g, '&lt;')}</li>`).join('');
+      m.bindPopup(`<strong>🚏 ${p.count > 1 ? 'Terminal · ' + p.count + ' rutas' : 'Base de 1 ruta'}</strong>` +
+        `<div style="font-size:0.72rem;color:#64748b;margin:2px 0 4px;">Punto estimado donde inician/terminan:</div>` +
+        `<ul style="margin:0;padding-left:1.1rem;font-size:0.76rem;max-height:180px;overflow:auto;">${lista}</ul>`, { maxWidth: 260 });
+      basesLayer.addLayer(m);
+    });
+  }
+
+  document.getElementById('basesToggle').addEventListener('change', function() {
+    if (this.checked) {
+      if (basesCargadas) { basesLayer.addTo(map); return; }
+      if (basesCargando) return;
+      basesCargando = true;
+      fetch('bases_morelia.geojson')
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(fc => {
+          pintarBases(fc); basesCargadas = true; basesCargando = false; basesLayer.addTo(map);
+          toast(`${(fc.features || []).length} bases/terminales estimadas.`, 'success');
+        })
+        .catch(err => { console.error(err); basesCargando = false; this.checked = false; toast('No se pudo cargar bases_morelia.geojson.', 'error'); });
+    } else {
+      map.removeLayer(basesLayer);
+    }
   });
 
   // ============================================================
