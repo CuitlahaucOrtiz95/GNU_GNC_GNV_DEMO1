@@ -1,8 +1,8 @@
 // ============================================================
 // ARCHIVO GENERADO desde: clientes_exportados (1).csv
 // Directorio único: lo usan Morelia y Tototlán a la vez.
-// Fecha: 23/7/2026, 11:53:52 a.m.
-// Registros: 18113
+// Fecha: 23/7/2026, 12:47:56 p.m.
+// Registros: 18110
 // NO editar a mano.
 // ============================================================
 window.CLIENTES_POTENCIALES = [
@@ -14926,7 +14926,6 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"UNIDAD DEPARTAMENTAL DE INSPECCION AMBIENTAL","lat":20.667286,"lon":-103.336005,"estado":"Jalisco","tamano":"Mediana"},
   {"nombre":"UNIDAD DEPARTAMENTAL DE SERVICIOS GENERALES","lat":20.695924,"lon":-103.353286,"estado":"Jalisco","tamano":"Mediana"},
   {"nombre":"UNIDAD ESTATAL DE MEDIDAS CAUTELARES DEL ESTADO DE JALISCO","lat":20.671909,"lon":-103.34376,"estado":"Jalisco","tamano":"Mediana"},
-  {"nombre":"BASE DE RUTA AZUL C","lat":19.735266,"lon":-101.165266,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"UNIDAD ESTATAL DE PROTECCION CIVIL Y BOMBEROS JALISCO","lat":21.979546,"lon":-103.585991,"estado":"Jalisco","tamano":"Pequeña"},
   {"nombre":"UNIDAD ESTATAL DE PROTECCION CIVIL Y BOMBEROS JALISCO","lat":20.629787,"lon":-103.336494,"estado":"Jalisco","tamano":"Grande"},
   {"nombre":"UNIDAD MUNICIPAL DE ATENCION A LA VIOLENCIA","lat":20.485929,"lon":-103.251584,"estado":"Jalisco","tamano":"Pequeña"},
@@ -14943,7 +14942,6 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"TAVEDA SECURITY PRIVADA E INVESTIGACION","lat":19.296495,"lon":-99.635479,"estado":"México","tamano":"Pequeña"},
   {"nombre":"BANCO DE ALIMENTOS CARITAS DEL ESTADO DE MEXICO I.A.P","lat":19.333186,"lon":-99.667274,"estado":"México","tamano":"Pequeña"},
   {"nombre":"BANCO DE TEJIDOS DEL ESTADO DE MEXICO","lat":19.3195,"lon":-99.631725,"estado":"México","tamano":"Pequeña"},
-  {"nombre":"BASE DE RUTA ORO VERDE","lat":19.736661,"lon":-101.164456,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"BASE DE SEGURIDAD","lat":20.60908,"lon":-103.340322,"estado":"Jalisco","tamano":"Pequeña"},
   {"nombre":"BASE DE TAXI RADIO TAXITEL AC","lat":19.418093,"lon":-102.040405,"estado":"Michoacán de Ocampo","tamano":"Estaciones de Taxis"},
   {"nombre":"CEDIASA TOLUCA","lat":19.273773,"lon":-99.641737,"estado":"México","tamano":"Mediana"},
@@ -18094,10 +18092,9 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"BASE RUTA PANTEON","lat":19.722143,"lon":-101.16683,"estado":"Michoacán de Ocampo","tamano":"Mediana"},
   {"nombre":"BASE RUTA ROJA 1","lat":19.716994,"lon":-101.224828,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"BASE RUTA ROJA 3B","lat":19.705848,"lon":-101.229001,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
-  {"nombre":"BASE RUTA VERDE 4","lat":19.720488,"lon":-101.162301,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"BASE ZONA NORTE REGION DIEZ","lat":19.369707,"lon":-99.665226,"estado":"México","tamano":"Mediana"},
   {"nombre":"COMISARIA DE LA POLICIA MUNICIPAL DE ZAPOPAN BASE SECTOR 4 TESISTAN","lat":20.80099,"lon":-103.478187,"estado":"Jalisco","tamano":"Pequeña"},
-  {"nombre":"SERVICIOS DE COMBIS","lat":19.981815,"lon":-102.286874,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
+  {"nombre":"MORADA 2A","lat":19.706524,"lon":-101.190678,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"GRUPO LOGISTICO DE TRANSPORTE Y COMERCIALIZADOR BASE","lat":20.574339,"lon":-101.18789,"estado":"Guanajuato","tamano":"Pequeña"},
   {"nombre":"OFICINA DE CAMIONES BASE 629","lat":20.675404,"lon":-103.383722,"estado":"Jalisco","tamano":"Pequeña"},
   {"nombre":"ROYAL TRANSPORTS BASE CELAYA","lat":20.518074,"lon":-100.886946,"estado":"Guanajuato","tamano":"Mediana"},
@@ -18114,9 +18111,9 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"Parabus Y Taxis Xangari","lat":19.675136,"lon":-101.221399,"estado":"Michoacán de Ocampo","tamano":"Estaciones de Taxis"},
   {"nombre":"Taxibit Morelia","lat":19.69033,"lon":-101.176423,"estado":"Michoacán de Ocampo","tamano":"Estaciones de Taxis"},
   {"nombre":"TERMINAL BASE RUTA CAMPO NUBES PEDREGAL","lat":19.695417,"lon":-101.289204,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
-  {"nombre":"TRANSPORTES RUTA NARANA Y GUINDA BASE ERANDENI","lat":19.751463,"lon":-101.177954,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
+  {"nombre":"SERVICIOS DE COMBIS","lat":19.981815,"lon":-102.286874,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"UNIDAD ESTATAL DE PROTECCION CIVIL Y BOMBEROS BASE REGIONAL EL GRULLO","lat":19.803303,"lon":-104.205688,"estado":"Jalisco","tamano":"Pequeña"},
   {"nombre":"CENTRAL CICLO COMBINADO EL SAUZ","lat":20.459724,"lon":-100.118281,"estado":"Querétaro","tamano":"Pequeña"},
   {"nombre":"RENTA DE COMBIS","lat":19.075681,"lon":-102.351102,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
-  {"nombre":"MORADA 2A","lat":19.706524,"lon":-101.190678,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"}
+  {"nombre":"TRANSPORTES RUTA NARANA Y GUINDA BASE ERANDENI","lat":19.751463,"lon":-101.177954,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"}
 ];
