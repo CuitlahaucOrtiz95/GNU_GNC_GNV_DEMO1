@@ -2344,10 +2344,13 @@ document.addEventListener('DOMContentLoaded', function(){
     (fc.features || []).forEach(f => {
       if (!f.geometry || f.geometry.type !== 'LineString') return;
       const latlngs = f.geometry.coordinates.map(c => [c[1], c[0]]); // [lon,lat] -> [lat,lng]
-      const color = (f.properties && f.properties.color) || '#e11d48';
-      const nombre = (f.properties && f.properties.nombre) || 'Ruta';
+      const props = f.properties || {};
+      const color = props.color || '#e11d48';
+      const nombre = props.nombre || 'Ruta';
+      const tipo = props.tipo || '';
+      const icono = tipo === 'Combi' ? '🚐' : '🚌';
       const linea = L.polyline(latlngs, { color, weight: 3, opacity: 0.85 });
-      linea.bindPopup(`<strong style="color:${color};">🚌 ${nombre}</strong><br><span style="font-size:0.75rem;color:#64748b;">Transporte público · Morelia</span>`);
+      linea.bindPopup(`<strong style="color:${color};">${icono} ${nombre}</strong><br><span style="font-size:0.75rem;color:#64748b;">${tipo ? tipo + ' · ' : ''}Transporte público de Morelia</span>`);
       linea.on('mouseover', () => linea.setStyle({ weight: 6, opacity: 1 }));
       linea.on('mouseout', () => linea.setStyle({ weight: 3, opacity: 0.85 }));
       rutasLayer.addLayer(linea);
