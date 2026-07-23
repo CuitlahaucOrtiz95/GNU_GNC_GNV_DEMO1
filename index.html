@@ -928,15 +928,97 @@ document.addEventListener('DOMContentLoaded', function(){
     return 2*R*Math.asin(Math.sqrt(a));
   }
 
+  // Clave estable de un cliente (redondeando coordenadas), usada para detectar
+  // duplicados y para identificar clientes eliminados/con dirección guardada
+  // sin tener que guardar el objeto completo.
+  function claveCliente(s) {
+    const latRound = Math.round(s.lat * 1e5) / 1e5;
+    const lonRound = Math.round(s.lon * 1e5) / 1e5;
+    return `${latRound}|${lonRound}|${(s.nombre || '').trim()}`;
+  }
+
   function deduplicate(data) {
     const seen = new Set();
     return data.filter(e => {
-      const latRound = Math.round(e.lat * 1e5) / 1e5;
-      const lonRound = Math.round(e.lon * 1e5) / 1e5;
-      const key = `${latRound}|${lonRound}|${e.nombre.trim()}`;
+      const key = claveCliente(e);
       if (!seen.has(key)) { seen.add(key); return true; }
       return false;
     });
+  }
+
+  // ============================================================
+  //  PERSISTENCIA LIGERA DE CAMBIOS (agregados / eliminados / direcciones)
+  //  Antes se guardaba el arreglo COMPLETO de clientes en localStorage cada vez
+  //  que algo cambiaba. Con datasets grandes (decenas de miles de registros)
+  //  eso rebasa la cuota del navegador (~5-10 MB) y localStorage.setItem falla
+  //  EN SILENCIO: el cambio se veía en pantalla pero nunca quedaba guardado, así
+  //  que reaparecía al recargar la página.
+  //  Ahora solo se guardan las DIFERENCIAS respecto al dataset original
+  //  (ClientesPotenciales.js), que son mucho más chicas y sí caben siempre:
+  //    - CLIENTES_AGREGADOS: clientes nuevos (agregar manual / importar CSV).
+  //    - CLIENTES_ELIMINADOS: claves de clientes del dataset original que se
+  //      borraron (no se puede quitar del archivo real, así que se excluyen).
+  //    - CLIENTES_DIRECCIONES: direcciones/estado obtenidos por geocodificación,
+  //      por clave, para no tener que regrabar todo el cliente.
+  // ============================================================
+  function leerJSONGuardado(key, valorDefecto) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return valorDefecto;
+      const parsed = JSON.parse(raw);
+      return parsed == null ? valorDefecto : parsed;
+    } catch (e) { return valorDefecto; }
+  }
+
+  let clientesAgregados = leerJSONGuardado('CLIENTES_AGREGADOS', []);
+  let clientesEliminados = new Set(leerJSONGuardado('CLIENTES_ELIMINADOS', []));
+  let direccionesGuardadas = leerJSONGuardado('CLIENTES_DIRECCIONES', {});
+
+  // Único punto que escribe en localStorage para estos cambios: al ser listas
+  // pequeñas (solo diferencias, no todo el dataset), esto sí persiste.
+  function guardarCambiosClientes() {
+    try {
+      localStorage.setItem('CLIENTES_AGREGADOS', JSON.stringify(clientesAgregados));
+      localStorage.setItem('CLIENTES_ELIMINADOS', JSON.stringify([...clientesEliminados]));
+      localStorage.setItem('CLIENTES_DIRECCIONES', JSON.stringify(direccionesGuardadas));
+      localStorage.setItem('CLIENTES_DIFF_ACTUALIZADO', Date.now().toString());
+      return true;
+    } catch (e) {
+      console.error('No se pudieron guardar los cambios de clientes:', e);
+      toast('No se pudo guardar el cambio (almacenamiento del navegador lleno).', 'error');
+      return false;
+    }
+  }
+
+  // Marca uno o varios clientes recién agregados por el usuario (manual o CSV).
+  function marcarClientesAgregados(lista) {
+    lista.forEach(c => { c._origen = 'agregado'; clientesAgregados.push(c); });
+    return guardarCambiosClientes();
+  }
+  function marcarClienteAgregado(cliente) { return marcarClientesAgregados([cliente]); }
+
+  // Marca un cliente como eliminado: si era uno agregado por el usuario, se
+  // quita de esa lista; si es del dataset original, se guarda su clave para
+  // excluirlo (el archivo original nunca se modifica).
+  function marcarClienteEliminado(cliente) {
+    if (cliente._origen === 'agregado') {
+      const idx = clientesAgregados.indexOf(cliente);
+      if (idx !== -1) clientesAgregados.splice(idx, 1);
+    } else {
+      clientesEliminados.add(claveCliente(cliente));
+    }
+    return guardarCambiosClientes();
+  }
+
+  // Registra en memoria (sin guardar todavía) que un cliente obtuvo dirección
+  // por geocodificación; útil para procesar lotes con un solo guardado final.
+  function registrarDireccionEnMemoria(cliente) {
+    if (cliente._origen === 'agregado') return; // ya vive completo en clientesAgregados
+    direccionesGuardadas[claveCliente(cliente)] = { direccion: cliente.direccion, estado: cliente.estado };
+  }
+  function marcarDireccionActualizada(cliente) {
+    registrarDireccionEnMemoria(cliente);
+    return guardarCambiosClientes();
   }
 
   function getDistRange(km) {
@@ -953,15 +1035,34 @@ document.addEventListener('DOMContentLoaded', function(){
 
   let rawClientes = Array.isArray(window.CLIENTES_POTENCIALES) ? window.CLIENTES_POTENCIALES : [];
 
+  // Compatibilidad con el esquema ANTERIOR (guardaba el arreglo completo): si
+  // existe un CLIENTES_JS válido de una sesión previa, se usa como base. Ya no
+  // se vuelve a escribir en esta clave (se sustituyó por el esquema de
+  // diferencias de abajo), pero se sigue leyendo por si quedó guardado.
   const clientesGuardado = localStorage.getItem('CLIENTES_JS');
   if (clientesGuardado) {
     const arr = leerArrayGuardado(clientesGuardado);
     if (arr && Array.isArray(arr)) {
       rawClientes = arr;
-      log('Clientes cargados desde localStorage');
+      log('Clientes cargados desde localStorage (formato anterior)');
     } else {
       warn('CLIENTES_JS no se pudo interpretar; se usa ClientesPotenciales.js');
     }
+  }
+
+  // Aplica los cambios guardados (esquema de diferencias, liviano): quita los
+  // eliminados, actualiza direcciones geocodificadas y agrega los del usuario.
+  if (clientesEliminados.size) rawClientes = rawClientes.filter(s => !clientesEliminados.has(claveCliente(s)));
+  rawClientes.forEach(s => {
+    const ov = direccionesGuardadas[claveCliente(s)];
+    if (ov) {
+      if (ov.direccion) s.direccion = ov.direccion;
+      if (ov.estado) s.estado = ov.estado;
+    }
+  });
+  if (clientesAgregados.length) {
+    clientesAgregados.forEach(c => { c._origen = 'agregado'; });
+    rawClientes = rawClientes.concat(clientesAgregados);
   }
 
   function actualizarEstadoCarga(n, porAncla) {
@@ -2136,13 +2237,10 @@ document.addEventListener('DOMContentLoaded', function(){
     };
     enriquecer([nuevo]);
     stations.push(nuevo);
+    marcarClienteAgregado(nuevo);
     reconstruirMarcadoresClientes();
     actualizarSelectTamano();
     applyFilters();
-    try {
-      localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
-      localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
-    } catch (e) {}
     modalOverlay.classList.remove('open');
     tempCoords = null;
     toast(`Cliente "${nombre}" agregado correctamente.`, 'success');
@@ -2197,14 +2295,11 @@ document.addEventListener('DOMContentLoaded', function(){
     const nombre = clienteAEliminar.nombre;
     const idx = stations.indexOf(clienteAEliminar);
     if (idx !== -1) stations.splice(idx, 1);
+    marcarClienteEliminado(clienteAEliminar);
     map.closePopup();
     reconstruirMarcadoresClientes();
     actualizarSelectTamano();
     applyFilters();
-    try {
-      localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
-      localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
-    } catch (e) {}
     cerrarModalEliminar();
     toast(`Cliente "${nombre}" eliminado.`, 'success');
   });
@@ -2701,15 +2796,12 @@ document.addEventListener('DOMContentLoaded', function(){
         const agregados = filtrarPorRadio190(nuevosReales);
         const fuera = nuevosReales.length - agregados.length;
         stations.push(...agregados);
+        marcarClientesAgregados(agregados);
         reconstruirMarcadoresClientes();
         actualizarSelectTamano();
         applyFilters();
         actualizarEstadoCarga(stations.length, contarPorAncla(stations));
         document.getElementById('rTotal').textContent = stations.length;
-        try {
-          localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
-          localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
-        } catch (e) {}
         toast(`${agregados.length} cliente(s) importado(s)${fuera ? ` · ${fuera} fuera de rango omitidos` : ''}.`, 'success');
         mostrarListaImportados(agregados);
       } catch (err) { console.error(err); toast('Error al procesar el archivo CSV.', 'error'); }
@@ -2855,6 +2947,7 @@ document.addEventListener('DOMContentLoaded', function(){
       if (result) {
         s.direccion = result.direccion;
         s.estado = result.estado || s.estado;
+        registrarDireccionEnMemoria(s);
         const entry = markerMap.get(s);
         if (entry) {
           entry.marker.closePopup();
@@ -2901,10 +2994,7 @@ document.addEventListener('DOMContentLoaded', function(){
     fill.style.width = `${(procesados/total)*100}%`;
     setTimeout(() => { progress.style.display = 'none'; }, 2000);
 
-    try {
-      localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
-      localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
-    } catch (e) { console.warn('No se pudo guardar en localStorage:', e); }
+    if (procesados > 0) guardarCambiosClientes();
 
     applyFilters();
   }
@@ -2952,10 +3042,7 @@ document.addEventListener('DOMContentLoaded', function(){
           });
           entry.marker.openPopup();
         }
-        try {
-          localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`);
-          localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString());
-        } catch (e) {}
+        marcarDireccionActualizada(cliente);
         applyFilters();
       } else {
         toast('No se pudo obtener la dirección para este cliente.', 'error');
@@ -3003,12 +3090,26 @@ document.addEventListener('DOMContentLoaded', function(){
   //  13. RECARGA DE CLIENTES DESDE LOCALSTORAGE
   // ============================================================
   function recargarClientes() {
-    const nuevoJS = localStorage.getItem('CLIENTES_JS');
-    if (!nuevoJS) return;
     try {
-      const nuevos = leerArrayGuardado(nuevoJS);
-      if (!nuevos || !Array.isArray(nuevos)) { warn('CLIENTES_JS inválido'); return; }
-      const nuevosFiltrados = filtrarPorRadio190(enriquecer(deduplicate(nuevos)));
+      // Vuelve a leer los cambios (otra pestaña pudo agregar/eliminar/geocodificar)
+      // y los reaplica sobre el dataset original, igual que en la carga inicial.
+      clientesAgregados = leerJSONGuardado('CLIENTES_AGREGADOS', []);
+      clientesEliminados = new Set(leerJSONGuardado('CLIENTES_ELIMINADOS', []));
+      direccionesGuardadas = leerJSONGuardado('CLIENTES_DIRECCIONES', {});
+
+      let base = Array.isArray(window.CLIENTES_POTENCIALES) ? window.CLIENTES_POTENCIALES : [];
+      if (clientesEliminados.size) base = base.filter(s => !clientesEliminados.has(claveCliente(s)));
+      base.forEach(s => {
+        const ov = direccionesGuardadas[claveCliente(s)];
+        if (ov) {
+          if (ov.direccion) s.direccion = ov.direccion;
+          if (ov.estado) s.estado = ov.estado;
+        }
+      });
+      clientesAgregados.forEach(c => { c._origen = 'agregado'; });
+      base = base.concat(clientesAgregados);
+
+      const nuevosFiltrados = filtrarPorRadio190(enriquecer(deduplicate(base)));
       stations.length = 0;
       stations.push(...nuevosFiltrados);
       reconstruirMarcadoresClientes();
@@ -3020,7 +3121,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   window.addEventListener('storage', function(e) {
-    if (e.key === 'CLIENTES_ACTUALIZADO') { log('Actualización de clientes detectada.'); recargarClientes(); }
+    if (e.key === 'CLIENTES_DIFF_ACTUALIZADO') { log('Actualización de clientes detectada.'); recargarClientes(); }
   });
 
   // ============================================================
