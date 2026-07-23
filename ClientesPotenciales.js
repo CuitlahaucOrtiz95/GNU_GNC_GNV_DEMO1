@@ -1,7 +1,7 @@
 // ============================================================
 // ARCHIVO GENERADO desde: clientes (2).csv
 // Directorio único: lo usan Morelia y Tototlán a la vez.
-// Fecha: 23/7/2026, 2:20:57 p.m.
+// Fecha: 23/7/2026, 2:28:00 p.m.
 // Registros: 18111
 // NO editar a mano.
 // ============================================================
@@ -18065,7 +18065,7 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"El Cerrillo","lat":19.296334,"lon":-99.539332,"estado":"Edo. de México","tamano":"Parque Industrial"},
   {"nombre":"Lerma-Toluca","lat":19.289659,"lon":-99.55205,"estado":"Edo. de México","tamano":"Parque Industrial"},
   {"nombre":"San Cayetano","lat":19.419888,"lon":-99.716254,"estado":"Edo. de México","tamano":"Parque Industrial"},
-  {"nombre":"Doña Rosa","lat":19.28675,"lon":-99.545551,"estado":"Edo. de México","tamano":"Parque Industrial"},
+  {"nombre":"Escato - Centro Operativo Lerma","lat":19.287661,"lon":-99.545787,"estado":"Edo. de México","tamano":"Parque Industrial"},
   {"nombre":"San Antonio Buenavista","lat":19.302778,"lon":-99.61378,"estado":"Edo. de México","tamano":"Parque Industrial"},
   {"nombre":"Pastejé","lat":19.657073,"lon":-99.795059,"estado":"Edo. de México","tamano":"Parque Industrial"},
   {"nombre":"Fidepark Ixtlahuaca","lat":19.574127,"lon":-99.755351,"estado":"Edo. de México","tamano":"Parque Industrial"},
