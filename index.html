@@ -242,6 +242,36 @@
     .toolbar .btn-loc { background: #0891b2; color: #fff; }
     .toolbar .btn-loc:hover { background: #0e7490; }
 
+    /* Filtro de rutas de transporte */
+    .toolbar .btn-rutas { background: transparent; color: var(--text-main); border: 1px solid var(--border); font-weight: 500; }
+    .toolbar .btn-rutas:hover { border-color: var(--border-hover); background: var(--bg-panel); }
+    .toolbar .btn-rutas.is-active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .toolbar .btn-rutas .chevron { font-size: 0.6rem; opacity: 0.85; }
+    .toolbar .btn-rutas .badge {
+      background: var(--primary); color: #fff; font-weight: 700; font-size: 0.65rem;
+      min-width: 1.15rem; height: 1.15rem; border-radius: 1rem; padding: 0 0.35rem;
+      display: inline-flex; align-items: center; justify-content: center; line-height: 1;
+    }
+    .toolbar .btn-rutas.is-active .badge { background: #fff; color: var(--primary); }
+    .toolbar .btn-rutas .badge[hidden] { display: none; }
+    .rutas-menu { min-width: 280px; max-width: 320px; padding: 8px; }
+    .rutas-search { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; background: var(--bg-main); }
+    .rutas-search i { color: var(--text-muted); font-size: 0.75rem; }
+    .rutas-search input { border: none; outline: none; background: transparent; color: var(--text-main); font-size: 0.8rem; flex: 1; padding: 2px 0; }
+    .rutas-quick { display: flex; gap: 6px; margin-bottom: 6px; }
+    .rutas-quick button { flex: 1; background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 0.3rem; font-size: 0.72rem; font-weight: 600; color: var(--text-main); cursor: pointer; transition: var(--transition); }
+    .rutas-quick button:hover { background: var(--border); }
+    .rutas-list { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; }
+    .rutas-empty { padding: 1rem; text-align: center; color: var(--text-muted); font-size: 0.78rem; }
+    .ruta-item { display: flex; align-items: center; gap: 8px; padding: 0.4rem 0.5rem; border-radius: 8px; cursor: pointer; transition: background 0.15s ease; }
+    .ruta-item:hover { background: var(--bg-main); }
+    .ruta-item.active { background: var(--primary-tint, rgba(31,92,169,0.1)); }
+    .ruta-item .ruta-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15); }
+    .ruta-item .ruta-nombre { flex: 1; font-size: 0.76rem; color: var(--text-main); line-height: 1.2; }
+    .ruta-item .ruta-tipo { font-size: 0.62rem; color: var(--text-muted); background: var(--bg-main); border: 1px solid var(--border); padding: 1px 6px; border-radius: 10px; flex-shrink: 0; }
+    .ruta-item .ruta-check { font-size: 0.72rem; color: var(--primary); opacity: 0; flex-shrink: 0; }
+    .ruta-item.active .ruta-check { opacity: 1; }
+
     /* Botón "Más": destacado (degradado índigo) para que resalte de la barra,
        porque abre las acciones que más se usan. */
     .toolbar .btn-mas {
@@ -708,6 +738,22 @@
         <input type="range" id="distSlider" min="60" max="190" value="190" step="5" />
         <span id="distLabel">190 km</span>
       </div>
+      <!-- Filtro independiente de rutas de transporte -->
+      <div class="dropdown" id="rutasDropdown">
+        <button class="btn btn-rutas" id="rutasToggleBtn" aria-haspopup="true" aria-expanded="false" title="Elegir rutas de transporte">
+          <i class="fas fa-bus"></i> <span id="rutasLabel">Rutas</span>
+          <span class="badge" id="rutasBadge" hidden>0</span>
+          <i class="fas fa-chevron-down chevron"></i>
+        </button>
+        <div class="dropdown-menu rutas-menu" id="rutasMenu">
+          <div class="rutas-search"><i class="fas fa-search"></i><input type="text" id="rutasSearch" placeholder="Buscar ruta…" autocomplete="off"></div>
+          <div class="rutas-quick">
+            <button type="button" id="rutasNinguna">Ninguna</button>
+            <button type="button" id="rutasTodas">Todas</button>
+          </div>
+          <div class="rutas-list" id="rutasList"><div class="rutas-empty">Cargando rutas…</div></div>
+        </div>
+      </div>
     </div>
 
     <span class="separator"></span>
@@ -781,9 +827,6 @@
         </button>
         <button class="dropdown-item menu-action" id="toggleMarcadoresBtn" title="Mostrar u ocultar todos los marcadores">
           <span class="dropdown-item-label"><i class="fas fa-eye"></i> Ocultar marcadores</span>
-        </button>
-        <button class="dropdown-item menu-action" id="toggleRutasBtn" title="Mostrar u ocultar las rutas de transporte de Morelia">
-          <span class="dropdown-item-label"><i class="fas fa-bus"></i> Rutas de transporte</span>
         </button>
         <button class="dropdown-item menu-action" id="noAddressBtn" aria-label="Filtrar clientes sin dirección">
           <span class="dropdown-item-label"><i class="fas fa-envelope"></i> Solo sin dirección</span>
@@ -1978,6 +2021,10 @@ document.addEventListener('DOMContentLoaded', function(){
       moreToggleBtn.classList.remove('open');
       moreToggleBtn.setAttribute('aria-expanded', 'false');
     }
+    if (!e.target.closest('#rutasDropdown')) {
+      document.getElementById('rutasMenu').classList.remove('open');
+      document.getElementById('rutasToggleBtn').setAttribute('aria-expanded', 'false');
+    }
   });
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
@@ -1986,6 +2033,8 @@ document.addEventListener('DOMContentLoaded', function(){
       masMenu.classList.remove('open');
       moreToggleBtn.classList.remove('open');
       moreToggleBtn.setAttribute('aria-expanded', 'false');
+      document.getElementById('rutasMenu').classList.remove('open');
+      document.getElementById('rutasToggleBtn').setAttribute('aria-expanded', 'false');
     }
   });
 
@@ -2331,65 +2380,127 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ============================================================
-  //  10e. RUTAS DE TRANSPORTE (capa GeoJSON de Morelia)
-  //  Se carga bajo demanda (el archivo pesa ~1.3 MB) la primera vez que se
-  //  activa. Siempre visible por encima del mapa; no depende de los círculos.
+  //  10e. FILTRO DE RUTAS DE TRANSPORTE (capa GeoJSON de Morelia)
+  //  Selector independiente: se elige una o varias rutas de una lista con
+  //  buscador y solo esas se dibujan. El GeoJSON (~1.3 MB) se carga bajo
+  //  demanda la primera vez que se abre el menú. No depende de los círculos.
   // ============================================================
   const rutasLayer = L.layerGroup().addTo(map);
-  let rutasVisibles = false;
-  let rutasCargadas = false;
-  let rutasCargando = false;
+  let rutasData = [];                 // features del geojson
+  const rutaLineas = new Map();       // id -> L.polyline (solo las dibujadas)
+  const rutasSeleccionadas = new Set(); // ids activos
+  let rutasCargadas = false, rutasCargando = false;
 
-  function pintarRutas(fc) {
-    (fc.features || []).forEach(f => {
-      if (!f.geometry || f.geometry.type !== 'LineString') return;
-      const latlngs = f.geometry.coordinates.map(c => [c[1], c[0]]); // [lon,lat] -> [lat,lng]
-      const props = f.properties || {};
-      const color = props.color || '#e11d48';
-      const nombre = props.nombre || 'Ruta';
-      const tipo = props.tipo || '';
-      const icono = tipo === 'Combi' ? '🚐' : '🚌';
-      const linea = L.polyline(latlngs, { color, weight: 3, opacity: 0.85 });
-      linea.bindPopup(`<strong style="color:${color};">${icono} ${nombre}</strong><br><span style="font-size:0.75rem;color:#64748b;">${tipo ? tipo + ' · ' : ''}Transporte público de Morelia</span>`);
-      linea.on('mouseover', () => linea.setStyle({ weight: 6, opacity: 1 }));
-      linea.on('mouseout', () => linea.setStyle({ weight: 3, opacity: 0.85 }));
-      rutasLayer.addLayer(linea);
-    });
+  const rutasToggleBtn = document.getElementById('rutasToggleBtn');
+  const rutasMenu = document.getElementById('rutasMenu');
+  const rutasListEl = document.getElementById('rutasList');
+  const rutasSearchEl = document.getElementById('rutasSearch');
+
+  function actualizarBadgeRutas() {
+    const n = rutasSeleccionadas.size;
+    const badge = document.getElementById('rutasBadge');
+    const label = document.getElementById('rutasLabel');
+    rutasToggleBtn.classList.toggle('is-active', n > 0);
+    if (badge) { if (n > 0) { badge.hidden = false; badge.textContent = n; } else badge.hidden = true; }
+    if (label) label.textContent = n === 0 ? 'Rutas' : (n === 1 ? '1 ruta' : n + ' rutas');
   }
 
-  function toggleRutas() {
-    const btn = document.getElementById('toggleRutasBtn');
-    const label = btn.querySelector('.dropdown-item-label');
-    // Aún cargando: no hacer nada
-    if (rutasCargando) return;
+  function dibujarRuta(f) {
+    const latlngs = f.geometry.coordinates.map(c => [c[1], c[0]]);
+    const p = f.properties || {};
+    const color = p.color || '#e11d48', nombre = p.nombre || 'Ruta', tipo = p.tipo || '';
+    const icono = tipo === 'Combi' ? '🚐' : '🚌';
+    const linea = L.polyline(latlngs, { color, weight: 4, opacity: 0.9 });
+    linea.bindPopup(`<strong style="color:${color};">${icono} ${nombre}</strong><br><span style="font-size:0.75rem;color:#64748b;">${tipo ? tipo + ' · ' : ''}Transporte público de Morelia</span>`);
+    linea.on('mouseover', () => linea.setStyle({ weight: 7 }));
+    linea.on('mouseout', () => linea.setStyle({ weight: 4 }));
+    rutasLayer.addLayer(linea);
+    rutaLineas.set(p.id, linea);
+    return linea;
+  }
 
-    // Ya cargadas: solo alternar visibilidad
-    if (rutasCargadas) {
-      rutasVisibles = !rutasVisibles;
-      if (rutasVisibles) { rutasLayer.addTo(map); label.innerHTML = '<i class="fas fa-bus"></i> Ocultar rutas'; toast('Rutas de transporte visibles.', 'info'); }
-      else { map.removeLayer(rutasLayer); label.innerHTML = '<i class="fas fa-bus"></i> Rutas de transporte'; toast('Rutas ocultas.', 'info'); }
-      return;
+  function toggleRuta(id, encuadrar) {
+    const f = rutasData.find(x => x.properties.id === id);
+    if (!f) return;
+    if (rutasSeleccionadas.has(id)) {
+      rutasSeleccionadas.delete(id);
+      const l = rutaLineas.get(id);
+      if (l) { rutasLayer.removeLayer(l); rutaLineas.delete(id); }
+    } else {
+      rutasSeleccionadas.add(id);
+      const l = dibujarRuta(f);
+      if (encuadrar && l.getBounds) map.flyToBounds(l.getBounds(), { padding: [50, 50], duration: 1 });
     }
+    // refleja el estado en la lista
+    const row = rutasListEl.querySelector(`.ruta-item[data-id="${id}"]`);
+    if (row) row.classList.toggle('active', rutasSeleccionadas.has(id));
+    actualizarBadgeRutas();
+  }
 
-    // Primera vez: cargar el GeoJSON
+  function renderListaRutas(filtro) {
+    const term = normalizarTexto(filtro || '');
+    rutasListEl.innerHTML = '';
+    const visibles = rutasData.filter(f => !term || normalizarTexto(f.properties.nombre).includes(term));
+    if (!visibles.length) { rutasListEl.innerHTML = '<div class="rutas-empty">Sin coincidencias.</div>'; return; }
+    const frag = document.createDocumentFragment();
+    visibles.forEach(f => {
+      const p = f.properties;
+      const row = document.createElement('div');
+      row.className = 'ruta-item' + (rutasSeleccionadas.has(p.id) ? ' active' : '');
+      row.dataset.id = p.id;
+      const nombreCorto = p.nombre.replace(/\s*-\s*(Combi|Cami[oó]n)\s*$/i, '');
+      row.innerHTML = `<span class="ruta-dot" style="background:${p.color};"></span>` +
+        `<span class="ruta-nombre"></span>` +
+        `<span class="ruta-tipo">${p.tipo || ''}</span>` +
+        `<i class="fas fa-check ruta-check"></i>`;
+      row.querySelector('.ruta-nombre').textContent = nombreCorto;
+      row.addEventListener('click', () => toggleRuta(p.id, true));
+      frag.appendChild(row);
+    });
+    rutasListEl.appendChild(frag);
+  }
+
+  function cargarRutas() {
+    if (rutasCargadas || rutasCargando) return Promise.resolve();
     rutasCargando = true;
-    label.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Cargando rutas…';
-    fetch('rutas_morelia.geojson')
+    rutasListEl.innerHTML = '<div class="rutas-empty"><i class="fas fa-circle-notch fa-spin"></i> Cargando rutas…</div>';
+    return fetch('rutas_morelia.geojson')
       .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(fc => {
-        pintarRutas(fc);
-        rutasCargadas = true; rutasVisibles = true; rutasCargando = false;
-        rutasLayer.addTo(map);
-        label.innerHTML = '<i class="fas fa-bus"></i> Ocultar rutas';
-        toast(`${(fc.features || []).length} rutas de transporte cargadas.`, 'success');
+        rutasData = (fc.features || []).filter(f => f.geometry && f.geometry.type === 'LineString')
+          .sort((a, b) => a.properties.nombre.localeCompare(b.properties.nombre));
+        rutasCargadas = true; rutasCargando = false;
+        renderListaRutas('');
       })
       .catch(err => {
         console.error(err); rutasCargando = false;
-        label.innerHTML = '<i class="fas fa-bus"></i> Rutas de transporte';
-        toast('No se pudo cargar el archivo de rutas (rutas_morelia.geojson).', 'error');
+        rutasListEl.innerHTML = '<div class="rutas-empty">No se pudo cargar rutas_morelia.geojson.</div>';
+        toast('No se pudo cargar el archivo de rutas.', 'error');
       });
   }
-  document.getElementById('toggleRutasBtn').addEventListener('click', toggleRutas);
+
+  rutasToggleBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const abierto = rutasMenu.classList.toggle('open');
+    this.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+    if (abierto) { cargarRutas(); setTimeout(() => rutasSearchEl.focus(), 50); }
+  });
+  // No cerrar el menú al hacer clic dentro (para elegir varias seguidas)
+  rutasMenu.addEventListener('click', e => e.stopPropagation());
+  rutasSearchEl.addEventListener('input', function() { renderListaRutas(this.value); });
+
+  document.getElementById('rutasNinguna').addEventListener('click', () => {
+    [...rutasSeleccionadas].forEach(id => { const l = rutaLineas.get(id); if (l) rutasLayer.removeLayer(l); });
+    rutasSeleccionadas.clear(); rutaLineas.clear();
+    rutasListEl.querySelectorAll('.ruta-item.active').forEach(r => r.classList.remove('active'));
+    actualizarBadgeRutas();
+  });
+  document.getElementById('rutasTodas').addEventListener('click', () => {
+    rutasData.forEach(f => { if (!rutasSeleccionadas.has(f.properties.id)) { rutasSeleccionadas.add(f.properties.id); dibujarRuta(f); } });
+    rutasListEl.querySelectorAll('.ruta-item').forEach(r => r.classList.add('active'));
+    actualizarBadgeRutas();
+    toast(`${rutasSeleccionadas.size} rutas mostradas.`, 'info');
+  });
 
   // ============================================================
   //  10b2. EXPORTAR CSV
