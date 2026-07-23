@@ -2544,17 +2544,46 @@ document.addEventListener('DOMContentLoaded', function(){
   function parsearCSV(csvText) {
     const lines = csvText.split(/\r?\n/).filter(l => l.trim() !== '');
     if (lines.length < 2) return [];
-    const header = lines[0].split(',').map(c => normalizarTexto(c.trim()));
-    const iNombre = header.indexOf('nombre'), iLat = header.indexOf('lat'), iLon = header.indexOf('lon');
-    if (iNombre === -1 || iLat === -1 || iLon === -1) { toast('El CSV debe tener columnas: nombre, lat, lon (mínimo).', 'error'); return null; }
-    const iEstado = header.indexOf('estado'), iTamano = header.indexOf('tamano'), iDir = header.indexOf('direccion'), iTel = header.indexOf('telefono');
+
+    // Detecta el separador según la fila de encabezados: coma, punto y coma o
+    // tabulador (Excel en español suele exportar con punto y coma).
+    const h0 = lines[0];
+    const cuenta = { ',': (h0.match(/,/g) || []).length, ';': (h0.match(/;/g) || []).length, '\t': (h0.match(/\t/g) || []).length };
+    const sep = Object.keys(cuenta).reduce((a, b) => cuenta[b] > cuenta[a] ? b : a, ',');
+
+    function partir(linea) {
+      if (sep === ',') {
+        // Respeta comillas dobles (para nombres con comas).
+        return (linea.match(/("([^"]|"")*"|[^,]*)(,|$)/g) || [])
+          .map(v => v.replace(/,$/, '').trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+      }
+      const re = sep === ';' ? /;/ : /\t/;
+      return linea.split(re).map(v => v.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+    }
+
+    const header = partir(lines[0]).map(c => normalizarTexto(c));
+    // Busca una columna aceptando varios nombres posibles (alias).
+    const idx = (alias) => { for (const a of alias) { const i = header.indexOf(a); if (i !== -1) return i; } return -1; };
+    const iNombre = idx(['nombre comercial', 'nombre', 'razon social', 'cliente']);
+    const iLat    = idx(['latitud', 'lat']);
+    const iLon    = idx(['longitud', 'lon', 'lng', 'long']);
+    const iEstado = idx(['estado', 'entidad']);
+    const iTamano = idx(['tamano de empresa', 'tamano empresa', 'tamano', 'categoria']);
+    const iDir    = idx(['direccion', 'domicilio']);
+    const iTel    = idx(['telefono', 'tel', 'celular']);
+
+    if (iNombre === -1 || iLat === -1 || iLon === -1) {
+      toast('El CSV debe incluir columnas de Nombre, Latitud y Longitud.', 'error');
+      return null;
+    }
+
+    // Convierte a número tolerando decimales con coma ("19,7048").
+    const num = (v) => parseFloat(String(v == null ? '' : v).trim().replace(',', '.'));
     const clientes = [];
     for (let i = 1; i < lines.length; i++) {
-      // Separa respetando comillas dobles (para nombres con comas).
-      const vals = (lines[i].match(/("([^"]|"")*"|[^,]*)(,|$)/g) || [])
-        .map(v => v.replace(/,$/, '').trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+      const vals = partir(lines[i]);
       const nombre = (vals[iNombre] || '').trim();
-      const lat = parseFloat(vals[iLat]), lon = parseFloat(vals[iLon]);
+      const lat = num(vals[iLat]), lon = num(vals[iLon]);
       if (!nombre || isNaN(lat) || isNaN(lon)) continue;
       clientes.push({
         nombre, lat, lon,
