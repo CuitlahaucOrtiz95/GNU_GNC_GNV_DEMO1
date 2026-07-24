@@ -45,7 +45,6 @@
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script defer src="ClientesPotenciales.js"></script>
   <style>
-    /* ===== ESTILOS OPTIMIZADOS ===== */
     :root {
       --primary: #1F5CA9;
       --primary-hover: #004a8f;
@@ -61,8 +60,6 @@
       --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
       --transition-smooth: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       --glass-bg: rgba(255, 255, 255, 0.95);
-
-      /* Variables añadidas */
       --r-pill: 9999px;
       --r-sm: 6px;
       --r-md: 10px;
@@ -595,11 +592,6 @@
       .dropdown-menu, .search-suggestions { max-width: calc(100vw - 2rem); }
     }
 
-    /* ==============================================================
-       PATCH v4 — Mejoras premium (#1,2,3,4,6,9,11,12,18)
-       ============================================================== */
-
-    /* ---------- #9 CHIPS DE FILTROS RÁPIDOS ---------- */
     .quick-filters {
       display: flex; gap: 0.4rem; padding: 0.5rem 1.2rem;
       background: var(--bg-panel); border-bottom: 1px solid var(--border);
@@ -637,7 +629,6 @@
     .qf-chip[data-tone="purple"].active { background: #8b5cf6; border-color: #8b5cf6; box-shadow: 0 2px 8px rgba(139,92,246,0.35); }
     .qf-chip[data-tone="slate"].active  { background: #475569; border-color: #475569; box-shadow: 0 2px 8px rgba(71,85,105,0.35); }
 
-    /* ---------- #2 LEYENDA DASHBOARD (barras proporcionales) ---------- */
     .price-legend.dash { min-width: 210px; padding: 12px 14px 8px; }
     .price-legend.dash .title {
       text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px;
@@ -680,7 +671,6 @@
     .price-legend.dash.minimized .title { padding-bottom: 0; border-bottom: none; margin-bottom: 0; }
     .price-legend.dash.minimized .clear-btn { display: none; }
 
-    /* ---------- #6 RAIL TIPO TARJETAS ---------- */
     .rail-list.cards { padding: 8px; }
     .rail-list.cards li {
       display: grid; grid-template-columns: 10px 1fr auto; gap: 10px;
@@ -737,7 +727,6 @@
       display: block; margin: 4px 0 2px;
     }
 
-    /* ---------- Skeleton loader para rail (#18) ---------- */
     .rail-list.cards.loading li.skeleton {
       background: var(--bg-panel); border: 1px solid var(--border);
       pointer-events: none;
@@ -756,7 +745,6 @@
       100% { background-position: -200% 0; }
     }
 
-    /* ---------- #3 POPUP TIPO TARJETA ---------- */
     .leaflet-popup-content-wrapper.popup-card-wrap,
     .leaflet-popup-content-wrapper:has(.popup-card) {
       border-radius: var(--r-lg) !important; padding: 0 !important;
@@ -812,7 +800,6 @@
     .popup-card .card-actions .popup-btn { grid-column: auto; }
     .popup-card .card-actions .popup-btn.wide { grid-column: 1 / -1; }
 
-    /* ---------- #11 ANILLO POR TAMAÑO en marcadores ---------- */
     .leaflet-marker-icon { transition: transform var(--dur-fast) var(--ease-spring); }
     .marker-pop-in { animation: marker-pop var(--dur-slow) var(--ease-spring); transform-origin: bottom center; }
     @keyframes marker-pop {
@@ -827,7 +814,6 @@
       70%     { transform: translateY(-4px)  scale(1.02); }
     }
 
-    /* ---------- #12 RUTA MÁS BONITA (halo + guiones animados) ---------- */
     .route-casing { stroke: #ffffff; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.25)); }
     .route-main {
       stroke-linecap: round; stroke-linejoin: round;
@@ -835,7 +821,6 @@
     }
     @keyframes route-flow { to { stroke-dashoffset: -22; } }
 
-    /* ---------- #18 TOOLTIPS elegantes ---------- */
     [data-tooltip] { position: relative; }
     [data-tooltip]::after {
       content: attr(data-tooltip);
@@ -859,14 +844,12 @@
       opacity: 1; visibility: visible; transition-delay: 0.5s, 0s;
     }
 
-    /* ---------- #18 Kbd hint en tooltips con atajo ---------- */
     kbd {
       display: inline-block; background: #1e293b; color: #fff;
       padding: 1px 5px; border-radius: 3px; font-family: monospace;
       font-size: 0.65rem; margin-left: 4px; box-shadow: inset 0 -1px 0 rgba(255,255,255,0.15);
     }
 
-    /* ---------- #1 Toolbar: badge cuenta filtros activos ---------- */
     .toolbar .btn .filter-count-badge {
       background: #ef4444; color: #fff; font-weight: 700; font-size: 0.6rem;
       min-width: 16px; height: 16px; padding: 0 5px; border-radius: var(--r-pill);
@@ -875,19 +858,12 @@
       animation: badge-pop var(--dur-slow) var(--ease-spring);
     }
 
-    /* Modal chip categorias (para #11 sin bug al reciclar tipo-chips) */
     .qf-strip { display: none; }
     @media (max-width: 500px) {
       .quick-filters { padding: 0.4rem 0.8rem; }
       .qf-chip { padding: 0.35rem 0.7rem; font-size: 0.72rem; }
     }
 
-
-    /* ==============================================================
-       PATCH v5 — Mitad 2 (#5,7,8,10,13,14,15,16)
-       ============================================================== */
-
-    /* ---------- #5 TARJETA LATERAL FLOTANTE ---------- */
     .detail-card {
       position: absolute; top: 14px; right: 14px;
       width: 320px; max-height: calc(100% - 28px);
@@ -938,7 +914,6 @@
     .detail-card .dc-actions .popup-btn { padding: 0.55rem 0.55rem; font-size: 0.75rem; }
     .detail-card .dc-actions .popup-btn.wide { grid-column: 1 / -1; }
 
-    /* ---------- #7 KPIs REALES ---------- */
     .topbar .kpi-strip {
       display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
     }
@@ -960,7 +935,6 @@
     .kpi-card .kpi-val small { font-size: 0.6rem; font-weight: 600; opacity: 0.75; }
     .kpi-card.kpi-warn .kpi-val { color: #fef3c7; }
 
-    /* ---------- #10 SELECTOR DE ESTILO DE MAPA ---------- */
     .map-style-fab {
       position: absolute; top: 14px; left: 60px; z-index: 400;
       background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--r-md);
@@ -979,7 +953,6 @@
     .map-style-fab .msb.active { background: var(--primary); color: #fff; box-shadow: var(--shadow-xs); }
     .leaflet-control-layers { display: none !important; }
 
-    /* ---------- #13 CARGA PROGRESIVA con contador ---------- */
     .loading-overlay .progress-info {
       font-size: 0.82rem; color: var(--text-main); font-weight: 700;
       margin-top: 4px; letter-spacing: 0.02em;
@@ -997,7 +970,6 @@
       border-radius: var(--r-pill);
     }
 
-    /* ---------- #14 MODO PRESENTACIÓN ---------- */
     body.presenting .topbar,
     body.presenting .toolbar,
     body.presenting .quick-filters,
@@ -1062,7 +1034,6 @@
     .present-hud .p-ctrl:hover { background: rgba(255,255,255,0.15); }
     .present-hud .p-ctrl.active { background: var(--primary); }
 
-    /* ---------- #15 DASHBOARD Chart.js ---------- */
     .dashboard-overlay {
       position: fixed; inset: 0; background: rgba(15,23,42,0.55);
       z-index: 9998; display: none; opacity: 0;
@@ -1115,7 +1086,6 @@
     }
     .chart-card canvas { max-height: 240px; }
 
-    /* ---------- #16 BOTTOM SHEET arrastrable en móvil ---------- */
     @media (max-width: 768px) {
       .rail { transition: transform var(--dur-slow) var(--ease-snappy), max-height var(--dur-slow) var(--ease-snappy); }
       .rail::before {
@@ -1168,7 +1138,6 @@
       .present-hud .p-top { padding: 14px 16px 30px; }
       .present-hud .p-top .p-title { font-size: 1.05rem; }
     }
-
   </style>
 </head>
 <body>
@@ -1419,14 +1388,12 @@
       <ul class="rail-list cards" id="list"></ul>
     </div>
 
-    <!-- #10 Selector de estilo de mapa -->
     <div class="map-style-fab" id="mapStyleFab" role="group" aria-label="Estilo del mapa">
       <button class="msb active" data-style="Calles">🗺️ Calles</button>
       <button class="msb" data-style="Satélite">🛰️ Satélite</button>
       <button class="msb" data-style="Oscuro">🌙 Oscuro</button>
     </div>
 
-    <!-- #5 Tarjeta lateral flotante -->
     <aside class="detail-card" id="detailCard" aria-hidden="true">
       <div class="dc-head">
         <button class="dc-close" id="dcClose" aria-label="Cerrar">✕</button>
@@ -1438,19 +1405,16 @@
       <div class="dc-actions" id="dcActions"></div>
     </aside>
 
-    <!-- #14 Botón modo presentación -->
     <button class="fab-present" id="presentBtn" data-tooltip="Modo presentación · P">
       <i class="fas fa-play"></i> Presentación
     </button>
 
-    <!-- #15 Botón dashboard -->
     <button class="fab-dashboard" id="dashboardBtn" data-tooltip="Ver dashboard · B">
       <i class="fas fa-chart-column"></i> Dashboard
     </button>
   </div>
 </div>
 
-<!-- #14 HUD del modo presentación -->
 <div class="present-hud" id="presentHud">
   <div class="p-top">
     <div>
@@ -1468,7 +1432,6 @@
   <div class="p-bottom" id="pHudKpis"></div>
 </div>
 
-<!-- #15 Overlay del dashboard -->
 <div class="dashboard-overlay" id="dashboardOverlay">
   <div class="dashboard-panel" role="dialog" aria-modal="true" aria-labelledby="dbTitle">
     <div class="dashboard-head">
@@ -1924,7 +1887,6 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   const CAT_COMBI = 'Base de Combis';
   const CAT_TAXI  = 'Estaciones de Taxis';
-  // Exponer para uso en otros módulos (chips)
   window.CAT_COMBI = CAT_COMBI;
   window.CAT_TAXI  = CAT_TAXI;
 
@@ -1947,50 +1909,57 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
-  function crearContenidoPopup(cliente) {
-    const d = cliente._matchDist < 10 ? cliente._matchDist.toFixed(1) : Math.round(cliente._matchDist);
-    const sinDireccion = !cliente.direccion;
-    const ringColor = colorPorTamano(cliente);
+  // --- Nueva función de contenido para la tarjeta lateral (sin popup de Leaflet) ---
+  function abrirDetalle(cliente) {
+    if (!cliente) return;
+    const d = cliente._matchDist < 10 ? cliente._matchDist.toFixed(1) : Math.round(cliente._matchDist || 0);
     const esM = cliente._matchAncla === 'Morelia';
-    const tintA = esM ? '#004D99' : '#F97316';
-    const tintB = esM ? '#1F5CA9' : '#FF6B35';
+    const dcHead = document.querySelector('.dc-head');
+    dcHead.style.setProperty('--dc-a', esM ? '#004D99' : '#F97316');
+    dcHead.style.setProperty('--dc-b', esM ? '#1F5CA9' : '#FF6B35');
     const emoji = (function(){
       const t = (cliente.tamano||'').toLowerCase();
-      if (/taxi/.test(t))            return '🚕';
-      if (/combi/.test(t))           return '🚐';
-      if (/industr|parque/.test(t))  return '🏭';
-      if (/grande/.test(t))          return '🏢';
+      if (/taxi/.test(t))           return '🚕';
+      if (/combi/.test(t))          return '🚐';
+      if (/industr|parque/.test(t)) return '🏭';
+      if (/grande/.test(t))         return '🏢';
       return '📍';
     })();
-
-    return `<div class="popup-card" style="--card-tint-a:${tintA}; --card-tint-b:${tintB};">
-      <div class="card-head">
-        ${cliente.tamano ? `<span class="p-badge">${emoji} ${cliente.tamano}</span>` : ''}
-        <div class="p-title">${cliente.nombre}</div>
-        <div class="p-state"><i class="fas fa-map-marker-alt"></i> ${cliente.estado || 'Sin estado'}</div>
+    document.getElementById('dcBadge').textContent = emoji + ' ' + (cliente.tamano || 'Cliente');
+    document.getElementById('dcTitle').textContent = cliente.nombre || 'Sin nombre';
+    document.getElementById('dcSubtitle').innerHTML = '<i class="fas fa-map-marker-alt"></i> ' + (cliente.estado || 'Sin estado');
+    document.getElementById('dcBody').innerHTML = `
+      <div class="dc-stat-row">
+        <div class="dc-stat"><div class="lbl">Distancia</div><div class="val">${d}<small>km</small></div></div>
+        <div class="dc-stat"><div class="lbl">Ancla</div><div class="val" style="font-size:0.9rem;">${cliente._matchAncla || '—'}</div></div>
       </div>
-      <div class="card-body">
-        <div class="field dist-field">
-          <span style="width:10px;height:10px;border-radius:50%;background:${cliente._matchColor};box-shadow:0 0 0 2px rgba(0,0,0,0.08);"></span>
-          <span><span class="dist-strong">${d} km</span> de ${cliente._matchAncla}</span>
-        </div>
-        ${cliente.direccion ? `<div class="field"><i class="fas fa-location-dot"></i> <span>${cliente.direccion}</span></div>` : ''}
-        ${cliente.telefono  ? `<div class="field"><i class="fas fa-phone"></i>          <span>${cliente.telefono}</span></div>` : ''}
-        ${ringColor ? `<div class="field subtle"><i class="fas fa-circle" style="color:${ringColor};"></i> Anillo por tamaño</div>` : ''}
-        <div class="field subtle">
-          Morelia ${Math.round(cliente.distMorelia)} km · Tototlán ${Math.round(cliente.distTototlan)} km
-        </div>
+      <div class="dc-stat-row">
+        <div class="dc-stat"><div class="lbl">A Morelia</div><div class="val">${Math.round(cliente.distMorelia)}<small>km</small></div></div>
+        <div class="dc-stat"><div class="lbl">A Tototlán</div><div class="val">${Math.round(cliente.distTototlan)}<small>km</small></div></div>
       </div>
-      <div class="card-actions">
-        <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${cliente.lat},${cliente.lon}" target="_blank">🗺️ Google&nbsp;Maps</a>
-        <button class="popup-btn btn-route" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🚗 Ruta</button>
-        <button class="popup-btn btn-route-prospeccion wide" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🧭 Ruta de prospección</button>
-        ${sinDireccion ? `<button class="popup-btn btn-geocode wide" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">📍 Obtener dirección</button>` : ''}
-        <button class="popup-btn btn-delete-client wide" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">🗑️ Eliminar cliente</button>
-      </div>
-    </div>`;
+      ${cliente.direccion ? `<div class="dc-field"><i class="fas fa-location-dot"></i> ${cliente.direccion}</div>` : ''}
+      ${cliente.telefono  ? `<div class="dc-field"><i class="fas fa-phone"></i> ${cliente.telefono}</div>` : ''}
+      <div class="dc-field subtle"><i class="fas fa-hashtag"></i> Coords: ${cliente.lat.toFixed(5)}, ${cliente.lon.toFixed(5)}</div>
+    `;
+    const sinDir = !cliente.direccion;
+    document.getElementById('dcActions').innerHTML = `
+      <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${cliente.lat},${cliente.lon}" target="_blank">🗺️ Maps</a>
+      <button class="popup-btn btn-route" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🚗 Ruta</button>
+      <button class="popup-btn btn-route-prospeccion wide" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🧭 Prospección</button>
+      ${sinDir ? `<button class="popup-btn btn-geocode wide" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">📍 Obtener dirección</button>` : ''}
+      <button class="popup-btn btn-delete-client wide" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">🗑️ Eliminar cliente</button>
+    `;
+    document.getElementById('detailCard').classList.add('open');
+    document.getElementById('detailCard').setAttribute('aria-hidden', 'false');
   }
 
+  function cerrarDetalle() {
+    document.getElementById('detailCard').classList.remove('open');
+    document.getElementById('detailCard').setAttribute('aria-hidden', 'true');
+  }
+  document.getElementById('dcClose').addEventListener('click', cerrarDetalle);
+
+  // Reconstruir marcadores sin bindPopup, solo click que abre la tarjeta lateral
   function reconstruirMarcadoresClientes() {
     cluster.clearLayers();
     markerMap.clear();
@@ -2000,7 +1969,10 @@ document.addEventListener('DOMContentLoaded', function(){
         icon: iconoEspecial || iconoPin(s.priceColor, colorPorTamano(s)),
         title: s.nombre
       });
-      marker.bindPopup(() => crearContenidoPopup(s), { className: '', maxWidth: 300 });
+      // No usamos bindPopup, usamos click para abrir la tarjeta lateral
+      marker.on('click', function() {
+        abrirDetalle(s);
+      });
       marker.data = s;
       markerMap.set(s, { marker, data: s });
     });
@@ -2029,6 +2001,17 @@ document.addEventListener('DOMContentLoaded', function(){
     if (rutaMarcador) { map.removeLayer(rutaMarcador); rutaMarcador = null; }
     if (rutaActiva) {
       rutaActiva = false;
+      // Restaurar cluster y círculos
+      if (!map.hasLayer(cluster)) map.addLayer(cluster);
+      activeCircleFilters.forEach(id => {
+        const c = circulos[id];
+        if (c && c.visible && !map.hasLayer(c.capa)) map.addLayer(c.capa);
+      });
+      // Forzar actualización
+      applyFilters();
+      map.invalidateSize();
+    } else {
+      // Si no hay ruta activa, pero por si acaso, aseguramos que todo esté visible
       if (!map.hasLayer(cluster)) map.addLayer(cluster);
       activeCircleFilters.forEach(id => {
         const c = circulos[id];
@@ -2162,7 +2145,6 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   let activePrice = null, activeTamano = 'all', searchTerm = '', maxDist = 190;
-  // Usamos window.activeNoAddress para que los chips y el botón compartan el estado
   window.activeNoAddress = false;
 
   function mejorCoincidenciaCirculo(s) {
@@ -2341,8 +2323,7 @@ document.addEventListener('DOMContentLoaded', function(){
         }
         applyFilters();
         map.flyTo([s.lat, s.lon], 14, { duration: 1.2 });
-        const entry = markerMap.get(s);
-        if (entry) entry.marker.openPopup();
+        abrirDetalle(s);
       });
       box.appendChild(item);
     });
@@ -2428,12 +2409,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     const activar = () => {
       map.flyTo([s.lat, s.lon], 14, { duration: 1.2 });
-      const entry = markerMap.get(s);
-      if (entry) {
-        entry.marker.openPopup();
-        const el = entry.marker.getElement();
-        if (el) { el.classList.remove('marker-bounce'); void el.offsetWidth; el.classList.add('marker-bounce'); }
-      }
+      abrirDetalle(s);
     };
     li.addEventListener('click', activar);
     li.addEventListener('keydown', e => {
@@ -2547,7 +2523,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
     const closest = visible.reduce((a, b) => a._matchDist < b._matchDist ? a : b);
     map.flyTo([closest.lat, closest.lon], 14, { duration: 1.2 });
-    markerMap.get(closest).marker.openPopup();
+    abrirDetalle(closest);
   });
 
   document.getElementById('toggleRailBtn').addEventListener('click', () => {
@@ -3008,7 +2984,8 @@ document.addEventListener('DOMContentLoaded', function(){
     const result = await geocodeCliente(cliente);
     if (result) {
       cliente.direccion = result.direccion; cliente.estado = result.estado || cliente.estado;
-      const entry = markerMap.get(cliente); if (entry) { entry.marker.closePopup(); entry.marker.bindPopup(() => crearContenidoPopup(cliente), { maxWidth: 300 }).openPopup(); }
+      // actualizar tarjeta si está abierta
+      if (document.getElementById('detailCard').classList.contains('open')) abrirDetalle(cliente);
       try { localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`); localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString()); } catch (e) {}
       applyFilters();
     } else toast('No se pudo obtener la dirección.', 'error');
@@ -3219,7 +3196,6 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   })();
 
-
   // ============================================================
   //  PATCH v5 — MITAD 2 (#5,7,8,10,13,14,15,16)
   // ============================================================
@@ -3348,70 +3324,6 @@ document.addEventListener('DOMContentLoaded', function(){
       return r;
     };
   })();
-
-  // #5 TARJETA LATERAL FLOTANTE
-  const detailCard = document.getElementById('detailCard');
-  const dcBadge    = document.getElementById('dcBadge');
-  const dcTitle    = document.getElementById('dcTitle');
-  const dcSubtitle = document.getElementById('dcSubtitle');
-  const dcBody     = document.getElementById('dcBody');
-  const dcActions  = document.getElementById('dcActions');
-  const dcClose    = document.getElementById('dcClose');
-  const dcHead     = detailCard.querySelector('.dc-head');
-
-  function abrirDetalle(cliente) {
-    if (!cliente) return;
-    const d = cliente._matchDist < 10 ? cliente._matchDist.toFixed(1) : Math.round(cliente._matchDist || 0);
-    const esM = cliente._matchAncla === 'Morelia';
-    dcHead.style.setProperty('--dc-a', esM ? '#004D99' : '#F97316');
-    dcHead.style.setProperty('--dc-b', esM ? '#1F5CA9' : '#FF6B35');
-    const emoji = (function(){
-      const t = (cliente.tamano||'').toLowerCase();
-      if (/taxi/.test(t))           return '🚕';
-      if (/combi/.test(t))          return '🚐';
-      if (/industr|parque/.test(t)) return '🏭';
-      if (/grande/.test(t))         return '🏢';
-      return '📍';
-    })();
-    dcBadge.textContent = emoji + ' ' + (cliente.tamano || 'Cliente');
-    dcTitle.textContent = cliente.nombre || 'Sin nombre';
-    dcSubtitle.innerHTML = '<i class="fas fa-map-marker-alt"></i> ' + (cliente.estado || 'Sin estado');
-    dcBody.innerHTML = `
-      <div class="dc-stat-row">
-        <div class="dc-stat"><div class="lbl">Distancia</div><div class="val">${d}<small>km</small></div></div>
-        <div class="dc-stat"><div class="lbl">Ancla</div><div class="val" style="font-size:0.9rem;">${cliente._matchAncla || '—'}</div></div>
-      </div>
-      <div class="dc-stat-row">
-        <div class="dc-stat"><div class="lbl">A Morelia</div><div class="val">${Math.round(cliente.distMorelia)}<small>km</small></div></div>
-        <div class="dc-stat"><div class="lbl">A Tototlán</div><div class="val">${Math.round(cliente.distTototlan)}<small>km</small></div></div>
-      </div>
-      ${cliente.direccion ? `<div class="dc-field"><i class="fas fa-location-dot"></i> ${cliente.direccion}</div>` : ''}
-      ${cliente.telefono  ? `<div class="dc-field"><i class="fas fa-phone"></i> ${cliente.telefono}</div>` : ''}
-      <div class="dc-field subtle"><i class="fas fa-hashtag"></i> Coords: ${cliente.lat.toFixed(5)}, ${cliente.lon.toFixed(5)}</div>
-    `;
-    const sinDir = !cliente.direccion;
-    dcActions.innerHTML = `
-      <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${cliente.lat},${cliente.lon}" target="_blank">🗺️ Maps</a>
-      <button class="popup-btn btn-route" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🚗 Ruta</button>
-      <button class="popup-btn btn-route-prospeccion wide" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🧭 Prospección</button>
-      ${sinDir ? `<button class="popup-btn btn-geocode wide" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">📍 Obtener dirección</button>` : ''}
-      <button class="popup-btn btn-delete-client wide" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">🗑️ Eliminar cliente</button>
-    `;
-    detailCard.classList.add('open');
-    detailCard.setAttribute('aria-hidden', 'false');
-  }
-  function cerrarDetalle() {
-    detailCard.classList.remove('open');
-    detailCard.setAttribute('aria-hidden', 'true');
-  }
-  dcClose.addEventListener('click', cerrarDetalle);
-
-  map.on('popupopen', function(e) {
-    try {
-      const layer = e.popup._source;
-      if (layer && layer.data) abrirDetalle(layer.data);
-    } catch (err) {}
-  });
 
   // #15 DASHBOARD Chart.js
   const dbOverlay = document.getElementById('dashboardOverlay');
@@ -3605,7 +3517,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if (e.key === 'Escape' || e.key === 'Esc') {
       if (document.body.classList.contains('presenting')) { salirPresentacion(); return; }
       if (dbOverlay.classList.contains('open')) { dbOverlay.classList.remove('open'); destruirCharts(); return; }
-      if (detailCard.classList.contains('open')) { cerrarDetalle(); return; }
+      if (document.getElementById('detailCard').classList.contains('open')) { cerrarDetalle(); return; }
     }
     if (!isTyping) {
       if (e.key === 'p' || e.key === 'P') { e.preventDefault(); presentBtn.click(); }
