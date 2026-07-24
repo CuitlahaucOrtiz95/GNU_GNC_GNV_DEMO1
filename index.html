@@ -2085,11 +2085,33 @@ document.addEventListener('DOMContentLoaded', function(){
       <span>📍 ${markers.length} clientes</span>
       <span style="font-weight:400;font-size:0.75rem;">📏 ${avgDist} km promedio</span>
     </div><div class="cluster-popup-list">`;
-    markers.forEach(m => {
-      html += `<div class="item"><span class="name">${m.data.nombre}</span><span class="state">${m.data.estado || ''}</span></div>`;
+    markers.forEach((m, idx) => {
+      // Cada item lleva un data-attr con las coordenadas para resolver el cliente al hacer click
+      html += `<div class="item" data-lat="${m.data.lat}" data-lon="${m.data.lon}" style="cursor:pointer;" title="Ver detalle de ${m.data.nombre}"><span class="name">${m.data.nombre}</span><span class="state">${m.data.estado || ''}</span></div>`;
     });
     html += '</div>';
     layer.bindPopup(html, { className: 'cluster-popup', maxWidth: 320, maxHeight: 280 }).openPopup();
+  });
+
+  // Delegate: al hacer click en un item de la lista del cluster, abrir tarjeta lateral (consistencia con click directo al marcador)
+  document.addEventListener('click', function(e) {
+    const item = e.target.closest('.cluster-popup-list .item');
+    if (!item) return;
+    const lat = parseFloat(item.dataset.lat);
+    const lon = parseFloat(item.dataset.lon);
+    if (isNaN(lat) || isNaN(lon)) return;
+    // Encontrar el cliente y su marcador
+    const cliente = stations.find(s => Math.abs(s.lat - lat) < 1e-6 && Math.abs(s.lon - lon) < 1e-6);
+    if (!cliente) return;
+    map.closePopup();
+    map.flyTo([cliente.lat, cliente.lon], 15, { duration: 1.0 });
+    abrirDetalle(cliente);
+    // Rebote del marcador al llegar
+    const entry = markerMap.get(cliente);
+    if (entry) {
+      const el = entry.marker.getElement();
+      if (el) { el.classList.remove('marker-bounce'); void el.offsetWidth; el.classList.add('marker-bounce'); }
+    }
   });
 
   let clusterTimer = null;
@@ -2410,6 +2432,12 @@ document.addEventListener('DOMContentLoaded', function(){
     const activar = () => {
       map.flyTo([s.lat, s.lon], 14, { duration: 1.2 });
       abrirDetalle(s);
+      // Rebote visual del marcador al llegar (mejora #4 v4)
+      const entry = markerMap.get(s);
+      if (entry) {
+        const el = entry.marker.getElement();
+        if (el) { el.classList.remove('marker-bounce'); void el.offsetWidth; el.classList.add('marker-bounce'); }
+      }
     };
     li.addEventListener('click', activar);
     li.addEventListener('keydown', e => {
