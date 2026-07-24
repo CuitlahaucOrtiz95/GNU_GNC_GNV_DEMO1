@@ -569,6 +569,297 @@
       .modal { padding: 18px 20px; }
       .dropdown-menu, .search-suggestions { max-width: calc(100vw - 2rem); }
     }
+
+    /* ==============================================================
+       PATCH v4 — Mejoras premium (#1,2,3,4,6,9,11,12,18)
+       Se agrega al final para no chocar con reglas anteriores.
+       ============================================================== */
+
+    /* ---------- #9 CHIPS DE FILTROS RÁPIDOS ---------- */
+    .quick-filters {
+      display: flex; gap: 0.4rem; padding: 0.5rem 1.2rem;
+      background: var(--bg-panel); border-bottom: 1px solid var(--border);
+      overflow-x: auto; scrollbar-width: none; flex-shrink: 0;
+      -webkit-overflow-scrolling: touch;
+    }
+    .quick-filters::-webkit-scrollbar { display: none; }
+    .qf-chip {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.35rem 0.75rem; border: 1px solid var(--border);
+      border-radius: var(--r-pill); background: var(--bg-main);
+      color: var(--text-muted); font-size: 0.75rem; font-weight: 600;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      transition: transform var(--dur-fast) var(--ease-spring),
+                  background var(--dur-fast) var(--ease),
+                  color var(--dur-fast) var(--ease),
+                  border-color var(--dur-fast) var(--ease),
+                  box-shadow var(--dur-fast) var(--ease);
+    }
+    .qf-chip:hover { border-color: var(--border-hover); color: var(--text-main); transform: translateY(-1px); }
+    .qf-chip:active { transform: scale(0.96); }
+    .qf-chip:focus-visible { outline: none; box-shadow: var(--shadow-glow); }
+    .qf-chip .qf-count {
+      background: var(--border); color: var(--text-muted); font-size: 0.65rem; font-weight: 700;
+      padding: 1px 6px; border-radius: var(--r-pill); min-width: 18px; text-align: center;
+      transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+    }
+    .qf-chip.active {
+      background: var(--primary); color: #fff; border-color: var(--primary);
+      box-shadow: 0 2px 8px rgba(31,92,169,0.35);
+    }
+    .qf-chip.active .qf-count { background: rgba(255,255,255,0.28); color: #fff; }
+    .qf-chip[data-tone="green"].active  { background: #10b981; border-color: #10b981; box-shadow: 0 2px 8px rgba(16,185,129,0.35); }
+    .qf-chip[data-tone="amber"].active  { background: #f59e0b; border-color: #f59e0b; box-shadow: 0 2px 8px rgba(245,158,11,0.35); }
+    .qf-chip[data-tone="purple"].active { background: #8b5cf6; border-color: #8b5cf6; box-shadow: 0 2px 8px rgba(139,92,246,0.35); }
+    .qf-chip[data-tone="slate"].active  { background: #475569; border-color: #475569; box-shadow: 0 2px 8px rgba(71,85,105,0.35); }
+
+    /* ---------- #2 LEYENDA DASHBOARD (barras proporcionales) ---------- */
+    .price-legend.dash { min-width: 210px; padding: 12px 14px 8px; }
+    .price-legend.dash .title {
+      text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px;
+      color: var(--text-muted); font-weight: 700; padding-bottom: 8px;
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    }
+    .price-legend.dash .title .legend-title-text::before {
+      content: '📊'; margin-right: 6px; font-size: 12px;
+    }
+    .price-legend.dash .row {
+      display: grid; grid-template-columns: 14px 1fr auto;
+      gap: 8px; padding: 5px 6px; margin: 2px 0; border-radius: var(--r-sm);
+      cursor: pointer; position: relative; align-items: center;
+      transition: background var(--dur-fast) var(--ease);
+    }
+    .price-legend.dash .row:hover { background: var(--bg-main); }
+    .price-legend.dash .row.active { background: var(--primary-tint); box-shadow: inset 0 0 0 1px var(--primary); }
+    .price-legend.dash .row .color-dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+    .price-legend.dash .row .rowbody { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .price-legend.dash .row .rowbody .label {
+      font-size: 10.5px; font-weight: 600; color: var(--text-main);
+      display: flex; justify-content: space-between; align-items: baseline; gap: 6px;
+    }
+    .price-legend.dash .row .rowbody .bar-track {
+      height: 5px; background: var(--border); border-radius: var(--r-pill);
+      overflow: hidden; position: relative;
+    }
+    .price-legend.dash .row .rowbody .bar-fill {
+      height: 100%; border-radius: var(--r-pill);
+      width: 0%; transform-origin: left center;
+      transition: width var(--dur-slow) var(--ease-snappy);
+      background: currentColor; opacity: 0.85;
+    }
+    .price-legend.dash .row .count {
+      font-size: 11px; font-weight: 700; color: var(--text-main);
+      background: transparent; padding: 0; min-width: 28px; text-align: right;
+    }
+    .price-legend.dash.minimized { min-width: 0; padding: 8px 12px; }
+    .price-legend.dash.minimized .row { display: none; }
+    .price-legend.dash.minimized .title { padding-bottom: 0; border-bottom: none; margin-bottom: 0; }
+    .price-legend.dash.minimized .clear-btn { display: none; }
+
+    /* ---------- #6 RAIL TIPO TARJETAS ---------- */
+    .rail-list.cards { padding: 8px; }
+    .rail-list.cards li {
+      display: grid; grid-template-columns: 10px 1fr auto; gap: 10px;
+      padding: 10px 12px; margin-bottom: 6px; border-bottom: none;
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--r-md);
+      align-items: center; box-shadow: var(--shadow-xs);
+      transition: transform var(--dur-fast) var(--ease-spring),
+                  box-shadow var(--dur-fast) var(--ease),
+                  border-color var(--dur-fast) var(--ease),
+                  background var(--dur-fast) var(--ease);
+    }
+    .rail-list.cards li:hover {
+      transform: translateY(-2px); box-shadow: var(--shadow-md);
+      border-color: var(--border-hover); padding-left: 12px;
+      background: var(--bg-panel);
+    }
+    .rail-list.cards li:focus-visible {
+      outline: none; box-shadow: var(--shadow-glow); border-color: var(--primary);
+      padding-left: 12px;
+    }
+    .rail-list.cards li .card-color-strip {
+      width: 4px; height: 100%; min-height: 42px; border-radius: var(--r-pill);
+      background: var(--strip-color, var(--primary));
+      box-shadow: 0 0 8px var(--strip-color, var(--primary));
+    }
+    .rail-list.cards li .card-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .rail-list.cards li .card-body .name {
+      font-weight: 600; color: var(--text-main); font-size: 0.82rem;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .rail-list.cards li .card-body .name mark {
+      background: rgba(250, 204, 21, 0.4); color: inherit; padding: 0 2px; border-radius: 3px;
+    }
+    .rail-list.cards li .card-body .meta {
+      display: flex; align-items: center; gap: 6px; font-size: 0.68rem; color: var(--text-muted);
+    }
+    .rail-list.cards li .card-body .meta .state-tag {
+      background: #e0f2fe; color: #0369a1; padding: 1px 8px;
+      border-radius: var(--r-pill); font-weight: 600; font-size: 0.62rem;
+    }
+    :root[data-theme="dark"] .rail-list.cards li .card-body .meta .state-tag { background: #1e3a8a; color: #93c5fd; }
+    .rail-list.cards li .card-dist {
+      font-weight: 800; color: var(--primary); font-size: 0.95rem; line-height: 1;
+      display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+    }
+    .rail-list.cards li .card-dist .dist-unit { font-size: 0.62rem; font-weight: 600; color: var(--text-muted); }
+    .rail-list.cards li .group-header, .rail-list.cards .group-header {
+      grid-column: 1 / -1; background: transparent; padding: 8px 4px 4px;
+      font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text-muted); font-weight: 700; border-bottom: none;
+    }
+    .rail-list.cards .group-header {
+      background: transparent !important;
+      display: block; margin: 4px 0 2px;
+    }
+
+    /* ---------- Skeleton loader para rail (#18) ---------- */
+    .rail-list.cards.loading li.skeleton {
+      background: var(--bg-panel); border: 1px solid var(--border);
+      pointer-events: none;
+    }
+    .rail-list.cards li.skeleton .card-color-strip { background: var(--border); box-shadow: none; }
+    .rail-list.cards li.skeleton .skel-line {
+      background: linear-gradient(90deg, var(--border) 0%, var(--border-hover) 50%, var(--border) 100%);
+      background-size: 200% 100%; border-radius: 4px;
+      animation: skel-shine 1.4s var(--ease) infinite;
+    }
+    .rail-list.cards li.skeleton .skel-line.w1 { width: 60%; height: 10px; }
+    .rail-list.cards li.skeleton .skel-line.w2 { width: 35%; height: 8px; }
+    .rail-list.cards li.skeleton .card-dist .skel-line { width: 32px; height: 12px; }
+    @keyframes skel-shine {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ---------- #3 POPUP TIPO TARJETA ---------- */
+    .leaflet-popup-content-wrapper.popup-card-wrap,
+    .leaflet-popup-content-wrapper:has(.popup-card) {
+      border-radius: var(--r-lg) !important; padding: 0 !important;
+      box-shadow: var(--shadow-lg) !important; overflow: hidden;
+    }
+    .leaflet-popup-content:has(.popup-card) { margin: 0 !important; width: 280px !important; }
+    .popup-card { animation: popup-in var(--dur-slow) var(--ease-spring); font-family: 'Inter', sans-serif; }
+    @keyframes popup-in {
+      from { opacity: 0; transform: translateY(10px) scale(0.94); }
+      to   { opacity: 1; transform: none; }
+    }
+    .popup-card .card-head {
+      background: linear-gradient(135deg, var(--card-tint-a, var(--primary)) 0%, var(--card-tint-b, var(--primary-hover)) 100%);
+      color: #fff; padding: 12px 14px 10px; position: relative;
+    }
+    .popup-card .card-head .p-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(255,255,255,0.22); color: #fff;
+      padding: 2px 8px; border-radius: var(--r-pill);
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.04em; margin-bottom: 6px; backdrop-filter: blur(4px);
+    }
+    .popup-card .card-head .p-title {
+      font-size: 1rem; font-weight: 700; line-height: 1.2; margin: 0;
+    }
+    .popup-card .card-head .p-state {
+      font-size: 0.75rem; opacity: 0.9; margin-top: 3px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .popup-card .card-body {
+      padding: 10px 14px 6px; background: var(--bg-panel); color: var(--text-main);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .popup-card .card-body .field {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.78rem; color: var(--text-main);
+    }
+    .popup-card .card-body .field i {
+      color: var(--primary); width: 14px; text-align: center; flex-shrink: 0;
+    }
+    .popup-card .card-body .field.dist-field {
+      background: var(--bg-main); padding: 6px 10px; border-radius: var(--r-sm);
+      font-weight: 600;
+    }
+    .popup-card .card-body .field.dist-field .dist-strong {
+      color: var(--primary); font-weight: 800;
+    }
+    .popup-card .card-body .field.subtle { font-size: 0.7rem; color: var(--text-muted); }
+    .popup-card .card-actions {
+      padding: 8px 12px 12px; background: var(--bg-panel);
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    }
+    .popup-card .card-actions .popup-btn { grid-column: auto; }
+    .popup-card .card-actions .popup-btn.wide { grid-column: 1 / -1; }
+
+    /* ---------- #11 ANILLO POR TAMAÑO en marcadores ---------- */
+    /* El anillo se dibuja como parte del SVG en JS; aquí solo animación de aparición #4 */
+    .leaflet-marker-icon { transition: transform var(--dur-fast) var(--ease-spring); }
+    .marker-pop-in { animation: marker-pop var(--dur-slow) var(--ease-spring); transform-origin: bottom center; }
+    @keyframes marker-pop {
+      0%   { opacity: 0; transform: translateY(-12px) scale(0.4); }
+      60%  { opacity: 1; transform: translateY(2px)  scale(1.08); }
+      100% { opacity: 1; transform: translateY(0)    scale(1); }
+    }
+    .marker-bounce { animation: marker-bounce 0.6s var(--ease-spring); }
+    @keyframes marker-bounce {
+      0%,100% { transform: translateY(0); }
+      40%     { transform: translateY(-14px) scale(1.1); }
+      70%     { transform: translateY(-4px)  scale(1.02); }
+    }
+
+    /* ---------- #12 RUTA MÁS BONITA (halo + guiones animados) ---------- */
+    /* Casing (borde blanco) es una segunda polyline que dibujamos por debajo */
+    .route-casing { stroke: #ffffff; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.25)); }
+    .route-main {
+      stroke-linecap: round; stroke-linejoin: round;
+      stroke-dasharray: 12 10; animation: route-flow 1s linear infinite;
+    }
+    @keyframes route-flow { to { stroke-dashoffset: -22; } }
+
+    /* ---------- #18 TOOLTIPS elegantes ---------- */
+    [data-tooltip] { position: relative; }
+    [data-tooltip]::after {
+      content: attr(data-tooltip);
+      position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) translateY(4px);
+      background: #0f172a; color: #fff; padding: 5px 10px; border-radius: 6px;
+      font-size: 0.7rem; font-weight: 500; line-height: 1.2; white-space: nowrap;
+      pointer-events: none; opacity: 0; visibility: hidden; z-index: 999;
+      box-shadow: var(--shadow-md);
+      transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease), visibility 0s var(--dur-fast);
+    }
+    [data-tooltip]::before {
+      content: ''; position: absolute; bottom: calc(100% + 3px); left: 50%; transform: translateX(-50%);
+      border: 5px solid transparent; border-top-color: #0f172a;
+      opacity: 0; visibility: hidden; pointer-events: none; z-index: 999;
+      transition: opacity var(--dur-fast) var(--ease), visibility 0s var(--dur-fast);
+    }
+    [data-tooltip]:hover::after, [data-tooltip]:focus-visible::after {
+      opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); transition-delay: 0.5s, 0.5s, 0s;
+    }
+    [data-tooltip]:hover::before, [data-tooltip]:focus-visible::before {
+      opacity: 1; visibility: visible; transition-delay: 0.5s, 0s;
+    }
+
+    /* ---------- #18 Kbd hint en tooltips con atajo ---------- */
+    kbd {
+      display: inline-block; background: #1e293b; color: #fff;
+      padding: 1px 5px; border-radius: 3px; font-family: monospace;
+      font-size: 0.65rem; margin-left: 4px; box-shadow: inset 0 -1px 0 rgba(255,255,255,0.15);
+    }
+
+    /* ---------- #1 Toolbar: badge cuenta filtros activos ---------- */
+    .toolbar .btn .filter-count-badge {
+      background: #ef4444; color: #fff; font-weight: 700; font-size: 0.6rem;
+      min-width: 16px; height: 16px; padding: 0 5px; border-radius: var(--r-pill);
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-left: 4px; box-shadow: 0 0 0 2px var(--bg-main);
+      animation: badge-pop var(--dur-slow) var(--ease-spring);
+    }
+
+    /* Modal chip categorias (para #11 sin bug al reciclar tipo-chips) */
+    .qf-strip { display: none; }
+    @media (max-width: 500px) {
+      .quick-filters { padding: 0.4rem 0.8rem; }
+      .qf-chip { padding: 0.35rem 0.7rem; font-size: 0.72rem; }
+    }
+
   </style>
 </head>
 <body>
@@ -769,6 +1060,15 @@
       </div>
     </div>
   </div>
+  <div class="quick-filters" id="quickFilters" role="group" aria-label="Filtros rápidos">
+    <button class="qf-chip active" data-qf="all">Todos <span class="qf-count" id="qfCount-all">0</span></button>
+    <button class="qf-chip" data-qf="taxis" data-tone="amber">🚕 Taxis <span class="qf-count" id="qfCount-taxis">0</span></button>
+    <button class="qf-chip" data-qf="combis" data-tone="amber">🚐 Combis <span class="qf-count" id="qfCount-combis">0</span></button>
+    <button class="qf-chip" data-qf="industria" data-tone="slate">🏭 Industria <span class="qf-count" id="qfCount-industria">0</span></button>
+    <button class="qf-chip" data-qf="grandes" data-tone="green">🏢 Grandes <span class="qf-count" id="qfCount-grandes">0</span></button>
+    <button class="qf-chip" data-qf="sindir" data-tone="amber">✉️ Sin dirección <span class="qf-count" id="qfCount-sindir">0</span></button>
+    <button class="qf-chip" data-qf="marcadores" data-tone="purple">📍 Marcadores <span class="qf-count" id="qfCount-marcadores">0</span></button>
+  </div>
   <div class="stage">
     <div id="map"></div>
     <div class="map-hint" id="mapHint">
@@ -785,7 +1085,7 @@
         </div>
         <span id="listCnt" style="color: var(--primary);">0</span>
       </div>
-      <ul class="rail-list" id="list"></ul>
+      <ul class="rail-list cards" id="list"></ul>
     </div>
   </div>
 </div>
@@ -1161,23 +1461,39 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   const iconCache = new Map();
-  function iconoPin(color) {
-    let ic = iconCache.get(color);
+  function iconoPin(color, ringColor) {
+    const key = color + '|' + (ringColor || '');
+    let ic = iconCache.get(key);
     if (!ic) {
       ic = L.divIcon({
-        className: '', html: pinSVG(color),
-        iconSize: [28,40], iconAnchor: [14,40], popupAnchor: [0,-37]
+        className: 'marker-pop-in', html: pinSVG(color, ringColor),
+        iconSize: [30,42], iconAnchor: [15,42], popupAnchor: [0,-39]
       });
-      iconCache.set(color, ic);
+      iconCache.set(key, ic);
     }
     return ic;
   }
 
-  function pinSVG(color) {
-    return `<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.2));">
-      <path d="M14 0 C6.27 0 0 6.27 0 14 C0 24.5 14 40 14 40 S28 24.5 28 14 C28 6.27 21.73 0 14 0 Z" fill="${color}" stroke="#1e293b" stroke-width="1.2"/>
-      <circle cx="14" cy="14" r="5" fill="white" stroke="#1e293b" stroke-width="1"/>
+  function pinSVG(color, ringColor) {
+    // ringColor codifica el TAMAÑO del cliente (opcional, mejora #11)
+    const ring = ringColor
+      ? `<circle cx="14" cy="14" r="7.5" fill="none" stroke="${ringColor}" stroke-width="2.2" opacity="0.95"/>`
+      : '';
+    return `<svg width="30" height="42" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 5px rgba(0,0,0,0.28));">
+      <path d="M15 1 C7.27 1 1 7.27 1 15 C1 25.5 15 41 15 41 S29 25.5 29 15 C29 7.27 22.73 1 15 1 Z" fill="${color}" stroke="#1e293b" stroke-width="1.3"/>
+      ${ring}
+      <circle cx="15" cy="15" r="4.5" fill="white" stroke="#1e293b" stroke-width="1"/>
     </svg>`;
+  }
+
+  // Color de anillo según tamaño (mejora #11)
+  function colorPorTamano(s) {
+    const raw = (s && s.tamano) ? String(s.tamano).toLowerCase() : '';
+    if (!raw)                                   return null;
+    if (/grande|industri/.test(raw))            return '#ef4444';   // rojo
+    if (/mediana|parque industrial|central/.test(raw)) return '#f59e0b'; // ámbar
+    if (/pequeñ|micro|base/.test(raw))          return '#10b981';   // verde
+    return null;
   }
 
   function iconoCombiSVG() {
@@ -1239,30 +1555,45 @@ document.addEventListener('DOMContentLoaded', function(){
   /* ========== FUNCIÓN ÚNICA PARA CONTENIDO DE POPUPS ========== */
   function crearContenidoPopup(cliente) {
     const d = cliente._matchDist < 10 ? cliente._matchDist.toFixed(1) : Math.round(cliente._matchDist);
-    const direccion = cliente.direccion ? `<br><span style="font-size:0.8rem;">📍 ${cliente.direccion}</span>` : '';
-    const tamano = cliente.tamano ? `<br><span style="font-size:0.8rem;">🏢 ${cliente.tamano}</span>` : '';
-    const telefono = cliente.telefono ? `<br><span style="font-size:0.8rem;">📞 ${cliente.telefono}</span>` : '';
     const sinDireccion = !cliente.direccion;
+    const ringColor = colorPorTamano(cliente);
+    // Degradado de encabezado según ancla más cercana (Morelia azul, Tototlán naranja)
+    const esM = cliente._matchAncla === 'Morelia';
+    const tintA = esM ? '#004D99' : '#F97316';
+    const tintB = esM ? '#1F5CA9' : '#FF6B35';
+    const emoji = (function(){
+      const t = (cliente.tamano||'').toLowerCase();
+      if (/taxi/.test(t))            return '🚕';
+      if (/combi/.test(t))           return '🚐';
+      if (/industr|parque/.test(t))  return '🏭';
+      if (/grande/.test(t))          return '🏢';
+      return '📍';
+    })();
 
-    return `<div style="padding:0.2rem;">
-      <strong style="font-size:1.05rem;color:var(--primary);">${cliente.nombre}</strong><br>
-      <span style="color:var(--text-muted);font-size:0.8rem;">${cliente.estado || '...'}</span>
-      ${direccion}
-      ${tamano}
-      ${telefono}
-      <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
-        <span style="display:block;width:10px;height:10px;border-radius:50%;background:${cliente._matchColor};"></span>
-        <span style="color:#0f172a;font-weight:600;">${d} km de ${cliente._matchAncla}</span>
+    return `<div class="popup-card" style="--card-tint-a:${tintA}; --card-tint-b:${tintB};">
+      <div class="card-head">
+        ${cliente.tamano ? `<span class="p-badge">${emoji} ${cliente.tamano}</span>` : ''}
+        <div class="p-title">${cliente.nombre}</div>
+        <div class="p-state"><i class="fas fa-map-marker-alt"></i> ${cliente.estado || 'Sin estado'}</div>
       </div>
-      <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">
-        Morelia ${Math.round(cliente.distMorelia)} km · Tototlán ${Math.round(cliente.distTototlan)} km
+      <div class="card-body">
+        <div class="field dist-field">
+          <span style="width:10px;height:10px;border-radius:50%;background:${cliente._matchColor};box-shadow:0 0 0 2px rgba(0,0,0,0.08);"></span>
+          <span><span class="dist-strong">${d} km</span> de ${cliente._matchAncla}</span>
+        </div>
+        ${cliente.direccion ? `<div class="field"><i class="fas fa-location-dot"></i> <span>${cliente.direccion}</span></div>` : ''}
+        ${cliente.telefono  ? `<div class="field"><i class="fas fa-phone"></i>          <span>${cliente.telefono}</span></div>` : ''}
+        ${ringColor ? `<div class="field subtle"><i class="fas fa-circle" style="color:${ringColor};"></i> Anillo por tamaño</div>` : ''}
+        <div class="field subtle">
+          Morelia ${Math.round(cliente.distMorelia)} km · Tototlán ${Math.round(cliente.distTototlan)} km
+        </div>
       </div>
-      <div class="popup-actions">
-        <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${cliente.lat},${cliente.lon}" target="_blank">🗺️ Maps</a>
+      <div class="card-actions">
+        <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${cliente.lat},${cliente.lon}" target="_blank">🗺️ Google&nbsp;Maps</a>
         <button class="popup-btn btn-route" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🚗 Ruta</button>
-        <button class="popup-btn btn-route-prospeccion" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🧭 Prospección</button>
-        ${sinDireccion ? `<button class="popup-btn btn-geocode" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">📍 Dirección</button>` : ''}
-        <button class="popup-btn btn-delete-client" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">🗑️ Eliminar</button>
+        <button class="popup-btn btn-route-prospeccion wide" data-lat="${cliente.lat}" data-lon="${cliente.lon}">🧭 Ruta de prospección</button>
+        ${sinDireccion ? `<button class="popup-btn btn-geocode wide" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">📍 Obtener dirección</button>` : ''}
+        <button class="popup-btn btn-delete-client wide" data-lat="${cliente.lat}" data-lon="${cliente.lon}" data-nombre="${cliente.nombre}">🗑️ Eliminar cliente</button>
       </div>
     </div>`;
   }
@@ -1273,7 +1604,7 @@ document.addEventListener('DOMContentLoaded', function(){
     stations.forEach(s => {
       const iconoEspecial = obtenerIconoEspecial(s);
       const marker = L.marker([s.lat, s.lon], {
-        icon: iconoEspecial || iconoPin(s.priceColor),
+        icon: iconoEspecial || iconoPin(s.priceColor, colorPorTamano(s)),
         title: s.nombre
       });
       marker.bindPopup(() => crearContenidoPopup(s), { className: '', maxWidth: 300 });
@@ -1340,7 +1671,10 @@ document.addEventListener('DOMContentLoaded', function(){
       if (c && c.visible && map.hasLayer(c.capa)) map.removeLayer(c.capa);
     });
 
-    rutaLayer = L.polyline(coords, { color, weight: 4, opacity: 0.8, dashArray: '8,8' }).addTo(map);
+    // Casing blanco + trazo principal animado (mejora #12)
+    const casing = L.polyline(coords, { color: '#ffffff', weight: 9, opacity: 0.95, className: 'route-casing' });
+    const main   = L.polyline(coords, { color, weight: 5, opacity: 0.95, className: 'route-main' });
+    rutaLayer = L.layerGroup([casing, main]).addTo(map);
     map.fitBounds(rutaLayer.getBounds(), { padding: [50,50], duration: 1.2 });
     rutaMarcador = L.marker([destLat, destLon], {
       icon: L.divIcon({ className: '', html: `<i class="fas fa-flag-checkered" style="font-size:28px;color:${color};filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>`, iconSize: [28,28] })
@@ -1390,8 +1724,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
   const legendControl = L.control({ position: 'bottomright' });
   legendControl.onAdd = function() {
-    const div = L.DomUtil.create('div', 'price-legend');
-    div.innerHTML = `<div class="title"><span class="legend-title-text">Distancia al círculo activo</span><span class="legend-btns"><button class="clear-btn" id="legendClearBtn" title="Quitar resaltado">✕</button><button class="minimize-btn" id="legendMinBtn" title="Minimizar">–</button></span></div>`;
+    const div = L.DomUtil.create('div', 'price-legend dash');
+    div.innerHTML = `<div class="title"><span class="legend-title-text">Clientes por distancia</span><span class="legend-btns"><button class="clear-btn" id="legendClearBtn" title="Quitar resaltado">✕</button><button class="minimize-btn" id="legendMinBtn" title="Minimizar">–</button></span></div>`;
     if (localStorage.getItem('leyendaMin') === '1') div.classList.add('minimized');
     const ranges = [
       { label: '0 – 50 km',   key: 'very-low', color: '#10b981' },
@@ -1400,21 +1734,31 @@ document.addEventListener('DOMContentLoaded', function(){
       { label: '150 – 190 km', key: 'high',   color: '#fb923c' },
       { label: '> 190 km',    key: 'no-price', color: '#94a3b8' }
     ];
+    // Estructura tarjeta con barra proporcional (mejora #2)
+    div.innerHTML += ranges.map(r => `<div class="row" data-key="${r.key}" style="color:${r.color};">
+        <span class="color-dot" style="background:${r.color};"></span>
+        <span class="rowbody">
+          <span class="label"><span>${r.label}</span></span>
+          <span class="bar-track"><span class="bar-fill"></span></span>
+        </span>
+        <span class="count">0</span>
+      </div>`).join('');
     function actualizarConteos(visibles) {
       const conteo = new Map();
       (visibles || []).forEach(s => conteo.set(s._matchKey, (conteo.get(s._matchKey) || 0) + 1));
+      // total para calcular proporciones
+      let total = 0;
+      ranges.forEach(r => { total += (conteo.get(r.key) || 0); });
+      const max = Math.max(1, ...ranges.map(r => conteo.get(r.key) || 0));
       div.querySelectorAll('.row').forEach(row => {
         const key = row.dataset.key;
         const count = conteo.get(key) || 0;
         const span = row.querySelector('.count');
         if (span) span.textContent = count;
+        const bar = row.querySelector('.bar-fill');
+        if (bar) bar.style.width = (count / max * 100).toFixed(1) + '%';
       });
     }
-    div.innerHTML += ranges.map(r => `<div class="row" data-key="${r.key}">
-        <span class="color-dot" style="background:${r.color};"></span>
-        <span class="label">${r.label}</span>
-        <span class="count">0</span>
-      </div>`).join('');
     setTimeout(actualizarConteos, 100);
     div._actualizarConteos = actualizarConteos;
     return div;
@@ -1477,7 +1821,7 @@ document.addEventListener('DOMContentLoaded', function(){
       const entry = markerMap.get(s);
       if (entry) {
         const iconoEspecial = obtenerIconoEspecial(s);
-        entry.marker.setIcon(iconoEspecial || iconoPin(s._matchColor));
+        entry.marker.setIcon(iconoEspecial || iconoPin(s._matchColor, colorPorTamano(s)));
       }
     });
 
@@ -1635,31 +1979,74 @@ document.addEventListener('DOMContentLoaded', function(){
 
   let sortMode = 'dist';
 
+  // Resalta el término de búsqueda en el nombre del cliente (mejora #18)
+  function highlightMatch(texto, termNorm) {
+    if (!termNorm) return texto;
+    const norm = normalizarTexto(texto);
+    const idx = norm.indexOf(termNorm);
+    if (idx < 0) return texto;
+    // Suponemos misma longitud de índices porque normalizar no cambia longitud
+    return texto.slice(0, idx) + '<mark>' + texto.slice(idx, idx + termNorm.length) + '</mark>' + texto.slice(idx + termNorm.length);
+  }
+
   function crearItemLista(s) {
     const li = document.createElement('li');
     li.tabIndex = 0;
     li.setAttribute('role', 'button');
     li.setAttribute('aria-label', `Ver ${s.nombre} en el mapa`);
+    li.style.setProperty('--strip-color', s._matchColor || 'var(--primary)');
 
-    const topRow = document.createElement('div');
-    topRow.className = 'top-row';
-    const nombreEl = document.createElement('span');
+    const strip = document.createElement('span');
+    strip.className = 'card-color-strip';
+
+    const body = document.createElement('div');
+    body.className = 'card-body';
+
+    const nombreEl = document.createElement('div');
     nombreEl.className = 'name';
-    nombreEl.textContent = s.nombre;
-    const distEl = document.createElement('span');
-    distEl.className = 'dist';
-    distEl.textContent = `${s._matchDist < 10 ? s._matchDist.toFixed(1) : Math.round(s._matchDist)} km`;
-    topRow.appendChild(nombreEl);
-    topRow.appendChild(distEl);
+    nombreEl.innerHTML = highlightMatch(s.nombre, searchTerm);
 
-    const stateEl = document.createElement('span');
-    stateEl.className = 'state-tag';
-    stateEl.textContent = s.estado || '...';
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    if (s.estado) {
+      const st = document.createElement('span');
+      st.className = 'state-tag';
+      st.textContent = s.estado;
+      meta.appendChild(st);
+    }
+    if (s.tamano) {
+      const tg = document.createElement('span');
+      tg.textContent = s.tamano;
+      meta.appendChild(tg);
+    }
 
-    li.appendChild(topRow);
-    li.appendChild(stateEl);
+    body.appendChild(nombreEl);
+    body.appendChild(meta);
 
-    const activar = () => { map.flyTo([s.lat, s.lon], 14, { duration: 1.2 }); markerMap.get(s).marker.openPopup(); };
+    const dist = document.createElement('div');
+    dist.className = 'card-dist';
+    const dNum = document.createElement('span');
+    dNum.textContent = s._matchDist < 10 ? s._matchDist.toFixed(1) : Math.round(s._matchDist);
+    const dUnit = document.createElement('span');
+    dUnit.className = 'dist-unit';
+    dUnit.textContent = 'km · ' + (s._matchAncla || '');
+    dist.appendChild(dNum);
+    dist.appendChild(dUnit);
+
+    li.appendChild(strip);
+    li.appendChild(body);
+    li.appendChild(dist);
+
+    const activar = () => {
+      map.flyTo([s.lat, s.lon], 14, { duration: 1.2 });
+      const entry = markerMap.get(s);
+      if (entry) {
+        entry.marker.openPopup();
+        // Rebote al llegar (mejora #4)
+        const el = entry.marker.getElement();
+        if (el) { el.classList.remove('marker-bounce'); void el.offsetWidth; el.classList.add('marker-bounce'); }
+      }
+    };
     li.addEventListener('click', activar);
     li.addEventListener('keydown', e => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activar(); }
@@ -2301,6 +2688,160 @@ document.addEventListener('DOMContentLoaded', function(){
   if (loadingOverlay) loadingOverlay.classList.add('hidden');
 
   log(`Mapa iniciado con ${stations.length} clientes.`);
+
+  // ============================================================
+  //  PATCH v4 – Chips, atajos de teclado, skeleton, contadores
+  // ============================================================
+  // #18 Bump animado del contador principal
+  (function() {
+    const readouts = document.querySelectorAll('.topbar .readout .num');
+    readouts.forEach(el => {
+      let last = el.textContent;
+      const obs = new MutationObserver(() => {
+        if (el.textContent === last) return;
+        last = el.textContent;
+        el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+      });
+      obs.observe(el, { childList: true, characterData: true, subtree: true });
+    });
+  })();
+
+  // #9 Chips de filtros rápidos
+  (function() {
+    const strip = document.getElementById('quickFilters');
+    if (!strip) return;
+    const tamFilter = document.getElementById('tamanoFilter');
+
+    function classifyQF(s) {
+      const t = (s.tamano || '').toLowerCase();
+      const n = (s.nombre || '').toLowerCase();
+      const tags = [];
+      if (/taxi/.test(t) || /taxi/.test(n))          tags.push('taxis');
+      if (/combi/.test(t) || /combi/.test(n))        tags.push('combis');
+      if (/industr|parque/.test(t))                  tags.push('industria');
+      if (/grande/.test(t))                          tags.push('grandes');
+      if (!s.direccion)                              tags.push('sindir');
+      return tags;
+    }
+
+    function refreshCounts() {
+      const cnts = { all: stations.length, taxis:0, combis:0, industria:0, grandes:0, sindir:0, marcadores:0 };
+      stations.forEach(s => classifyQF(s).forEach(k => { if (cnts[k] !== undefined) cnts[k]++; }));
+      try { cnts.marcadores = (window.marcadoresManuales || []).length || 0; } catch(e) {}
+      Object.keys(cnts).forEach(k => {
+        const el = document.getElementById('qfCount-' + k);
+        if (el) el.textContent = cnts[k];
+      });
+    }
+    refreshCounts();
+    // Actualizar cuando cambien clientes/marcadores (poll ligero)
+    setInterval(refreshCounts, 4000);
+
+    strip.addEventListener('click', function(e) {
+      const btn = e.target.closest('.qf-chip');
+      if (!btn) return;
+      strip.querySelectorAll('.qf-chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      const kind = btn.dataset.qf;
+
+      // Reset filtros previos que gestionamos aquí
+      const noAddrBtn = document.getElementById('noAddressBtn');
+      if (typeof activeNoAddress !== 'undefined') { window.activeNoAddress = false; }
+      if (noAddrBtn) noAddrBtn.classList.remove('active');
+      if (tamFilter) tamFilter.value = 'all';
+      try {
+        if (kind === 'all') {
+          // Nada más que hacer
+        } else if (kind === 'taxis') {
+          if (tamFilter) tamFilter.value = (window.CAT_TAXI || 'Taxis');
+        } else if (kind === 'combis') {
+          if (tamFilter) tamFilter.value = (window.CAT_COMBI || 'Combis');
+        } else if (kind === 'industria') {
+          const opciones = tamFilter ? [...tamFilter.options].map(o => o.value) : [];
+          const match = opciones.find(v => /industr|parque/i.test(v));
+          if (match) tamFilter.value = match;
+        } else if (kind === 'grandes') {
+          const opciones = tamFilter ? [...tamFilter.options].map(o => o.value) : [];
+          const match = opciones.find(v => /grande/i.test(v));
+          if (match) tamFilter.value = match;
+        } else if (kind === 'sindir') {
+          window.activeNoAddress = true;
+          if (noAddrBtn) noAddrBtn.classList.add('active');
+        } else if (kind === 'marcadores') {
+          // Solo hace scroll a los marcadores manuales si existen
+          try {
+            const arr = window.marcadoresManuales || [];
+            if (arr.length && window.map) {
+              const b = L.latLngBounds(arr.map(m => [m.lat, m.lon]));
+              window.map.flyToBounds(b, { padding: [40,40], duration: 1.0 });
+            }
+          } catch (e) {}
+        }
+      } catch (err) { console.warn('QF error:', err); }
+      if (typeof applyFilters === 'function') applyFilters();
+    });
+  })();
+
+  // #18 Atajos de teclado
+  (function() {
+    document.addEventListener('keydown', function(e) {
+      const activeTag = (document.activeElement && document.activeElement.tagName) || '';
+      const isTyping = activeTag === 'INPUT' || activeTag === 'TEXTAREA';
+
+      // Ctrl+K / Ctrl+F → foco al buscador
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K' || e.key === 'f' || e.key === 'F')) {
+        const inp = document.getElementById('searchInput');
+        if (inp) { e.preventDefault(); inp.focus(); inp.select(); }
+        return;
+      }
+
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        // Cerrar dropdowns abiertos
+        document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+        document.querySelectorAll('[aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+        // Cerrar modales
+        document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+        // Blur del buscador si tiene foco
+        const inp = document.getElementById('searchInput');
+        if (inp && document.activeElement === inp) inp.blur();
+        return;
+      }
+
+      if (!isTyping) {
+        // Teclas simples: m = Morelia, t = Tototlán, u = Mi ubicación, d = directorio, r = restablecer
+        const map = {
+          'm': 'centerMoreliaBtn',
+          't': 'centerTototlanBtn',
+          'u': 'locBtn',
+          'd': 'toggleRailBtn',
+          'r': 'resetBtn'
+        };
+        const id = map[e.key.toLowerCase()];
+        if (id) {
+          const b = document.getElementById(id);
+          if (b) { e.preventDefault(); b.click(); }
+        }
+      }
+    });
+  })();
+
+  // #18 Tooltips con atajo agregados a botones clave
+  (function() {
+    const tips = {
+      'searchInput':       'Buscar cliente · Ctrl+K',
+      'centerMoreliaBtn':  'Centrar en Morelia · M',
+      'centerTototlanBtn': 'Centrar en Tototlán · T',
+      'locBtn':            'Mi ubicación · U',
+      'toggleRailBtn':     'Directorio · D',
+      'resetBtn':          'Restablecer vista · R',
+      'themeToggleBtn':    'Cambiar tema'
+    };
+    Object.keys(tips).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.setAttribute('data-tooltip', tips[id]);
+    });
+  })();
+
 });
 </script>
 </body>
