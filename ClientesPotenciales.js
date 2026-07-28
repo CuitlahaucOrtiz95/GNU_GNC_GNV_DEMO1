@@ -1,8 +1,8 @@
 // ============================================================
-// ARCHIVO GENERADO desde: clientes (2).csv
+// ARCHIVO GENERADO desde: clientes (6).csv
 // Directorio único: lo usan Morelia y Tototlán a la vez.
-// Fecha: 23/7/2026, 2:28:00 p.m.
-// Registros: 18111
+// Fecha: 28/7/2026, 4:13:23 p.m.
+// Registros: 18120
 // NO editar a mano.
 // ============================================================
 window.CLIENTES_POTENCIALES = [
@@ -1929,7 +1929,7 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"VENADITOS TRUCKING","lat":19.974127,"lon":-102.273571,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
   {"nombre":"ALIANZA PACK","lat":19.694714,"lon":-101.195289,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
   {"nombre":"BACE DE MANDADITOS","lat":19.085139,"lon":-102.358133,"estado":"Michoacán de Ocampo","tamano":"Mediana"},
-  {"nombre":"BASE DE COMBIS DE LA RUTA GRIS 3","lat":19.6835,"lon":-101.256894,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
+  {"nombre":"BASE DE COMBIS DE LA RUTA GRIS 3","lat":19.6835,"lon":-101.256894,"estado":"Michoacán","tamano":"Base de Combis","direccion":"Calle Benito Juárez, Morelia, Michoacán, 58337, México"},
   {"nombre":"C.P.E. MICHOACAN","lat":19.682738,"lon":-101.225665,"estado":"Michoacán de Ocampo","tamano":"Grande"},
   {"nombre":"CAP MOLINO DE PARRAS MORELIA MICH","lat":19.701889,"lon":-101.20538,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
   {"nombre":"CARSSA","lat":19.726027,"lon":-101.206347,"estado":"Michoacán de Ocampo","tamano":"Mediana"},
@@ -18115,6 +18115,15 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"UNIDAD ESTATAL DE PROTECCION CIVIL Y BOMBEROS BASE REGIONAL EL GRULLO","lat":19.803303,"lon":-104.205688,"estado":"Jalisco","tamano":"Pequeña"},
   {"nombre":"CENTRAL CICLO COMBINADO EL SAUZ","lat":20.459724,"lon":-100.118281,"estado":"Querétaro","tamano":"Pequeña"},
   {"nombre":"RENTA DE COMBIS","lat":19.075681,"lon":-102.351102,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
-  {"nombre":"TRANSPORTES RUTA NARANA Y GUINDA BASE ERANDENI","lat":19.751463,"lon":-101.177954,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
-  {"nombre":"BAS DE COMBIEZ RUTA CORAL 1","lat":19.711753,"lon":-101.210011,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"}
+  {"nombre":"BAS DE COMBIEZ RUTA CORAL 1","lat":19.711753,"lon":-101.210011,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
+  {"nombre":"Colectivos Ruta Gris (PRUEBA)","lat":19.686145,"lon":-101.235331,"estado":"Michoacán de Ocampo","tamano":"Base de combis"},
+  {"nombre":"Parada de Ruta Gris norte","lat":19.701817,"lon":-101.243349,"estado":"Michoacán de Ocampo","tamano":"Base de combis"},
+  {"nombre":"Base ruta gris centro","lat":19.70446,"lon":-101.189982,"estado":"Michoacán de Ocampo","tamano":"Base de combis"},
+  {"nombre":"Base Combi Morada 1","lat":19.663893,"lon":-101.220051,"estado":"Michoacán de Ocampo","tamano":"Base de combis"},
+  {"nombre":"Base de combi morada 1","lat":19.766704,"lon":-101.138424,"estado":"Michoacán de Ocampo","tamano":"Base de combis"},
+  {"nombre":"Base Ruta Morada 2","lat":19.723403,"lon":-101.175502,"estado":"Michoacán de Ocampo","tamano":"Base de combis"},
+  {"nombre":"Base de la Ruta Guinda 2","lat":19.671411,"lon":-101.192941,"estado":"Michoacán de Ocampo","tamano":"Base de combis"},
+  {"nombre":"Base Ruta Guinda","lat":19.667178,"lon":-101.198061,"estado":"Michoacán de Ocampo","tamano":"Base de combis"},
+  {"nombre":"Base Combi Guinda Morita","lat":19.661035,"lon":-101.215914,"estado":"Michoacán de Ocampo","tamano":"Base de combis"},
+  {"nombre":"TRANSPORTES RUTA NARANJA BASE","lat":19.752443,"lon":-101.177854,"estado":"Michoacán de Ocampo","tamano":"Base de combis"}
 ];
