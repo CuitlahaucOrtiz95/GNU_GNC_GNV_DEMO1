@@ -442,6 +442,24 @@
 
     .leaflet-popup-content { font-size: 0.8rem; font-family: 'Inter', sans-serif; margin: 10px; }
 
+    /* Mejora de contraste para popups de marcadores */
+    .leaflet-popup-content .marcador-popup {
+      color: var(--text-main) !important;
+      background: var(--bg-panel) !important;
+      padding: 0.5rem;
+      border-radius: 8px;
+    }
+    .leaflet-popup-content .marcador-popup .popup-actions {
+      margin-top: 8px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .leaflet-popup-content .marcador-popup .popup-actions .popup-btn {
+      font-size: 0.7rem;
+      padding: 4px 10px;
+    }
+
     .popup-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
     .popup-actions .popup-btn {
       text-align: center; white-space: nowrap; text-decoration: none;
@@ -458,6 +476,7 @@
     .btn-route-prospeccion { background: #059669; }
     .btn-geocode { background: #10b981; }
     .btn-delete-client { background: #dc2626; }
+    .btn-edit-marcador { background: #8b5cf6; }
 
     .geocode-progress {
       position: fixed;
@@ -1212,7 +1231,7 @@
 
 <div class="modal-overlay" id="addPinModalOverlay">
   <div class="modal">
-    <h3>📍 Nuevo marcador</h3>
+    <h3 id="pinModalTitle">📍 Nuevo marcador</h3>
     <p class="warning-text" style="margin-bottom:2px;">Un marcador es solo un recordatorio en el mapa. No crea un cliente ni guarda sus datos.</p>
     <label>Tipo de marcador</label>
     <div class="tipo-chips" id="pinTipoChips">
@@ -1909,7 +1928,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
-  // --- Nueva función de contenido para la tarjeta lateral (sin popup de Leaflet) ---
+  // --- Tarjeta lateral ---
   function abrirDetalle(cliente) {
     if (!cliente) return;
     const d = cliente._matchDist < 10 ? cliente._matchDist.toFixed(1) : Math.round(cliente._matchDist || 0);
@@ -1959,7 +1978,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   document.getElementById('dcClose').addEventListener('click', cerrarDetalle);
 
-  // Reconstruir marcadores sin bindPopup, solo click que abre la tarjeta lateral
+  // Reconstruir marcadores clientes
   function reconstruirMarcadoresClientes() {
     cluster.clearLayers();
     markerMap.clear();
@@ -1969,7 +1988,6 @@ document.addEventListener('DOMContentLoaded', function(){
         icon: iconoEspecial || iconoPin(s.priceColor, colorPorTamano(s)),
         title: s.nombre
       });
-      // No usamos bindPopup, usamos click para abrir la tarjeta lateral
       marker.on('click', function() {
         abrirDetalle(s);
       });
@@ -2001,17 +2019,14 @@ document.addEventListener('DOMContentLoaded', function(){
     if (rutaMarcador) { map.removeLayer(rutaMarcador); rutaMarcador = null; }
     if (rutaActiva) {
       rutaActiva = false;
-      // Restaurar cluster y círculos
       if (!map.hasLayer(cluster)) map.addLayer(cluster);
       activeCircleFilters.forEach(id => {
         const c = circulos[id];
         if (c && c.visible && !map.hasLayer(c.capa)) map.addLayer(c.capa);
       });
-      // Forzar actualización
       applyFilters();
       map.invalidateSize();
     } else {
-      // Si no hay ruta activa, pero por si acaso, aseguramos que todo esté visible
       if (!map.hasLayer(cluster)) map.addLayer(cluster);
       activeCircleFilters.forEach(id => {
         const c = circulos[id];
@@ -2086,27 +2101,23 @@ document.addEventListener('DOMContentLoaded', function(){
       <span style="font-weight:400;font-size:0.75rem;">📏 ${avgDist} km promedio</span>
     </div><div class="cluster-popup-list">`;
     markers.forEach((m, idx) => {
-      // Cada item lleva un data-attr con las coordenadas para resolver el cliente al hacer click
       html += `<div class="item" data-lat="${m.data.lat}" data-lon="${m.data.lon}" style="cursor:pointer;" title="Ver detalle de ${m.data.nombre}"><span class="name">${m.data.nombre}</span><span class="state">${m.data.estado || ''}</span></div>`;
     });
     html += '</div>';
     layer.bindPopup(html, { className: 'cluster-popup', maxWidth: 320, maxHeight: 280 }).openPopup();
   });
 
-  // Delegate: al hacer click en un item de la lista del cluster, abrir tarjeta lateral (consistencia con click directo al marcador)
   document.addEventListener('click', function(e) {
     const item = e.target.closest('.cluster-popup-list .item');
     if (!item) return;
     const lat = parseFloat(item.dataset.lat);
     const lon = parseFloat(item.dataset.lon);
     if (isNaN(lat) || isNaN(lon)) return;
-    // Encontrar el cliente y su marcador
     const cliente = stations.find(s => Math.abs(s.lat - lat) < 1e-6 && Math.abs(s.lon - lon) < 1e-6);
     if (!cliente) return;
     map.closePopup();
     map.flyTo([cliente.lat, cliente.lon], 15, { duration: 1.0 });
     abrirDetalle(cliente);
-    // Rebote del marcador al llegar
     const entry = markerMap.get(cliente);
     if (entry) {
       const el = entry.marker.getElement();
@@ -2227,7 +2238,7 @@ document.addEventListener('DOMContentLoaded', function(){
     renderList(visible);
     updateLegendUI();
     updateStats(visible);
-    document.getElementById('clearAllBtn').classList.toggle('hidden', !(activePrice || selectedTam !== 'all' || term || maxDist < 190 || window.activeNoAddress));
+    document.getElementById('clearAllBtn').classList.toggle('hidden', !(activePrice || selectedTam !== 'all' || term || maxDist < 190 || window.activeNoAddress || activeCircleFilters.size > 0));
     const legendDiv = document.querySelector('.price-legend');
     if (legendDiv && legendDiv._actualizarConteos) legendDiv._actualizarConteos(visible);
     actualizarPistaMapa();
@@ -2358,8 +2369,15 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
+  // Limpiar filtros (incluye desactivar círculos)
   document.getElementById('clearAllBtn').addEventListener('click', () => {
-    activePrice = null; searchTerm = '';
+    // Desactivar todos los círculos
+    [...activeCircleFilters].forEach(id => desactivarCirculoId(id));
+    activeCircleFilters.clear();
+    actualizarEtiquetaCirculos();
+    // Limpiar resto de filtros
+    activePrice = null;
+    searchTerm = '';
     document.getElementById('tamanoFilter').value = 'all';
     document.getElementById('searchInput').value = '';
     maxDist = 190;
@@ -2368,7 +2386,7 @@ document.addEventListener('DOMContentLoaded', function(){
     window.activeNoAddress = false;
     document.getElementById('noAddressBtn').classList.remove('active');
     const visibles = applyFilters();
-    if (activeCircleFilters.size) encuadrarClientes(visibles); else verAmbasAnclas();
+    verAmbasAnclas();
   });
 
   let sortMode = 'dist';
@@ -2432,7 +2450,6 @@ document.addEventListener('DOMContentLoaded', function(){
     const activar = () => {
       map.flyTo([s.lat, s.lon], 14, { duration: 1.2 });
       abrirDetalle(s);
-      // Rebote visual del marcador al llegar (mejora #4 v4)
       const entry = markerMap.get(s);
       if (entry) {
         const el = entry.marker.getElement();
@@ -2636,14 +2653,31 @@ document.addEventListener('DOMContentLoaded', function(){
     toast('Haz clic en el mapa para colocar el cliente.', 'info');
   });
 
+  // --- Manejador del clic en el mapa (incluye modo agregar pin y cliente) ---
   map.on('click', function(e) {
-    if (!addingClientMode) return;
-    addingClientMode = false;
-    map.getContainer().style.cursor = '';
-    tempCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
-    addLat.value = tempCoords.lat.toFixed(6);
-    addLon.value = tempCoords.lng.toFixed(6);
-    modalOverlay.classList.add('open');
+    // Primero, manejar modo agregar cliente
+    if (addingClientMode) {
+      addingClientMode = false;
+      map.getContainer().style.cursor = '';
+      tempCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
+      addLat.value = tempCoords.lat.toFixed(6);
+      addLon.value = tempCoords.lng.toFixed(6);
+      modalOverlay.classList.add('open');
+      return;
+    }
+    // Luego, modo agregar marcador (pin)
+    if (addingPinMode) {
+      setPinMode(false);
+      tempPinCoords = { lat: e.latlng.lat, lon: e.latlng.lng };
+      pinTipoSel = 'interes';
+      pinNota.value = '';
+      pinTipoChips.querySelectorAll('.tipo-chip').forEach(ch => ch.classList.toggle('selected', ch.dataset.tipo === pinTipoSel));
+      pinModalOverlay.classList.add('open');
+      setTimeout(() => pinNota.focus(), 50);
+      return;
+    }
+    // Si no estamos en ningún modo especial, cerrar popups de cluster
+    cluster.closePopup();
   });
 
   document.getElementById('addCancelBtn').addEventListener('click', () => {
@@ -2735,6 +2769,8 @@ document.addEventListener('DOMContentLoaded', function(){
   const marcadorMarkers = new Map();
   const marcadoresLayer = L.layerGroup().addTo(map);
   let marcadoresVisibles = true;
+  let editandoMarcadorId = null; // null = creación, string = edición
+
   try { const guardados = JSON.parse(localStorage.getItem('MARCADORES_USUARIO') || '[]'); if (Array.isArray(guardados)) marcadores = guardados; } catch (e) {}
 
   function guardarMarcadores() { try { localStorage.setItem('MARCADORES_USUARIO', JSON.stringify(marcadores)); } catch (e) {} }
@@ -2742,12 +2778,25 @@ document.addEventListener('DOMContentLoaded', function(){
     const t = MARCADOR_TIPOS[tipo] || MARCADOR_TIPOS.nota;
     return L.divIcon({ className: '', html: `<svg width="34" height="46"><path d="M17 0C7.6 0 0 7.6 0 17c0 12.75 17 29 17 29s17-16.25 17-29C34 7.6 26.4 0 17 0z" fill="${t.color}" stroke="#fff" stroke-width="2"/><circle cx="17" cy="16.5" r="10" fill="#fff"/><text x="17" y="16.5" font-size="12" text-anchor="middle">${t.emoji}</text></svg>`, iconSize: [34,46], iconAnchor: [17,46], popupAnchor: [0,-42] });
   }
+
+  // Popup mejorado con botón Editar
   function popupMarcador(m) {
     const t = MARCADOR_TIPOS[m.tipo] || MARCADOR_TIPOS.nota;
     const fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-MX', { day:'numeric', month:'short', year:'numeric' }) : '';
     const nota = m.nota ? `<div style="font-size:0.82rem;margin-top:4px;">${String(m.nota).replace(/</g,'&lt;')}</div>` : '';
-    return `<div style="padding:0.2rem;min-width:170px;"><strong style="color:${t.color};">${t.emoji} ${t.label}</strong>${nota}${fecha?`<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">Guardado el ${fecha}</div>`:''}<div class="popup-actions"><a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${m.lat},${m.lon}" target="_blank">🗺️ Maps</a><button class="popup-btn btn-route-prospeccion" data-lat="${m.lat}" data-lon="${m.lon}">🧭 Cómo llegar</button><button class="popup-btn btn-delete-marcador" data-id="${m.id}">🗑️ Quitar</button></div></div>`;
+    return `<div class="marcador-popup">
+      <strong style="color:${t.color};">${t.emoji} ${t.label}</strong>
+      ${nota}
+      ${fecha?`<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">Guardado el ${fecha}</div>`:''}
+      <div class="popup-actions">
+        <a class="popup-btn btn-maps" href="https://www.google.com/maps?q=${m.lat},${m.lon}" target="_blank">🗺️ Maps</a>
+        <button class="popup-btn btn-route-prospeccion" data-lat="${m.lat}" data-lon="${m.lon}">🧭 Cómo llegar</button>
+        <button class="popup-btn btn-edit-marcador" data-id="${m.id}">✏️ Editar</button>
+        <button class="popup-btn btn-delete-marcador" data-id="${m.id}">🗑️ Quitar</button>
+      </div>
+    </div>`;
   }
+
   function crearMarcadorEnMapa(m) {
     const marker = L.marker([m.lat, m.lon], { icon: marcadorIcon(m.tipo) });
     marker.bindPopup(() => popupMarcador(m), { maxWidth:280 });
@@ -2757,50 +2806,156 @@ document.addEventListener('DOMContentLoaded', function(){
   function reconstruirMarcadores() { marcadoresLayer.clearLayers(); marcadorMarkers.clear(); if (marcadoresVisibles) marcadores.forEach(crearMarcadorEnMapa); }
   reconstruirMarcadores();
 
-  let addingPinMode = false, tempPinCoords = null, pinTipoSel = 'interes';
-  const pinModalOverlay = document.getElementById('addPinModalOverlay'), pinNota = document.getElementById('pinNota'), pinTipoChips = document.getElementById('pinTipoChips');
+  // Función para abrir modal de edición de marcador
+  function abrirModalEditarMarcador(id) {
+    const marcador = marcadores.find(m => m.id === id);
+    if (!marcador) return;
+    editandoMarcadorId = id;
+    // Rellenar el modal con los datos del marcador
+    pinTipoSel = marcador.tipo;
+    pinNota.value = marcador.nota || '';
+    pinTipoChips.querySelectorAll('.tipo-chip').forEach(ch => {
+      ch.classList.toggle('selected', ch.dataset.tipo === pinTipoSel);
+    });
+    tempPinCoords = { lat: marcador.lat, lon: marcador.lon };
+    document.getElementById('pinModalTitle').textContent = '✏️ Editar marcador';
+    pinModalOverlay.classList.add('open');
+    setTimeout(() => pinNota.focus(), 50);
+  }
+
+  // Manejar modo agregar pin con gestión de popups de círculos
+  let addingPinMode = false;
+  let tempPinCoords = null;
+  let pinTipoSel = 'interes';
+  const pinModalOverlay = document.getElementById('addPinModalOverlay');
+  const pinNota = document.getElementById('pinNota');
+  const pinTipoChips = document.getElementById('pinTipoChips');
+
   function setPinMode(on) {
     addingPinMode = on;
-    if (on) { if (addingClientMode) { addingClientMode = false; addClientBtn.classList.remove('active'); } map.getContainer().style.cursor = 'crosshair'; }
-    else map.getContainer().style.cursor = '';
+    if (on) {
+      if (addingClientMode) { addingClientMode = false; addClientBtn.classList.remove('active'); }
+      map.getContainer().style.cursor = 'crosshair';
+      // Guardar popups de círculos y eliminarlos temporalmente
+      for (const key in circulos) {
+        const c = circulos[key];
+        if (c.capa && c.capa.getPopup) {
+          const popup = c.capa.getPopup();
+          if (popup) {
+            c._popupContent = popup.getContent();
+            c.capa.unbindPopup();
+          }
+        }
+      }
+      map.closePopup();
+    } else {
+      map.getContainer().style.cursor = '';
+      // Restaurar popups de círculos
+      for (const key in circulos) {
+        const c = circulos[key];
+        if (c.capa && c._popupContent) {
+          c.capa.bindPopup(c._popupContent);
+          c._popupContent = null;
+        }
+      }
+    }
   }
+
   document.getElementById('addPinBtn').addEventListener('click', () => setPinMode(true));
-  map.on('click', function(e) {
-    if (!addingPinMode) return;
-    setPinMode(false);
-    tempPinCoords = { lat: e.latlng.lat, lon: e.latlng.lng };
-    pinTipoSel = 'interes'; pinNota.value = '';
-    pinTipoChips.querySelectorAll('.tipo-chip').forEach(ch => ch.classList.toggle('selected', ch.dataset.tipo === pinTipoSel));
-    pinModalOverlay.classList.add('open'); setTimeout(() => pinNota.focus(), 50);
-  });
+
   pinTipoChips.addEventListener('click', function(e) {
     const chip = e.target.closest('.tipo-chip'); if (!chip) return;
     pinTipoSel = chip.dataset.tipo;
     pinTipoChips.querySelectorAll('.tipo-chip').forEach(ch => ch.classList.toggle('selected', ch === chip));
   });
-  document.getElementById('pinCancelBtn').addEventListener('click', () => { pinModalOverlay.classList.remove('open'); tempPinCoords = null; });
+
+  document.getElementById('pinCancelBtn').addEventListener('click', () => {
+    pinModalOverlay.classList.remove('open');
+    tempPinCoords = null;
+    editandoMarcadorId = null;
+    document.getElementById('pinModalTitle').textContent = '📍 Nuevo marcador';
+  });
+
   document.getElementById('pinSaveBtn').addEventListener('click', () => {
     if (!tempPinCoords) return;
-    const nuevo = { id: 'm' + Date.now() + Math.floor(Math.random()*1000), lat: Math.round(tempPinCoords.lat*1e6)/1e6, lon: Math.round(tempPinCoords.lon*1e6)/1e6, tipo: pinTipoSel, nota: pinNota.value.trim(), fecha: Date.now() };
-    marcadores.push(nuevo); guardarMarcadores();
-    if (!marcadoresVisibles) { marcadoresVisibles = true; reconstruirMarcadores(); } else crearMarcadorEnMapa(nuevo);
-    pinModalOverlay.classList.remove('open'); tempPinCoords = null;
-    toast(`Marcador "${MARCADOR_TIPOS[nuevo.tipo].label}" guardado.`, 'success');
+    const nota = pinNota.value.trim();
+    if (editandoMarcadorId) {
+      // Modo edición
+      const idx = marcadores.findIndex(m => m.id === editandoMarcadorId);
+      if (idx !== -1) {
+        marcadores[idx].tipo = pinTipoSel;
+        marcadores[idx].nota = nota;
+        marcadores[idx].lat = Math.round(tempPinCoords.lat * 1e6) / 1e6;
+        marcadores[idx].lon = Math.round(tempPinCoords.lon * 1e6) / 1e6;
+        marcadores[idx].fecha = Date.now();
+        guardarMarcadores();
+        const oldMarker = marcadorMarkers.get(editandoMarcadorId);
+        if (oldMarker) {
+          marcadoresLayer.removeLayer(oldMarker);
+          marcadorMarkers.delete(editandoMarcadorId);
+        }
+        crearMarcadorEnMapa(marcadores[idx]);
+        toast(`Marcador actualizado.`, 'success');
+      }
+      editandoMarcadorId = null;
+      document.getElementById('pinModalTitle').textContent = '📍 Nuevo marcador';
+    } else {
+      // Modo creación
+      const nuevo = {
+        id: 'm' + Date.now() + Math.floor(Math.random() * 1000),
+        lat: Math.round(tempPinCoords.lat * 1e6) / 1e6,
+        lon: Math.round(tempPinCoords.lon * 1e6) / 1e6,
+        tipo: pinTipoSel,
+        nota: nota,
+        fecha: Date.now()
+      };
+      marcadores.push(nuevo);
+      guardarMarcadores();
+      if (!marcadoresVisibles) {
+        marcadoresVisibles = true;
+        reconstruirMarcadores();
+      } else {
+        crearMarcadorEnMapa(nuevo);
+      }
+      toast(`Marcador "${MARCADOR_TIPOS[nuevo.tipo].label}" guardado.`, 'success');
+    }
+    pinModalOverlay.classList.remove('open');
+    tempPinCoords = null;
   });
+
+  // Eliminar marcador (ya existente)
   document.addEventListener('click', function(e) {
-    const btn = e.target.closest('.btn-delete-marcador'); if (!btn) return;
-    const id = btn.dataset.id, idx = marcadores.findIndex(m => m.id === id); if (idx === -1) return;
-    marcadores.splice(idx,1); guardarMarcadores();
-    const marker = marcadorMarkers.get(id); if (marker) { marcadoresLayer.removeLayer(marker); marcadorMarkers.delete(id); }
-    map.closePopup(); toast('Marcador eliminado.', 'success');
+    const btn = e.target.closest('.btn-delete-marcador');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const idx = marcadores.findIndex(m => m.id === id);
+    if (idx === -1) return;
+    marcadores.splice(idx,1);
+    guardarMarcadores();
+    const marker = marcadorMarkers.get(id);
+    if (marker) { marcadoresLayer.removeLayer(marker); marcadorMarkers.delete(id); }
+    map.closePopup();
+    toast('Marcador eliminado.', 'success');
   });
+
+  // Editar marcador (botón en popup)
+  document.addEventListener('click', function(e) {
+    const editBtn = e.target.closest('.btn-edit-marcador');
+    if (editBtn) {
+      const id = editBtn.dataset.id;
+      abrirModalEditarMarcador(id);
+      map.closePopup();
+    }
+  });
+
   document.getElementById('toggleMarcadoresBtn').addEventListener('click', function() {
-    marcadoresVisibles = !marcadoresVisibles; reconstruirMarcadores();
+    marcadoresVisibles = !marcadoresVisibles;
+    reconstruirMarcadores();
     this.querySelector('.dropdown-item-label').innerHTML = marcadoresVisibles ? '<i class="fas fa-eye"></i> Ocultar marcadores' : '<i class="fas fa-eye-slash"></i> Mostrar marcadores';
     toast(marcadoresVisibles ? 'Marcadores visibles.' : 'Marcadores ocultos.', 'info');
   });
 
-  // Rutas de transporte (geojson)
+  // Rutas de transporte
   const rutasLayer = L.layerGroup().addTo(map);
   let rutasData = [], rutasSeleccionadas = new Set(), rutasCargadas = false, rutasCargando = false;
   const rutaLineas = new Map();
@@ -3012,7 +3167,6 @@ document.addEventListener('DOMContentLoaded', function(){
     const result = await geocodeCliente(cliente);
     if (result) {
       cliente.direccion = result.direccion; cliente.estado = result.estado || cliente.estado;
-      // actualizar tarjeta si está abierta
       if (document.getElementById('detailCard').classList.contains('open')) abrirDetalle(cliente);
       try { localStorage.setItem('CLIENTES_JS', `window.CLIENTES_POTENCIALES = ${JSON.stringify(stations)};`); localStorage.setItem('CLIENTES_ACTUALIZADO', Date.now().toString()); } catch (e) {}
       applyFilters();
