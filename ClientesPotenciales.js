@@ -1,7 +1,7 @@
 // ============================================================
 // ARCHIVO GENERADO desde: clientes (7).csv
 // Directorio único: lo usan Morelia y Tototlán a la vez.
-// Fecha: 29/7/2026, 4:19:45 p.m.
+// Fecha: 29/7/2026, 4:21:30 p.m.
 // Registros: 18112
 // NO editar a mano.
 // ============================================================
