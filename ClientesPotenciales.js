@@ -1,8 +1,8 @@
 // ============================================================
 // ARCHIVO GENERADO desde: clientes (7).csv
 // Directorio único: lo usan Morelia y Tototlán a la vez.
-// Fecha: 29/7/2026, 9:02:08 a.m.
-// Registros: 18075
+// Fecha: 29/7/2026, 4:17:23 p.m.
+// Registros: 18112
 // NO editar a mano.
 // ============================================================
 window.CLIENTES_POTENCIALES = [
@@ -18080,5 +18080,42 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"TERMINAL BASE RUTA CAMPO NUBES PEDREGAL","lat":19.695417,"lon":-101.289204,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
   {"nombre":"UNIDAD ESTATAL DE PROTECCION CIVIL Y BOMBEROS BASE REGIONAL EL GRULLO","lat":19.803303,"lon":-104.205688,"estado":"Jalisco","tamano":"Pequeña"},
   {"nombre":"CENTRAL CICLO COMBINADO EL SAUZ","lat":20.459724,"lon":-100.118281,"estado":"Querétaro","tamano":"Pequeña"},
-  {"nombre":"RENTA DE COMBIS","lat":19.075681,"lon":-102.351102,"estado":"Michoacán de Ocampo","tamano":"Pequeña"}
+  {"nombre":"RENTA DE COMBIS","lat":19.075681,"lon":-102.351102,"estado":"Michoacán de Ocampo","tamano":"Pequeña"},
+  {"nombre":"Amarilla 1","lat":19.691188,"lon":-101.203188,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Amarilla 2","lat":19.706976,"lon":-101.164023,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Amarilla Tenencia Morelos","lat":19.664288,"lon":-101.225355,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Azul A","lat":19.674838,"lon":-101.240851,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Azul B","lat":19.717515,"lon":-101.14575,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Azul C","lat":19.735272,"lon":-101.165157,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Café1","lat":19.72324,"lon":-101.223378,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Café 2","lat":19.716081,"lon":-101.239403,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Café 2B","lat":19.732059,"lon":-101.234215,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Coral 1 y 2","lat":19.686376,"lon":-101.138603,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Coral 2-A","lat":19.725659,"lon":-101.221573,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Crema 1 y 2","lat":19.72376,"lon":-101.164479,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Crema 2-A","lat":19.72171,"lon":-101.166955,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Gris 1 y 3","lat":19.685523,"lon":-101.235694,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Gris 2","lat":19.703289,"lon":-101.189671,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Guinda 1","lat":19.659944,"lon":-101.189987,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Guinda 2","lat":19.671501,"lon":-101.192154,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Morada 1","lat":19.765933,"lon":-101.137627,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Morada 2","lat":19.724087,"lon":-101.174003,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Morada 2A","lat":19.70807,"lon":-101.191064,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Naranja 2","lat":19.686071,"lon":-101.219446,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Naranja 3","lat":19.693275,"lon":-101.181536,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Naranja 1","lat":19.677112,"lon":-101.218786,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Negra 1 y 2","lat":19.723798,"lon":-101.210287,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Oro-Verde 1 y 2","lat":19.732355,"lon":-101.181701,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Café 2A","lat":19.705557,"lon":-101.143406,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Paloma Azul","lat":19.661599,"lon":-101.215705,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Roja 1,2 y 3","lat":19.70669,"lon":-101.254661,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Roja 4","lat":19.699161,"lon":-101.151564,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Roja 3B","lat":19.708656,"lon":-101.229099,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Roja 4M","lat":19.696985,"lon":-101.235613,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Roja 4A","lat":19.69006,"lon":-101.260617,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Rosa 2 y 3","lat":19.678454,"lon":-101.23153,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Rosa 1","lat":19.763533,"lon":-101.210427,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Rosa 2B","lat":19.693573,"lon":-101.203658,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Verde 4 y 4B","lat":19.713665,"lon":-101.241477,"estado":"Michoacán de Ocampo","tamano":"Base de combi"},
+  {"nombre":"Verde 2 y 3","lat":19.696855,"lon":-101.253618,"estado":"Michoacán de Ocampo","tamano":"Base de combi"}
 ];
