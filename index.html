@@ -7,6 +7,14 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="format-detection" content="telephone=no" />
+  <!-- Script para cargar el tema guardado antes de renderizar -->
+  <script>
+    (function(){
+      try {
+        if (localStorage.getItem('tema') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      } catch (e) {}
+    })();
+  </script>
   <meta name="description" content="Mapa de clientes potenciales en Morelia y Tototlán con filtros por distancia, tamaño y estado, cálculo de rutas y geocodificación." />
   <meta name="robots" content="noindex, nofollow" />
   <meta name="theme-color" content="#1F5CA9" />
@@ -39,7 +47,7 @@
   <script defer src="ClientesPotenciales.js"></script>
   <style>
     /* ============================================================
-       ESTILOS CORREGIDOS Y OPTIMIZADOS (SOLO MODO CLARO)
+       ESTILOS CORREGIDOS (Con soporte real para modo Oscuro en la UI)
        ============================================================ */
     :root {
       --primary: #1F5CA9;
@@ -69,6 +77,23 @@
       --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
       --shadow-glow: 0 0 0 3px rgba(31, 92, 169, 0.25);
       --primary-tint: rgba(31, 92, 169, 0.08);
+    }
+
+    /* ✅ MODO OSCURO REINTEGRADO Y CORREGIDO (Aplica solo a la UI, no al mapa) */
+    :root[data-theme="dark"] {
+      --primary: #3b82f6;
+      --primary-hover: #60a5fa;
+      --secondary: #38bdf8;
+      --bg-main: #0f172a;      /* Fondo oscuro elegante */
+      --bg-panel: #1e293b;     /* Fondo de tarjetas/menús */
+      --text-main: #e2e8f0;    /* Texto principal blanco suave */
+      --text-muted: #94a3b8;   /* Texto secundario gris claro */
+      --border: #334155;       /* Bordes sutiles */
+      --border-hover: #475569;
+      --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+      --glass-bg: rgba(30, 41, 59, 0.92);
+      --primary-tint: rgba(59, 130, 246, 0.15);
     }
 
     @keyframes badge-pop {
@@ -106,6 +131,26 @@
     .topbar .status-badge { background: rgba(255,255,255,0.2); border-radius: 2rem; padding: 0.2rem 0.7rem; font-size: 0.7rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
     .topbar .stats { display: flex; gap: 0.8rem; font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 0.2rem 0.8rem; border-radius: 2rem; }
     .topbar .stats .stat { display: flex; align-items: center; gap: 0.2rem; }
+
+    /* 🌙 NUEVO: Botón de alternancia Modo oscuro / Modo día */
+    .theme-toggle {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50px;
+      padding: 0.2rem 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: background 0.2s ease, transform 0.2s ease;
+      flex-shrink: 0;
+    }
+    .theme-toggle:hover { background: rgba(255,255,255,0.25); transform: scale(1.05); }
+    .theme-toggle:active { transform: scale(0.95); }
+    .theme-toggle i { font-size: 0.9rem; }
 
     .toolbar { background: var(--bg-main); padding: 0.4rem 1.2rem; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; flex-shrink: 0; z-index: 9; }
     .toolbar .search { position: relative; flex: 1; min-width: 150px; display: flex; align-items: center; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 2rem; padding: 0.2rem 0.8rem; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
@@ -735,6 +780,12 @@
       </div>
       <span class="status-badge" id="stateStatus" style="display:none;"><i class="fas fa-check-circle"></i> <span id="statusText">Cargando…</span></span>
       <span class="stats" id="stats" style="display:none;"></span>
+      
+      <!-- 🌙 Botón de alternancia global (Modo oscuro / Modo día) -->
+      <button class="theme-toggle" id="themeToggleBtn" title="Alternar modo oscuro/día">
+        <i class="fas fa-moon" id="themeIcon"></i>
+        <span id="themeLabel">Modo oscuro</span>
+      </button>
     </div>
   </div>
 
@@ -2086,6 +2137,36 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('sortDist').addEventListener('click', function() { sortMode = 'dist'; marcarSortActivo('sortDist'); applyFilters(); });
   document.getElementById('sortState').addEventListener('click', function() { sortMode = 'state'; marcarSortActivo('sortState'); applyFilters(); });
   document.getElementById('sortName').addEventListener('click', function() { sortMode = 'name'; marcarSortActivo('sortName'); applyFilters(); });
+
+  // ============================================================
+  // 🟢 CONTROL GLOBAL DEL MODO OSCURO (UI, no el mapa)
+  // ============================================================
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  const themeIcon = document.getElementById('themeIcon');
+  const themeLabel = document.getElementById('themeLabel');
+
+  function aplicarTemaGlobal(tema) {
+    document.documentElement.setAttribute('data-theme', tema);
+    if (tema === 'dark') {
+      themeIcon.className = 'fas fa-sun';
+      themeLabel.textContent = 'Modo día';
+      themeToggleBtn.title = 'Cambiar a modo día';
+    } else {
+      themeIcon.className = 'fas fa-moon';
+      themeLabel.textContent = 'Modo oscuro';
+      themeToggleBtn.title = 'Cambiar a modo oscuro';
+    }
+    try { localStorage.setItem('tema', tema); } catch (e) {}
+  }
+
+  // Cargar el tema guardado (si existe)
+  const temaActual = document.documentElement.getAttribute('data-theme') || 'light';
+  aplicarTemaGlobal(temaActual);
+
+  themeToggleBtn.addEventListener('click', function() {
+    const actual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    aplicarTemaGlobal(actual === 'dark' ? 'light' : 'dark');
+  });
 
   // ============================================================
   // 12. MENÚS DESPLEGABLES
