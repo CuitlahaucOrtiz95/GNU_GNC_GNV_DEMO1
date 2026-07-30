@@ -45,9 +45,6 @@
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script defer src="ClientesPotenciales.js"></script>
   <style>
-    /* ============================================================
-       ESTILOS CORREGIDOS Y OPTIMIZADOS
-       ============================================================ */
     :root {
       --primary: #1F5CA9;
       --primary-hover: #004a8f;
@@ -3231,7 +3228,7 @@ document.addEventListener('DOMContentLoaded', function() {
   })();
 
   // ============================================================
-  // 🛠️ CORRECCIÓN FINAL: EVENTOS DEL BUSCADOR Y LIMPIAR FILTROS
+  // 🔥 CORRECCIÓN FINAL: EVENTOS DEL BUSCADOR Y LIMPIAR FILTROS
   // ============================================================
   const searchInput = document.getElementById('searchInput');
   const clearAllBtn = document.getElementById('clearAllBtn');
@@ -3262,6 +3259,33 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   clearAllBtn.addEventListener('click', limpiarFiltros);
+
+  // ============================================================
+  // 🔥 CORRECCIÓN FINAL: BOTONES DE ESTILO DE MAPA (Satélite y Oscuro)
+  // ============================================================
+  const mapStyleFab = document.getElementById('mapStyleFab');
+  mapStyleFab.addEventListener('click', function(e) {
+    const btn = e.target.closest('.msb');
+    if (!btn) return;
+
+    // 1. Quitar la clase active a todos los botones
+    this.querySelectorAll('.msb').forEach(b => b.classList.remove('active'));
+    // 2. Poner la clase active al botón clickeado
+    btn.classList.add('active');
+
+    // 3. Obtener el estilo seleccionado y cambiar la capa del mapa
+    const style = btn.dataset.style; // 'Calles', 'Satélite' o 'Oscuro'
+    if (baseLayers[style]) {
+      // Quitar todas las capas base actuales
+      Object.keys(baseLayers).forEach(key => {
+        if (map.hasLayer(baseLayers[key])) {
+          map.removeLayer(baseLayers[key]);
+        }
+      });
+      // Agregar la capa seleccionada
+      baseLayers[style].addTo(map);
+    }
+  });
 
   // ============================================================
   // 23. INICIALIZACIÓN FINAL
