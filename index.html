@@ -397,7 +397,6 @@
       .price-legend { font-size: 10px; padding: 8px 10px; min-width: 130px; }
       .geocode-progress { left: 12px; right: 12px; bottom: 12px; max-width: none; }
       .modal { padding: 18px 20px; }
-      /* 🛠️ CORRECCIÓN DE MÓVIL: Menús desplegables con scroll */
       .dropdown-menu, .search-suggestions { max-width: calc(100vw - 1rem); max-height: 60vh; overflow-y: auto; }
       .dropdown-menu.open, .search-suggestions.show { overflow-y: auto; }
     }
@@ -1342,8 +1341,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const iconCache = new Map();
   
-  // 🛠️ CORRECCIÓN DE MODO OSCURO: Los SVG ahora usan variables CSS reales para el borde
-  function pinSVG(color, ringColor) {
+  function pinSVG(color, ringColor, resaltado) {
+    if (resaltado) {
+      // Icono aumentado de tamaño con círculo de resalte
+      return `<svg width="40" height="52" viewBox="0 0 40 52" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 4px 8px rgba(0,0,0,0.4));">
+        <circle cx="20" cy="20" r="12.5" fill="none" stroke="var(--bg-panel)" stroke-width="4" style="filter:drop-shadow(0 0 8px rgba(0,0,0,0.5));"/>
+        <circle cx="20" cy="20" r="11" fill="none" stroke="${color}" stroke-width="2" opacity="0.5"/>
+        <path d="M20 2 C12.27 2 6 8.27 6 16 C6 26.5 20 42 20 42 S34 26.5 34 16 C34 8.27 27.73 2 20 2 Z" fill="${color}" stroke="var(--bg-panel)" stroke-width="2"/>
+        ${ringColor ? `<circle cx="20" cy="20" r="10" fill="none" stroke="${ringColor}" stroke-width="2.4" opacity="0.95"/>` : ''}
+        <circle cx="20" cy="20" r="6" fill="var(--bg-panel)" stroke="var(--border)" stroke-width="1.2"/>
+      </svg>`;
+    }
     const ring = ringColor
       ? `<circle cx="14" cy="14" r="7.5" fill="none" stroke="var(--text-main)" stroke-width="2.2" opacity="0.95"/>`
       : '';
@@ -1354,13 +1362,16 @@ document.addEventListener('DOMContentLoaded', function() {
     </svg>`;
   }
 
-  function iconoPin(color, ringColor) {
-    const key = color + '|' + (ringColor || '');
+  function iconoPin(color, ringColor, resaltado) {
+    const key = color + '|' + (ringColor || '') + '|' + (resaltado ? 'hl' : '');
     let ic = iconCache.get(key);
     if (!ic) {
+      const size = resaltado ? [40, 52] : [30, 42];
+      const anchor = resaltado ? [20, 52] : [15, 42];
       ic = L.divIcon({
-        className: 'marker-pop-in', html: pinSVG(color, ringColor),
-        iconSize: [30,42], iconAnchor: [15,42], popupAnchor: [0,-39]
+        className: resaltado ? 'marker-pop-in marker-resaltado' : 'marker-pop-in',
+        html: pinSVG(color, ringColor, resaltado),
+        iconSize: size, iconAnchor: anchor, popupAnchor: [0, -size[1] + 6]
       });
       iconCache.set(key, ic);
     }
@@ -1376,7 +1387,6 @@ document.addEventListener('DOMContentLoaded', function() {
     return null;
   }
 
-  // 🛠️ CORRECCIÓN DE MODO OSCURO: Se agregó color: var(--border) y fill: var(--bg-panel)
   function iconoCombiSVG() {
     return `<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.2));">
       <rect x="4" y="12" width="20" height="12" rx="2" fill="#f59e0b" stroke="var(--border)" stroke-width="1"/>
@@ -1435,12 +1445,51 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ============================================================
-  // 4. TARJETA LATERAL Y DETALLE DE CLIENTE (con Editar)
+  // 🚀 NUEVO: Lógica de resaltado de pines (Highlight)
+  // ============================================================
+  let marcadorResaltado = null;
+
+  function limpiarResaltado() {
+    if (marcadorResaltado) {
+      if (marcadorResaltado._iconoOriginal) {
+        marcadorResaltado.setIcon(marcadorResaltado._iconoOriginal);
+      }
+      marcadorResaltado = null;
+    }
+  }
+
+  function resaltarMarcador(marker, cliente) {
+    limpiarResaltado(); // Limpiar cualquier resaltado previo
+
+    if (!marker || !cliente) return;
+
+    // Guardar el icono original si no se ha guardado aún
+    if (!marker._iconoOriginal) {
+      marker._iconoOriginal = marker.getIcon();
+    }
+
+    const color = cliente._matchColor || cliente.priceColor || '#1F5CA9';
+    const ringColor = colorPorTamano(cliente);
+    const iconoResaltado = iconoPin(color, ringColor, true); // True activa el modo resaltado
+
+    marker.setIcon(iconoResaltado);
+    marcadorResaltado = marker;
+  }
+
+  // ============================================================
+  // 4. TARJETA LATERAL Y DETALLE DE CLIENTE
   // ============================================================
   let clienteEnEdicion = null;
 
   function abrirDetalle(cliente) {
     if (!cliente) return;
+    
+    // 🔥 Aplicar el resaltado visual al pin
+    const entry = markerMap.get(cliente);
+    if (entry) {
+      resaltarMarcador(entry.marker, cliente);
+    }
+
     const d = cliente._matchDist < 10 ? cliente._matchDist.toFixed(1) : Math.round(cliente._matchDist || 0);
     const esM = cliente._matchAncla === 'Morelia';
     const dcHead = document.querySelector('.dc-head');
@@ -1485,10 +1534,19 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function cerrarDetalle() {
+    limpiarResaltado(); // 🔥 Limpiar el resaltado al cerrar la tarjeta
     document.getElementById('detailCard').classList.remove('open');
     document.getElementById('detailCard').setAttribute('aria-hidden', 'true');
   }
   document.getElementById('dcClose').addEventListener('click', cerrarDetalle);
+
+  // Limpiar resaltado si se hace clic en el fondo del mapa
+  map.on('click', function(e) {
+    if (!addingClientMode && !addingPinMode) {
+      limpiarResaltado();
+      cerrarDetalle();
+    }
+  });
 
   // ============================================================
   // 5. EDICIÓN DE CLIENTES
@@ -1573,10 +1631,14 @@ document.addEventListener('DOMContentLoaded', function() {
     markerMap.clear();
     stations.forEach(s => {
       const iconoEspecial = obtenerIconoEspecial(s);
+      const iconoNormal = iconoEspecial || iconoPin(s.priceColor, colorPorTamano(s), false);
       const marker = L.marker([s.lat, s.lon], {
-        icon: iconoEspecial || iconoPin(s.priceColor, colorPorTamano(s)),
+        icon: iconoNormal,
         title: s.nombre
       });
+      // Guardamos el icono original en el objeto del marcador para poder restaurarlo luego
+      marker._iconoOriginal = iconoNormal;
+      
       marker.on('click', function() {
         abrirDetalle(s);
       });
@@ -1726,7 +1788,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // ============================================================
-  // 9. LEYENDA DE PRECIOS / DISTANCIAS (CON BOTONES FUNCIONALES 🛠️)
+  // 9. LEYENDA DE PRECIOS / DISTANCIAS
   // ============================================================
   const legendControl = L.control({ position: 'bottomright' });
   legendControl.onAdd = function() {
@@ -1765,7 +1827,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
     
-    // 🛠️ CORRECCIÓN: Hacer que los botones de la leyenda funcionen
     setTimeout(actualizarConteos, 100);
     div._actualizarConteos = actualizarConteos;
 
@@ -1773,9 +1834,9 @@ document.addEventListener('DOMContentLoaded', function() {
       row.addEventListener('click', function() {
         const key = this.dataset.key;
         if (activePrice === key) {
-          activePrice = null; // Desactivar si ya estaba activo
+          activePrice = null;
         } else {
-          activePrice = key; // Activar
+          activePrice = key;
         }
         updateLegendUI();
         applyFilters();
@@ -1856,7 +1917,15 @@ document.addEventListener('DOMContentLoaded', function() {
       const entry = markerMap.get(s);
       if (entry) {
         const iconoEspecial = obtenerIconoEspecial(s);
-        entry.marker.setIcon(iconoEspecial || iconoPin(s._matchColor, colorPorTamano(s)));
+        const nuevoIcono = iconoEspecial || iconoPin(s._matchColor, colorPorTamano(s), false);
+        // Solo sobrescribir si no está resaltado actualmente
+        if (entry.marker !== marcadorResaltado) {
+          entry.marker.setIcon(nuevoIcono);
+          entry.marker._iconoOriginal = nuevoIcono;
+        } else {
+          // Si es el resaltado, mantenerlo, pero actualizar su referencia base
+          entry.marker._iconoOriginal = nuevoIcono;
+        }
       }
     });
 
@@ -2302,8 +2371,6 @@ document.addEventListener('DOMContentLoaded', function() {
   try { const guardados = JSON.parse(localStorage.getItem('MARCADORES_USUARIO') || '[]'); if (Array.isArray(guardados)) marcadores = guardados; } catch (e) {}
 
   function guardarMarcadores() { try { localStorage.setItem('MARCADORES_USUARIO', JSON.stringify(marcadores)); } catch (e) {} }
-
-  // 🛠️ CORRECCIÓN: Los iconos de marcadores ahora usan variables CSS
   function marcadorIcon(tipo) {
     const t = MARCADOR_TIPOS[tipo] || MARCADOR_TIPOS.nota;
     return L.divIcon({ className: '', html: `<svg width="34" height="46"><path d="M17 0C7.6 0 0 7.6 0 17c0 12.75 17 29 17 29s17-16.25 17-29C34 7.6 26.4 0 17 0z" fill="${t.color}" stroke="var(--border)" stroke-width="2"/><circle cx="17" cy="16.5" r="10" fill="var(--bg-panel)"/><text x="17" y="16.5" font-size="12" text-anchor="middle">${t.emoji}</text></svg>`, iconSize: [34,46], iconAnchor: [17,46], popupAnchor: [0,-42] });
@@ -2536,7 +2603,6 @@ document.addEventListener('DOMContentLoaded', function() {
       rutasCargadas = true; rutasCargando = false; renderListaRutas('');
     }).catch(err => {
       rutasCargando = false;
-      // 🛠️ CORRECCIÓN: Mensaje de error más amigable en lugar de "No se pudo cargar..."
       rutasListEl.innerHTML = '<div class="rutas-empty">🚧 Archivo de rutas no disponible.</div>';
     });
   }
