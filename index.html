@@ -7,13 +7,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="format-detection" content="telephone=no" />
-  <script>
-    (function(){
-      try {
-        if (localStorage.getItem('tema') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-      } catch (e) {}
-    })();
-  </script>
   <meta name="description" content="Mapa de clientes potenciales en Morelia y Tototlán con filtros por distancia, tamaño y estado, cálculo de rutas y geocodificación." />
   <meta name="robots" content="noindex, nofollow" />
   <meta name="theme-color" content="#1F5CA9" />
@@ -45,6 +38,9 @@
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script defer src="ClientesPotenciales.js"></script>
   <style>
+    /* ============================================================
+       ESTILOS CORREGIDOS Y OPTIMIZADOS (SOLO MODO CLARO)
+       ============================================================ */
     :root {
       --primary: #1F5CA9;
       --primary-hover: #004a8f;
@@ -73,20 +69,6 @@
       --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
       --shadow-glow: 0 0 0 3px rgba(31, 92, 169, 0.25);
       --primary-tint: rgba(31, 92, 169, 0.08);
-    }
-    :root[data-theme="dark"] {
-      --primary: #3b82f6;
-      --primary-hover: #60a5fa;
-      --secondary: #38bdf8;
-      --bg-main: #0f172a;
-      --bg-panel: #1e293b;
-      --text-main: #e2e8f0;
-      --text-muted: #94a3b8;
-      --border: #334155;
-      --border-hover: #475569;
-      --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-      --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
-      --glass-bg: rgba(30, 41, 59, 0.92);
     }
 
     @keyframes badge-pop {
@@ -124,8 +106,6 @@
     .topbar .status-badge { background: rgba(255,255,255,0.2); border-radius: 2rem; padding: 0.2rem 0.7rem; font-size: 0.7rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
     .topbar .stats { display: flex; gap: 0.8rem; font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 0.2rem 0.8rem; border-radius: 2rem; }
     .topbar .stats .stat { display: flex; align-items: center; gap: 0.2rem; }
-    .theme-toggle { background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 50%; width: 30px; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s ease; flex-shrink: 0; }
-    .theme-toggle:hover { background: rgba(255,255,255,0.3); }
 
     .toolbar { background: var(--bg-main); padding: 0.4rem 1.2rem; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; flex-shrink: 0; z-index: 9; }
     .toolbar .search { position: relative; flex: 1; min-width: 150px; display: flex; align-items: center; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 2rem; padding: 0.2rem 0.8rem; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
@@ -389,7 +369,6 @@
       #masDropdown { flex: 1 1 100%; }
       #masDropdown .btn-mas { width: 100%; }
       .dropdown-item, .rail-list li, .search-suggestions .item, .price-legend .row { min-height: 40px; }
-      .theme-toggle { width: 36px; height: 36px; }
       .map-hint { font-size: 0.72rem; padding: 0.45rem 0.8rem; top: 8px; }
       .price-legend { font-size: 10px; padding: 8px 10px; min-width: 130px; }
       .geocode-progress { left: 12px; right: 12px; bottom: 12px; max-width: none; }
@@ -439,7 +418,6 @@
     .rail-list.cards li .card-body .name mark { background: rgba(250, 204, 21, 0.4); color: inherit; padding: 0 2px; border-radius: 3px; }
     .rail-list.cards li .card-body .meta { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; color: var(--text-muted); }
     .rail-list.cards li .card-body .meta .state-tag { background: #e0f2fe; color: #0369a1; padding: 1px 8px; border-radius: var(--r-pill); font-weight: 600; font-size: 0.62rem; }
-    :root[data-theme="dark"] .rail-list.cards li .card-body .meta .state-tag { background: #1e3a8a; color: #93c5fd; }
     .rail-list.cards li .card-dist { font-weight: 800; color: var(--primary); font-size: 0.95rem; line-height: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
     .rail-list.cards li .card-dist .dist-unit { font-size: 0.62rem; font-weight: 600; color: var(--text-muted); }
     .rail-list.cards li .group-header, .rail-list.cards .group-header { grid-column: 1 / -1; background: transparent; padding: 8px 4px 4px; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 700; border-bottom: none; }
@@ -501,7 +479,6 @@
     .detail-card .dc-close:hover { background: rgba(255,255,255,0.35); transform: rotate(90deg); }
     .detail-card .dc-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.22); padding: 3px 10px; border-radius: var(--r-pill); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; backdrop-filter: blur(4px); }
     .detail-card .dc-title { font-size: 1.1rem; font-weight: 700; line-height: 1.2; margin: 0; padding-right: 28px; }
-    .dark .detail-card { background: rgba(30,41,59,0.92); }
     .detail-card .dc-subtitle { font-size: 0.78rem; opacity: 0.92; margin-top: 4px; display: flex; align-items: center; gap: 5px; }
     .detail-card .dc-body { padding: 14px 16px 6px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
     .detail-card .dc-stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -758,9 +735,6 @@
       </div>
       <span class="status-badge" id="stateStatus" style="display:none;"><i class="fas fa-check-circle"></i> <span id="statusText">Cargando…</span></span>
       <span class="stats" id="stats" style="display:none;"></span>
-      <button class="theme-toggle" id="themeToggleBtn" title="Cambiar tema claro/oscuro" aria-label="Cambiar tema claro/oscuro">
-        <i class="fas fa-moon" id="themeIcon"></i>
-      </button>
     </div>
   </div>
 
@@ -1442,7 +1416,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ============================================================
-  // 🚀 NUEVO: Lógica de resaltado de pines (Highlight)
+  // 🚀 Lógica de resaltado de pines (Highlight)
   // ============================================================
   let marcadorResaltado = null;
 
@@ -2114,22 +2088,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('sortName').addEventListener('click', function() { sortMode = 'name'; marcarSortActivo('sortName'); applyFilters(); });
 
   // ============================================================
-  // 12. TEMA
-  // ============================================================
-  function aplicarTema(tema) {
-    document.documentElement.setAttribute('data-theme', tema);
-    const icon = document.getElementById('themeIcon');
-    if (icon) icon.className = tema === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    try { localStorage.setItem('tema', tema); } catch (e) {}
-  }
-  aplicarTema(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
-  document.getElementById('themeToggleBtn').addEventListener('click', () => {
-    const actual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-    aplicarTema(actual === 'dark' ? 'light' : 'dark');
-  });
-
-  // ============================================================
-  // 13. MENÚS DESPLEGABLES
+  // 12. MENÚS DESPLEGABLES
   // ============================================================
   const masMenu = document.getElementById('masMenu');
   const moreToggleBtn = document.getElementById('moreToggleBtn');
@@ -2202,7 +2161,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // ============================================================
-  // 14. AGREGAR CLIENTE
+  // 13. AGREGAR CLIENTE
   // ============================================================
   let addingClientMode = false;
   const addClientBtn = document.getElementById('addClientBtn');
@@ -2302,7 +2261,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // ============================================================
-  // 15. ELIMINAR CLIENTE
+  // 14. ELIMINAR CLIENTE
   // ============================================================
   const NIP_ELIMINAR = '1723';
   let clienteAEliminar = null;
@@ -2351,7 +2310,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // ============================================================
-  // 16. MARCADORES (PINES)
+  // 15. MARCADORES (PINES)
   // ============================================================
   const MARCADOR_TIPOS = {
     interes: { label: 'Punto de interés', color: '#8b5cf6', emoji: '⭐' },
@@ -2540,7 +2499,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // ============================================================
-  // 17. RUTAS DE TRANSPORTE
+  // 16. RUTAS DE TRANSPORTE
   // ============================================================
   const rutasLayer = L.layerGroup().addTo(map);
   let rutasData = [], rutasSeleccionadas = new Set(), rutasCargadas = false, rutasCargando = false;
@@ -2621,7 +2580,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // ============================================================
-  // 18. BASES DE RUTAS
+  // 17. BASES DE RUTAS
   // ============================================================
   const basesLayer = L.layerGroup().addTo(map); let basesCargadas = false, basesCargando = false;
   function baseIcon(count) {
@@ -2647,7 +2606,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // ============================================================
-  // 19. EXPORTAR E IMPORTAR CSV
+  // 18. EXPORTAR E IMPORTAR CSV
   // ============================================================
   document.getElementById('exportCsvBtn').addEventListener('click', () => {
     if (!stations.length) return toast('No hay clientes.', 'info');
@@ -2718,7 +2677,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('importResultCloseBtn').addEventListener('click', () => document.getElementById('importResultModalOverlay').classList.remove('open'));
 
   // ============================================================
-  // 20. GEOCODIFICACIÓN
+  // 19. GEOCODIFICACIÓN
   // ============================================================
   async function geocodeCliente(cliente) {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${cliente.lat}&lon=${cliente.lon}&format=json&zoom=16&addressdetails=1`;
@@ -2790,7 +2749,7 @@ document.addEventListener('DOMContentLoaded', function() {
   window.addEventListener('storage', function(e) { if (e.key === 'CLIENTES_ACTUALIZADO') recargarClientes(); });
 
   // ============================================================
-  // 21. MI UBICACIÓN
+  // 20. MI UBICACIÓN
   // ============================================================
   let miUbicacionMarker = null;
   function miUbicacionIcon() {
@@ -2817,7 +2776,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // ============================================================
-  // 22. PATCHES: FILTROS RÁPIDOS, ATAJOS, KPIs, DASHBOARD, PRESENTACIÓN, BOTTOM SHEET
+  // 21. PATCHES: FILTROS RÁPIDOS, ATAJOS, KPIs, DASHBOARD, PRESENTACIÓN, BOTTOM SHEET
   // ============================================================
   (function() {
     const strip = document.getElementById('quickFilters');
@@ -2933,8 +2892,7 @@ document.addEventListener('DOMContentLoaded', function() {
       'centerTototlanBtn': 'Centrar en Tototlán · T',
       'locBtn':            'Mi ubicación · U',
       'toggleRailBtn':     'Directorio · D',
-      'resetBtn':          'Restablecer vista · R',
-      'themeToggleBtn':    'Cambiar tema'
+      'resetBtn':          'Restablecer vista · R'
     };
     Object.keys(tips).forEach(id => {
       const el = document.getElementById(id);
@@ -3228,7 +3186,7 @@ document.addEventListener('DOMContentLoaded', function() {
   })();
 
   // ============================================================
-  // 🔥 CORRECCIÓN FINAL: EVENTOS DEL BUSCADOR Y LIMPIAR FILTROS
+  // CORRECCIÓN FINAL: EVENTOS DEL BUSCADOR Y LIMPIAR FILTROS
   // ============================================================
   const searchInput = document.getElementById('searchInput');
   const clearAllBtn = document.getElementById('clearAllBtn');
@@ -3261,7 +3219,7 @@ document.addEventListener('DOMContentLoaded', function() {
   clearAllBtn.addEventListener('click', limpiarFiltros);
 
   // ============================================================
-  // 🔥 CORRECCIÓN FINAL: BOTONES DE ESTILO DE MAPA (Satélite y Oscuro)
+  // CORRECCIÓN FINAL: BOTONES DE ESTILO DE MAPA (Satélite y Oscuro)
   // ============================================================
   const mapStyleFab = document.getElementById('mapStyleFab');
   mapStyleFab.addEventListener('click', function(e) {
@@ -3274,21 +3232,19 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.classList.add('active');
 
     // 3. Obtener el estilo seleccionado y cambiar la capa del mapa
-    const style = btn.dataset.style; // 'Calles', 'Satélite' o 'Oscuro'
+    const style = btn.dataset.style;
     if (baseLayers[style]) {
-      // Quitar todas las capas base actuales
       Object.keys(baseLayers).forEach(key => {
         if (map.hasLayer(baseLayers[key])) {
           map.removeLayer(baseLayers[key]);
         }
       });
-      // Agregar la capa seleccionada
       baseLayers[style].addTo(map);
     }
   });
 
   // ============================================================
-  // 23. INICIALIZACIÓN FINAL
+  // 22. INICIALIZACIÓN FINAL
   // ============================================================
   reconstruirMarcadoresClientes();
   actualizarSelectTamano();
