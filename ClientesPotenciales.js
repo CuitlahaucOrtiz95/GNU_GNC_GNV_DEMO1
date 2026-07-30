@@ -1,8 +1,8 @@
 // ============================================================
-// ARCHIVO GENERADO desde: clientes (7).csv
+// ARCHIVO GENERADO desde: clientes (8).csv
 // Directorio único: lo usan Morelia y Tototlán a la vez.
-// Fecha: 30/7/2026, 8:50:12 a.m.
-// Registros: 18112
+// Fecha: 30/7/2026, 9:21:16 a.m.
+// Registros: 18113
 // NO editar a mano.
 // ============================================================
 window.CLIENTES_POTENCIALES = [
@@ -18104,7 +18104,7 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"Naranja 2","lat":19.686071,"lon":-101.219446,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"Naranja 3","lat":19.693275,"lon":-101.181536,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"Naranja 1","lat":19.677112,"lon":-101.218786,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
-  {"nombre":"Negra 1 y 2","lat":19.723798,"lon":-101.210287,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
+  {"nombre":"Negra 1","lat":19.744374,"lon":-101.219519,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"Oro-Verde 1 y 2","lat":19.732355,"lon":-101.181701,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"Café 2A","lat":19.705557,"lon":-101.143406,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"Paloma Azul","lat":19.661599,"lon":-101.215705,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
@@ -18117,5 +18117,6 @@ window.CLIENTES_POTENCIALES = [
   {"nombre":"Rosa 1","lat":19.763533,"lon":-101.210427,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"Rosa 2B","lat":19.693573,"lon":-101.203658,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
   {"nombre":"Verde 4 y 4B","lat":19.713665,"lon":-101.241477,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
-  {"nombre":"Verde 2 y 3","lat":19.696855,"lon":-101.253618,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"}
+  {"nombre":"Verde 2 y 3","lat":19.696855,"lon":-101.253618,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"},
+  {"nombre":"Negra 2","lat":19.684011,"lon":-101.153324,"estado":"Michoacán de Ocampo","tamano":"Base de Combis"}
 ];
